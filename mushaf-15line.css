@@ -1,0 +1,576 @@
+/* ==========================================================================
+   NŪR QURAN - 15-LINE MUSHAF & ILLUMINATED LAUH SPREAD STYLES
+   Authentic Tajweedi Hafizi 15-Line layout & Classic Illuminated Arch
+   ========================================================================== */
+
+:root {
+  --mushaf-paper: #fcfbf7;
+  --mushaf-border-green: #295738;
+  --mushaf-border-gold: #c99e32;
+  --mushaf-border-red: #a82a20;
+  --mushaf-ink: #12241b;
+  --mushaf-rule: #d5e0d2;
+  --mushaf-highlight: #d8ebb8;
+  --mushaf-cartouche-bg: #fdf5df;
+  --mushaf-cartouche-border: #b82d23;
+  --mushaf-line-h: 46px;
+}
+
+body.dark {
+  --mushaf-paper: #1c2a23;
+  --mushaf-border-green: #416e51;
+  --mushaf-border-gold: #9f7d29;
+  --mushaf-border-red: #8f322a;
+  --mushaf-ink: #f0f7f2;
+  --mushaf-rule: #2f4539;
+  --mushaf-highlight: #2c4433;
+  --mushaf-cartouche-bg: #2b3930;
+  --mushaf-cartouche-border: #963b34;
+}
+
+/* Base Quran Page Container */
+.quran-page {
+  background: var(--mushaf-paper) !important;
+  width: min(720px, calc(100% - 24px)) !important;
+  max-width: 720px !important;
+  max-height: calc(100vh - 125px) !important;
+  padding: 10px 14px 14px !important;
+  box-shadow: 0 12px 40px rgba(25, 43, 34, 0.16) !important;
+  border: 1px solid #d9d0be !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+}
+
+body.dark .quran-page {
+  background: var(--mushaf-paper) !important;
+  border-color: #384e42 !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ==========================================================================
+   TOP MUSHAF HEADER (Surah - Page - Juz)
+   ========================================================================== */
+.mushaf-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px 8px;
+  font-family: 'Amiri', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mushaf-border-green);
+  border-bottom: 1px solid var(--mushaf-rule);
+  margin-bottom: 8px;
+  direction: ltr; /* Surah on left, Page in middle, Juz on right */
+}
+
+body.dark .mushaf-header-bar {
+  color: #c7ded0;
+}
+
+.mushaf-header-surah {
+  font-size: 17px;
+  color: #1e4b34;
+  direction: rtl;
+}
+
+body.dark .mushaf-header-surah {
+  color: #9eccad;
+}
+
+.mushaf-header-page {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7d8e83;
+  letter-spacing: 0.5px;
+}
+
+.mushaf-header-page b {
+  font-family: 'Amiri', serif;
+  font-size: 16px;
+  margin-left: 5px;
+}
+
+.mushaf-header-juz {
+  font-size: 17px;
+  color: #1e4b34;
+  direction: rtl;
+}
+
+body.dark .mushaf-header-juz {
+  color: #9eccad;
+}
+
+/* ==========================================================================
+   MAIN MUSHAF WRAPPER (Side Margins + Central Bordered Frame)
+   ========================================================================== */
+.mushaf-layout-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Side Margin with Juz & Ruku Indicators */
+.mushaf-side-margin {
+  width: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 14px;
+  font-family: 'Amiri', serif;
+  flex-shrink: 0;
+}
+
+.margin-badge {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border: 1px solid var(--mushaf-border-green);
+  border-radius: 4px;
+  padding: 6px 3px;
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--mushaf-border-green);
+  background: rgba(41, 87, 56, 0.06);
+  letter-spacing: 1px;
+}
+
+body.dark .margin-badge {
+  color: #b7d6c1;
+  border-color: #4b735a;
+  background: rgba(65, 110, 81, 0.15);
+}
+
+.margin-badge.ruku-badge {
+  border-color: var(--mushaf-border-gold);
+  color: #966f16;
+  background: rgba(201, 158, 50, 0.08);
+}
+
+body.dark .margin-badge.ruku-badge {
+  color: #d9b85c;
+  border-color: #9f7d29;
+}
+
+.margin-badge.waqf-badge {
+  border-color: var(--mushaf-border-red);
+  color: var(--mushaf-border-red);
+  background: rgba(168, 42, 32, 0.06);
+}
+
+/* The Ornate Islamic Border Frame */
+.mushaf-bordered-frame {
+  flex: 1;
+  border: 4px double var(--mushaf-border-green);
+  outline: 2px solid var(--mushaf-border-gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+  padding: 10px 14px 14px;
+  background: var(--mushaf-paper);
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(201, 158, 50, 0.35);
+  display: flex;
+  flex-direction: column;
+}
+
+body.dark .mushaf-bordered-frame {
+  border-color: #3f684e;
+  outline-color: #8c6f2a;
+}
+
+/* Bottom Outer Footer */
+.mushaf-footer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px 2px;
+  font-family: 'Amiri', serif;
+  font-size: 13px;
+  color: #7a8c80;
+  border-top: 1px solid var(--mushaf-rule);
+  margin-top: 8px;
+}
+
+.mushaf-footer-manzil {
+  margin: 0 auto;
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--mushaf-border-green);
+}
+
+body.dark .mushaf-footer-manzil {
+  color: #a3cbb1;
+}
+
+/* ==========================================================================
+   IMAGE 2 STYLE: 15-LINE MUSHAF PAGE (Pages 3 to 604)
+   ========================================================================== */
+.mushaf-15lines-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 600px;
+  width: 100%;
+  direction: rtl;
+}
+
+.mushaf-line-row {
+  min-height: var(--mushaf-line-h);
+  border-bottom: 1px solid var(--mushaf-rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-family: 'Amiri', serif;
+  font-size: 23px;
+  line-height: var(--mushaf-line-h);
+  color: var(--mushaf-ink);
+  text-align: justify;
+  text-justify: inter-word;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.mushaf-line-row:last-child {
+  border-bottom: none;
+}
+
+/* Highlighted Section/Juz Start Row (like Line 1 in Image 2) */
+.mushaf-line-row.has-highlight {
+  background: var(--mushaf-highlight);
+  border-radius: 3px;
+}
+
+/* 15-line Page Continuous Flow Mode */
+.mushaf-flow-grid {
+  width: 100%;
+  direction: rtl;
+  font-family: 'Amiri', serif;
+  font-size: 23px;
+  line-height: var(--mushaf-line-h);
+  text-align: justify;
+  text-justify: inter-word;
+  color: var(--mushaf-ink);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--mushaf-line-h) - 1px),
+    var(--mushaf-rule) calc(var(--mushaf-line-h) - 1px),
+    var(--mushaf-rule) var(--mushaf-line-h)
+  );
+  padding-bottom: 4px;
+}
+
+/* Ayah Interaction */
+.mushaf-ayah {
+  display: inline;
+  cursor: pointer;
+  padding: 2px 2px;
+  border-radius: 4px;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  user-select: none;
+}
+
+.mushaf-ayah:hover {
+  background: rgba(185, 121, 88, 0.14);
+}
+
+.mushaf-ayah.playing {
+  background: rgba(185, 121, 88, 0.28) !important;
+  color: #173d32 !important;
+  box-shadow: 0 0 0 2px rgba(185, 121, 88, 0.4) !important;
+  border-radius: 4px;
+}
+
+body.dark .mushaf-ayah.playing {
+  background: rgba(212, 154, 112, 0.32) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(212, 154, 112, 0.5) !important;
+}
+
+/* Ornate Circular Golden Ayah End Marker (۝) */
+.ayah-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  margin: 0 5px;
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ayah-flower {
+  font-size: 28px;
+  color: #c49537;
+  line-height: 1;
+}
+
+body.dark .ayah-flower {
+  color: #d8af5c;
+}
+
+.ayah-num {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1b4b34;
+  font-family: 'Amiri', serif;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+body.dark .ayah-num {
+  color: #f6fcf8;
+}
+
+/* In-Page Surah Title Box (when a Surah starts in the middle of a 15-line page) */
+.mushaf-surah-box {
+  width: 100%;
+  margin: 10px 0 6px;
+  background: linear-gradient(135deg, #fcedc5 0%, #fae5b4 50%, #fcedc5 100%);
+  border: 2px solid #b73229;
+  border-radius: 8px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+body.dark .mushaf-surah-box {
+  background: linear-gradient(135deg, #2b3930 0%, #36483d 50%, #2b3930 100%);
+  border-color: #963b34;
+}
+
+.mushaf-surah-title {
+  font-family: 'Amiri', serif;
+  font-size: 22px;
+  font-weight: bold;
+  color: #8f1e17;
+  margin: 0 auto;
+}
+
+body.dark .mushaf-surah-title {
+  color: #f1cfc2;
+}
+
+/* ==========================================================================
+   IMAGE 1 STYLE: ILLUMINATED LAUH OPENING SPREAD (Pages 1 & 2)
+   ========================================================================== */
+.lauh-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  direction: rtl;
+}
+
+/* Multi-layered Ornate Frame for Pages 1 & 2 */
+.page-lauh .mushaf-bordered-frame {
+  border: 5px solid #b83b5e !important;
+  outline: 4px solid #2d7a46 !important;
+  outline-offset: 3px !important;
+  background: #fdfaf3 !important;
+  box-shadow: 0 0 0 6px #d9b85c, 0 16px 40px rgba(0,0,0,0.18) !important;
+  padding: 8px 10px !important;
+}
+
+body.dark .page-lauh .mushaf-bordered-frame {
+  border-color: #8c324b !important;
+  outline-color: #235934 !important;
+  background: #192720 !important;
+  box-shadow: 0 0 0 6px #7d6529, 0 16px 40px rgba(0,0,0,0.4) !important;
+}
+
+/* The Iconic Illuminated Arch Header */
+.lauh-arch-header {
+  width: 100%;
+  position: relative;
+  background: #1b5932;
+  border-radius: 140px 140px 0 0;
+  border: 3px solid #d4a340;
+  padding: 16px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.35);
+}
+
+/* Arabesque Vine Floral Pattern Overlay */
+.lauh-arch-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 50% 10%, rgba(212, 163, 64, 0.4) 0%, transparent 60%),
+    repeating-linear-gradient(45deg, rgba(212, 163, 64, 0.08) 0, rgba(212, 163, 64, 0.08) 10px, transparent 10px, transparent 20px),
+    repeating-linear-gradient(-45deg, rgba(184, 59, 94, 0.08) 0, rgba(184, 59, 94, 0.08) 10px, transparent 10px, transparent 20px);
+  pointer-events: none;
+}
+
+/* The Arch Niche (white/cream inner dome) */
+.lauh-arch-niche {
+  position: relative;
+  z-index: 2;
+  background: #fdfaf3;
+  border: 2px solid #d4a340;
+  border-radius: 110px 110px 0 0;
+  width: min(440px, 94%);
+  padding: 18px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+}
+
+body.dark .lauh-arch-niche {
+  background: #1e2c24;
+}
+
+/* Surah Cartouche (Image 1 Style Pill Box) */
+.lauh-cartouche-surah {
+  background: linear-gradient(135deg, #fff7df 0%, #fae6b8 50%, #fff7df 100%);
+  border: 2px solid var(--mushaf-cartouche-border);
+  outline: 1px solid #d4a340;
+  outline-offset: 1px;
+  border-radius: 22px;
+  padding: 5px 22px;
+  font-family: 'Amiri', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8c1e18;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(140, 30, 24, 0.15);
+  max-width: 96%;
+}
+
+body.dark .lauh-cartouche-surah {
+  background: linear-gradient(135deg, #2b3930 0%, #36493d 50%, #2b3930 100%);
+  color: #f7d5ca;
+}
+
+/* Bismillah Cartouche (Image 1 Style Pill Box with Audio Play Button) */
+.lauh-cartouche-bismillah {
+  background: linear-gradient(135deg, #fff7df 0%, #fae6b8 50%, #fff7df 100%);
+  border: 2px solid var(--mushaf-cartouche-border);
+  outline: 1px solid #d4a340;
+  outline-offset: 1px;
+  border-radius: 22px;
+  padding: 5px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(140, 30, 24, 0.15);
+  max-width: 96%;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.lauh-cartouche-bismillah:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(140, 30, 24, 0.25);
+}
+
+.lauh-cartouche-bismillah.playing {
+  background: #e5efe6;
+  border-color: #3b7e52;
+}
+
+.lauh-bismillah-text {
+  font-family: 'Amiri', serif;
+  font-size: 23px;
+  font-weight: 700;
+  color: #8c1e18;
+}
+
+body.dark .lauh-cartouche-bismillah {
+  background: linear-gradient(135deg, #2b3930 0%, #36493d 50%, #2b3930 100%);
+}
+
+body.dark .lauh-bismillah-text {
+  color: #f7d5ca;
+}
+
+/* Verses Table for Lauh Pages */
+.lauh-verses-table {
+  width: 100%;
+  direction: rtl;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--mushaf-rule);
+}
+
+.lauh-verse-row {
+  min-height: 48px;
+  border-bottom: 1px solid var(--mushaf-rule);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  font-family: 'Amiri', serif;
+  font-size: 24px;
+  color: var(--mushaf-ink);
+  text-align: center;
+}
+
+/* Tajweed Footnote Bar (as seen at the bottom of Image 1) */
+.tajweed-footer-guide {
+  width: 100%;
+  margin-top: 12px;
+  padding: 6px 10px;
+  background: rgba(45, 122, 70, 0.08);
+  border: 1px solid rgba(45, 122, 70, 0.25);
+  border-radius: 6px;
+  font-family: 'Amiri', serif;
+  font-size: 13px;
+  color: #2b5e39;
+  text-align: center;
+  direction: rtl;
+}
+
+body.dark .tajweed-footer-guide {
+  background: rgba(65, 110, 81, 0.15);
+  border-color: #3a5b46;
+  color: #b7d6c1;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 650px) {
+  .quran-page {
+    width: calc(100% - 10px) !important;
+    padding: 6px 8px 10px !important;
+  }
+  .mushaf-side-margin {
+    display: none; /* Hide side margin on phones to give full width to 15 lines */
+  }
+  .mushaf-line-row, .mushaf-flow-grid {
+    font-size: 19px;
+    --mushaf-line-h: 40px;
+  }
+  .lauh-cartouche-surah {
+    font-size: 16px;
+    padding: 4px 14px;
+  }
+  .lauh-bismillah-text {
+    font-size: 18px;
+  }
+}
+

@@ -1,0 +1,29 @@
+{
+  "name": "Nūr Al-Quran - The Noble 15-Line Mushaf",
+  "short_name": "Nūr Al-Quran",
+  "description": "Production-ready 15-line Quran reading and recitation platform with 604 verified pages, 12 world-renowned Qaris, offline PWA support, and Ramzan Sanctuary.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1813",
+  "theme_color": "#113628",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["books", "lifestyle", "education"],
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

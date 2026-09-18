@@ -1,0 +1,25 @@
+{
+  "name": "nur-al-quran",
+  "version": "2.5.0",
+  "description": "Premium 15-Line Quran Mushaf Web Platform & Progressive Web App (القرآن الكريم)",
+  "main": "code.js",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "test": "node -c code.js && node -c sw.js",
+    "build": "echo \"Production static PWA ready for Vercel, Netlify, or GitHub Pages.\""
+  },
+  "keywords": [
+    "quran",
+    "mushaf",
+    "15-line-quran",
+    "islamic-web-app",
+    "pwa",
+    "audio-recitation",
+    "offline-quran",
+    "indexeddb"
+  ],
+  "author": "Nūr Al-Quran Engineering Team",
+  "license": "MIT"
+}
+

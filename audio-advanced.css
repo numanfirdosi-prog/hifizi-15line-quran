@@ -1,0 +1,20 @@
+.audio-repeat,.audio-download{border:1px solid #c9d6ca;border-radius:6px;background:#f4f0e8;color:#315b49;padding:5px 7px;font:10px 'DM Sans';cursor:pointer}.audio-repeat{max-width:104px}.audio-download{font-size:14px;line-height:1}body.dark .audio-repeat,body.dark .audio-download{background:#1c2924;color:#dce9df;border-color:#536d5c}@media(max-width:560px){.audio-repeat{max-width:67px}.audio-download{padding:5px}.audio-repeat option{font-size:10px}}
+.surah-separator{margin:18px 0 14px;text-align:center}
+.surah-title-banner{background:linear-gradient(135deg,#e4eee5 0%,#f0f6f1 50%,#e4eee5 100%);border:1px solid #c5d8ca;border-radius:8px;padding:7px 18px;display:inline-flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(35,77,67,.06)}
+.surah-title-text{font:21px 'Amiri',serif;color:#234d43;direction:rtl}
+.surah-title-ornament{color:#b97958;font-size:15px}
+.bismillah-banner{background:#f7f4ee;border:1px solid #e0d7c7;border-radius:8px;padding:7px 16px;display:flex;align-items:center;justify-content:center;gap:14px;margin:8px auto 14px;max-width:440px;transition:background .2s,border-color .2s}
+.bismillah-banner.playing{background:#e5efe6;border-color:#79a686}
+.bismillah-calligraphy{font:24px/1.8 'Amiri',serif;color:#315b49;direction:rtl}
+.bismillah-play{border:0;background:#234d43;color:#f4f0e8;width:28px;height:28px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:transform .15s,background .15s}
+.bismillah-play:hover{transform:scale(1.08);background:#315f4f}
+.bismillah-banner.playing .bismillah-play{background:#b97958}
+body.dark .surah-title-banner{background:linear-gradient(135deg,#263830 0%,#2f443a 50%,#263830 100%);border-color:#40584b;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+body.dark .surah-title-text{color:#d8eadb}
+body.dark .surah-title-ornament{color:#d49a70}
+body.dark .bismillah-banner{background:#223029;border-color:#3d5345}
+body.dark .bismillah-banner.playing{background:#2f4639;border-color:#61876e}
+body.dark .bismillah-calligraphy{color:#dce9df}
+body.dark .bismillah-play{background:#dce9df;color:#234d43}
+body.dark .bismillah-banner.playing .bismillah-play{background:#d49a70;color:#1c2924}
+@media(max-width:560px){.bismillah-banner{padding:6px 10px;gap:8px}.bismillah-calligraphy{font-size:19px}.surah-title-text{font-size:18px}}
