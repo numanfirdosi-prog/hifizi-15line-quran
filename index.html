@@ -1076,6 +1076,7 @@
 						<div class="mushaf-bordered-frame" id="mushafBorderedFrame">
 							<div class="reader-status" id="readerStatus">Loading verified Quran text...</div>
 							<div class="reader-ayahs" id="readerAyahs"></div>
+							<canvas id="annotationCanvas" class="annotation-canvas"></canvas>
 						</div>
 					</div>
 					<div class="mushaf-footer-bar" id="mushafFooterBar">
@@ -1094,6 +1095,119 @@
 				</div>
 				<span class="sync-status-badge" id="syncRecitationStatus">● Syncing Recitation: Mishary Rashid Alafasy</span>
 				<button class="btn-primary-green" id="nextPage">Next Page →</button>
+			</div>
+			<!-- Floating 2-Row Color Palette Popup (Screenshot 1) -->
+			<div class="color-palette-popup hidden" id="colorPalettePopup">
+				<div class="color-palette-grid">
+					<button class="color-chip active" data-color="#e53935" style="background:#e53935;" aria-label="Red"></button>
+					<button class="color-chip" data-color="#ffeb3b" style="background:#ffeb3b;" aria-label="Yellow"></button>
+					<button class="color-chip" data-color="#ffc107" style="background:#ffc107;" aria-label="Amber"></button>
+					<button class="color-chip" data-color="#ff9800" style="background:#ff9800;" aria-label="Orange"></button>
+					<button class="color-chip" data-color="#4caf50" style="background:#4caf50;" aria-label="Green"></button>
+					<button class="color-chip" data-color="#00897b" style="background:#00897b;" aria-label="Teal"></button>
+					<button class="color-chip" data-color="#1e88e5" style="background:#1e88e5;" aria-label="Blue"></button>
+					<button class="color-chip" data-color="#8e24aa" style="background:#8e24aa;" aria-label="Purple"></button>
+					<button class="color-chip color-chip-rainbow" id="rainbowColorBtn" title="Custom Color" aria-label="Custom Color">
+						<span class="rainbow-icon">🎨</span>
+						<input type="color" id="customColorPicker" value="#e53935" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;">
+					</button>
+				</div>
+			</div>
+
+			<!-- Drawing Tools Bottom Sheet (Screenshot 2 & 3) -->
+			<div class="drawing-tools-backdrop hidden" id="drawingToolsBackdrop"></div>
+			<div class="drawing-tools-sheet hidden" id="drawingToolsSheet">
+				<div class="drawing-sheet-handle-bar">
+					<div class="drawing-sheet-handle"></div>
+				</div>
+				<div class="drawing-sheet-header">
+					<h3>Drawing Tools</h3>
+					<button class="icon-button" id="closeDrawingTools" aria-label="Close Drawing Tools">✕</button>
+				</div>
+				<div class="drawing-tools-grid">
+					<!-- 1. Rectangle -->
+					<button class="drawing-tool-card" data-tool="rectangle" id="toolCardRectangle">
+						<div class="tool-card-icon">
+							<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+								<rect x="3" y="3" width="18" height="18" rx="2"/>
+							</svg>
+						</div>
+						<span class="tool-card-name">Rectangle</span>
+					</button>
+
+					<!-- 2. Pen -->
+					<button class="drawing-tool-card" data-tool="pen" id="toolCardPen">
+						<div class="tool-card-icon">
+							<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+								<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+							</svg>
+						</div>
+						<span class="tool-card-name">Pen</span>
+					</button>
+
+					<!-- 3. Highlighter (Default Active) -->
+					<button class="drawing-tool-card active" data-tool="highlighter" id="toolCardHighlighter">
+						<div class="tool-card-icon">
+							<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+								<path d="M19 17H5v2h14v-2zm-2.7-7.7l-4.6-4.6L4.7 11.7l4.6 4.6 7-7zm-.7-.7l1.4-1.4c.4-.4.4-1 0-1.4l-2.5-2.5c-.4-.4-1-.4-1.4 0l-1.4 1.4 3.9 3.9z"/>
+							</svg>
+						</div>
+						<span class="tool-card-name">Highlighter</span>
+					</button>
+
+					<!-- 4. Brush -->
+					<button class="drawing-tool-card" data-tool="brush" id="toolCardBrush">
+						<div class="tool-card-icon">
+							<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+								<path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34a.996.996 0 0 0-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/>
+							</svg>
+						</div>
+						<span class="tool-card-name">Brush</span>
+					</button>
+
+					<!-- 5. Eraser -->
+					<button class="drawing-tool-card" data-tool="eraser" id="toolCardEraser">
+						<div class="tool-card-icon">
+							<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+								<path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z"/>
+							</svg>
+						</div>
+						<span class="tool-card-name">Eraser</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Bottom Annotation Toolbar (Screenshot 4) -->
+			<div class="annotation-toolbar hidden" id="annotationToolbar">
+				<div class="annot-tool-item" id="annotColorBtn" title="Choose Color">
+					<span class="annot-color-preview" id="annotActiveColorDot" style="background:#e53935;"></span>
+					<span class="annot-label">Color</span>
+				</div>
+				<div class="annot-tool-item active" id="annotToolBtn" title="Drawing Tools">
+					<span class="annot-icon" id="annotActiveToolIcon">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+							<path d="M19 17H5v2h14v-2zm-2.7-7.7l-4.6-4.6L4.7 11.7l4.6 4.6 7-7zm-.7-.7l1.4-1.4c.4-.4.4-1 0-1.4l-2.5-2.5c-.4-.4-1-.4-1.4 0l-1.4 1.4 3.9 3.9z"/>
+						</svg>
+					</span>
+					<span class="annot-label" id="annotActiveToolLabel">Highlighter</span>
+				</div>
+				<div class="annot-tool-item" id="annotNotesBtn" title="Notes & Reflection">
+					<span class="annot-icon">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+							<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3v-3h2v3h3v2zm-3-7V3.5L18.5 9H13z"/>
+						</svg>
+					</span>
+					<span class="annot-label">Notes</span>
+				</div>
+				<div class="annot-tool-item" id="annotClearBtn" title="Clear Markings">
+					<span class="annot-icon">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+							<path d="M15 16h4v2h-4zm0-8h7v2h-7zm0 4h6v2h-6zM3 18c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V8H3v10zm2-8h6v8H5v-8zm5-6H6L5 5H2v2h12V5h-3z"/>
+						</svg>
+					</span>
+					<span class="annot-label">Clear</span>
+				</div>
+				<button class="annot-close-btn" id="annotCloseBtn" title="Exit Annotation Mode">✕</button>
 			</div>
 		</div>
 	</div>

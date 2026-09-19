@@ -577,11 +577,20 @@ function openReader(surahIndex = null, syncHash = true) {
 }
 
 function openReaderPage(page) {
+  if (typeof saveCurrentPageAnnotation === 'function') {
+    saveCurrentPageAnnotation();
+  }
   state.page = Math.min(604, Math.max(1, Number(page)));
   openReader(null, true);
 }
 
 function closeReader(syncHash = true) {
+  if (typeof saveCurrentPageAnnotation === 'function') {
+    saveCurrentPageAnnotation();
+  }
+  if (typeof toggleAnnotationSuite === 'function') {
+    toggleAnnotationSuite(false);
+  }
   $('readerOverlay')?.classList.add('hidden');
   document.body.style.overflow = '';
   updateKhatmTracker();
@@ -591,6 +600,9 @@ function closeReader(syncHash = true) {
 }
 
 function navigatePage(step) {
+  if (typeof saveCurrentPageAnnotation === 'function') {
+    saveCurrentPageAnnotation();
+  }
   state.page = Math.min(604, Math.max(1, state.page + step));
   const mode = state.mode;
   const overlay = $('readerOverlay');
@@ -913,6 +925,10 @@ function renderAudioAyahControls() {
       playBismillah(Number(el.dataset.surah || 1), Number(el.dataset.ayah || 1));
     };
   });
+
+  if (typeof loadPageAnnotation === 'function') {
+    loadPageAnnotation(page);
+  }
 }
 
 function showAyahBubble(ayah, targetEl) {
@@ -2179,8 +2195,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btnModeScroll')?.addEventListener('click', () => setReadingMode('Scroll'));
   $('btnModeTurn')?.addEventListener('click', () => setReadingMode('Page turn'));
 
-  // Tafsir Drawer
-  $('btnToggleTafsir')?.addEventListener('click', () => toggleTafsirDrawer());
+  // Notes & Study Annotation Suite Trigger (User Request)
+  $('btnToggleTafsir')?.addEventListener('click', () => {
+    toggleAnnotationSuite();
+  });
   $('btnCloseTafsir')?.addEventListener('click', () => toggleTafsirDrawer(false));
   $('playAyahTafsirBtn')?.addEventListener('click', () => {
     if (selectedAyahData) playAyah(selectedAyahData.number, true);
@@ -2530,6 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const diffY = touchEndY - touchStartY;
 
       // Swiping horizontally with at least 45px distance and horizontal dominant
+      if (typeof annotState !== 'undefined' && annotState.isActive) return; // Prevent page turn while drawing
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
         // In Arabic reading:
         // Swipe left (diffX < 0) -> Next Page (towards page 604)
@@ -2549,7 +2568,434 @@ document.addEventListener('DOMContentLoaded', () => {
       hideAyahBubble();
     }
   });
+
+  // Initialize Study & Annotation Suite
+  initAnnotationSuite();
 });
+
+// ============================================================================
+// 12. 15-LINE QURAN STUDY & ANNOTATION SUITE (Drawing, Highlighting, Notes)
+// ============================================================================
+
+const annotState = {
+  isActive: false,
+  activeTool: 'highlighter', // 'rectangle' | 'pen' | 'highlighter' | 'brush' | 'eraser'
+  activeColor: '#e53935',
+  isDrawing: false,
+  startX: 0,
+  startY: 0,
+  lastX: 0,
+  lastY: 0,
+  snapshotCanvas: null
+};
+
+function hexToRgba(hex, alpha) {
+  if (!hex) return `rgba(229, 57, 53, ${alpha})`;
+  let c = hex.replace('#', '');
+  if (c.length === 3) {
+    c = c.split('').map(ch => ch + ch).join('');
+  }
+  const num = parseInt(c, 16);
+  if (isNaN(num)) return `rgba(229, 57, 53, ${alpha})`;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function getToolIconSvg(toolName) {
+  switch (toolName) {
+    case 'rectangle':
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+    case 'pen':
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
+    case 'brush':
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34a.996.996 0 0 0-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/></svg>`;
+    case 'eraser':
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.04.79 2.83 0l3.53-3.53-4.95-4.95-4.95 4.95z"/></svg>`;
+    case 'highlighter':
+    default:
+      return `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19 17H5v2h14v-2zm-2.7-7.7l-4.6-4.6L4.7 11.7l4.6 4.6 7-7zm-.7-.7l1.4-1.4c.4-.4.4-1 0-1.4l-2.5-2.5c-.4-.4-1-.4-1.4 0l-1.4 1.4 3.9 3.9z"/></svg>`;
+  }
+}
+
+function getToolLabel(toolName) {
+  const map = {
+    rectangle: 'Rectangle',
+    pen: 'Pen',
+    highlighter: 'Highlighter',
+    brush: 'Brush',
+    eraser: 'Eraser'
+  };
+  return map[toolName] || 'Highlighter';
+}
+
+function resizeAnnotationCanvas() {
+  const canvas = $('annotationCanvas');
+  const frame = $('mushafBorderedFrame');
+  if (!canvas || !frame) return;
+
+  const rect = frame.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const targetW = Math.round(rect.width * dpr);
+  const targetH = Math.round(rect.height * dpr);
+
+  if (canvas.width !== targetW || canvas.height !== targetH) {
+    let temp = null;
+    if (canvas.width > 0 && canvas.height > 0) {
+      temp = document.createElement('canvas');
+      temp.width = canvas.width;
+      temp.height = canvas.height;
+      temp.getContext('2d').drawImage(canvas, 0, 0);
+    }
+
+    canvas.width = targetW;
+    canvas.height = targetH;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    if (temp) {
+      ctx.drawImage(temp, 0, 0, rect.width, rect.height);
+    }
+  }
+}
+
+function getCanvasCoords(e) {
+  const canvas = $('annotationCanvas');
+  if (!canvas) return { x: 0, y: 0 };
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+}
+
+function saveCurrentPageAnnotation() {
+  const canvas = $('annotationCanvas');
+  if (!canvas || !state.page) return;
+
+  try {
+    const key = `nur-annot-page-${state.page}`;
+    const dataUrl = canvas.toDataURL('image/png');
+    if (dataUrl && dataUrl.length > 300) {
+      localStorage.setItem(key, dataUrl);
+    } else {
+      localStorage.removeItem(key);
+    }
+  } catch (err) {
+    console.warn('Unable to save drawing to localStorage:', err);
+  }
+}
+
+function loadPageAnnotation(page) {
+  const canvas = $('annotationCanvas');
+  if (!canvas) return;
+
+  resizeAnnotationCanvas();
+  const ctx = canvas.getContext('2d');
+
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  const key = `nur-annot-page-${page}`;
+  const saved = localStorage.getItem(key);
+  if (!saved) return;
+
+  const img = new Image();
+  img.onload = () => {
+    const frame = $('mushafBorderedFrame');
+    if (!frame) return;
+    const rect = frame.getBoundingClientRect();
+    ctx.drawImage(img, 0, 0, rect.width, rect.height);
+  };
+  img.src = saved;
+}
+
+function clearPageAnnotation(page) {
+  const canvas = $('annotationCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+
+  localStorage.removeItem(`nur-annot-page-${page}`);
+}
+
+function toggleAnnotationSuite(forceOpen = null) {
+  const toolbar = $('annotationToolbar');
+  const canvas = $('annotationCanvas');
+  if (!toolbar || !canvas) return;
+
+  const isCurrentlyOpen = !toolbar.classList.contains('hidden');
+  const shouldOpen = forceOpen !== null ? forceOpen : !isCurrentlyOpen;
+
+  if (shouldOpen) {
+    toolbar.classList.remove('hidden');
+    canvas.classList.add('active-mode');
+    annotState.isActive = true;
+    resizeAnnotationCanvas();
+    showToast('✏️ Notes & Study Tools Active');
+  } else {
+    saveCurrentPageAnnotation();
+    toolbar.classList.add('hidden');
+    canvas.classList.remove('active-mode');
+    annotState.isActive = false;
+    $('colorPalettePopup')?.classList.add('hidden');
+    $('drawingToolsSheet')?.classList.add('hidden');
+    $('drawingToolsBackdrop')?.classList.add('hidden');
+  }
+}
+
+function setActiveTool(tool) {
+  annotState.activeTool = tool;
+  document.querySelectorAll('.drawing-tool-card').forEach(card => {
+    card.classList.toggle('active', card.dataset.tool === tool);
+  });
+
+  const labelEl = $('annotActiveToolLabel');
+  if (labelEl) labelEl.textContent = getToolLabel(tool);
+
+  const iconEl = $('annotActiveToolIcon');
+  if (iconEl) iconEl.innerHTML = getToolIconSvg(tool);
+
+  closeDrawingToolsSheet();
+}
+
+function setActiveColor(colorHex) {
+  if (!colorHex) return;
+  annotState.activeColor = colorHex;
+
+  document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.color === colorHex);
+  });
+
+  const dot = $('annotActiveColorDot');
+  if (dot) dot.style.background = colorHex;
+
+  $('colorPalettePopup')?.classList.add('hidden');
+}
+
+function toggleColorPalette() {
+  const popup = $('colorPalettePopup');
+  if (!popup) return;
+  const isHidden = popup.classList.contains('hidden');
+  if (isHidden) {
+    closeDrawingToolsSheet();
+    popup.classList.remove('hidden');
+  } else {
+    popup.classList.add('hidden');
+  }
+}
+
+function openDrawingToolsSheet() {
+  $('colorPalettePopup')?.classList.add('hidden');
+  $('drawingToolsSheet')?.classList.remove('hidden');
+  $('drawingToolsBackdrop')?.classList.remove('hidden');
+}
+
+function closeDrawingToolsSheet() {
+  $('drawingToolsSheet')?.classList.add('hidden');
+  $('drawingToolsBackdrop')?.classList.add('hidden');
+}
+
+function initAnnotationSuite() {
+  const canvas = $('annotationCanvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Resize canvas when Mushaf frame dimensions update
+  if (window.ResizeObserver && $('mushafBorderedFrame')) {
+    new ResizeObserver(() => resizeAnnotationCanvas()).observe($('mushafBorderedFrame'));
+  }
+  window.addEventListener('resize', () => resizeAnnotationCanvas());
+
+  // 1. Pointer Event Handlers for Drawing & Highlighting
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!annotState.isActive) return;
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+
+    const coords = getCanvasCoords(e);
+    annotState.isDrawing = true;
+    annotState.startX = coords.x;
+    annotState.startY = coords.y;
+    annotState.lastX = coords.x;
+    annotState.lastY = coords.y;
+
+    if (annotState.activeTool === 'rectangle') {
+      annotState.snapshotCanvas = document.createElement('canvas');
+      annotState.snapshotCanvas.width = canvas.width;
+      annotState.snapshotCanvas.height = canvas.height;
+      annotState.snapshotCanvas.getContext('2d').drawImage(canvas, 0, 0);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(coords.x, coords.y);
+      applyToolStyles(ctx);
+      ctx.lineTo(coords.x, coords.y);
+      ctx.stroke();
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!annotState.isDrawing || !annotState.isActive) return;
+    e.preventDefault();
+
+    const coords = getCanvasCoords(e);
+
+    if (annotState.activeTool === 'rectangle') {
+      if (!annotState.snapshotCanvas) return;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(annotState.snapshotCanvas, 0, 0);
+      ctx.restore();
+
+      const rx = Math.min(annotState.startX, coords.x);
+      const ry = Math.min(annotState.startY, coords.y);
+      const rw = Math.abs(coords.x - annotState.startX);
+      const rh = Math.abs(coords.y - annotState.startY);
+
+      ctx.save();
+      ctx.fillStyle = hexToRgba(annotState.activeColor, 0.16);
+      ctx.strokeStyle = annotState.activeColor;
+      ctx.lineWidth = 2;
+      ctx.fillRect(rx, ry, rw, rh);
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(annotState.lastX, annotState.lastY);
+      applyToolStyles(ctx);
+      ctx.lineTo(coords.x, coords.y);
+      ctx.stroke();
+      annotState.lastX = coords.x;
+      annotState.lastY = coords.y;
+    }
+  });
+
+  const endDrawing = (e) => {
+    if (!annotState.isDrawing) return;
+    annotState.isDrawing = false;
+    annotState.snapshotCanvas = null;
+    saveCurrentPageAnnotation();
+  };
+
+  canvas.addEventListener('pointerup', endDrawing);
+  canvas.addEventListener('pointercancel', endDrawing);
+
+  function applyToolStyles(targetCtx) {
+    switch (annotState.activeTool) {
+      case 'highlighter':
+        targetCtx.globalCompositeOperation = 'source-over';
+        targetCtx.strokeStyle = hexToRgba(annotState.activeColor, 0.38);
+        targetCtx.lineWidth = 22;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
+        break;
+      case 'pen':
+        targetCtx.globalCompositeOperation = 'source-over';
+        targetCtx.strokeStyle = annotState.activeColor;
+        targetCtx.lineWidth = 2.5;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
+        break;
+      case 'brush':
+        targetCtx.globalCompositeOperation = 'source-over';
+        targetCtx.strokeStyle = hexToRgba(annotState.activeColor, 0.85);
+        targetCtx.lineWidth = 7;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
+        break;
+      case 'eraser':
+        targetCtx.globalCompositeOperation = 'destination-out';
+        targetCtx.lineWidth = 26;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
+        break;
+      default:
+        targetCtx.globalCompositeOperation = 'source-over';
+        targetCtx.strokeStyle = annotState.activeColor;
+        targetCtx.lineWidth = 3;
+        targetCtx.lineCap = 'round';
+        targetCtx.lineJoin = 'round';
+        break;
+    }
+  }
+
+  // 2. Toolbar Event Listeners
+  $('annotColorBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleColorPalette();
+  });
+
+  $('annotToolBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openDrawingToolsSheet();
+  });
+
+  $('annotNotesBtn')?.addEventListener('click', () => {
+    toggleTafsirDrawer();
+  });
+
+  $('annotClearBtn')?.addEventListener('click', () => {
+    clearPageAnnotation(state.page);
+    showToast('Page markings cleared');
+  });
+
+  $('annotCloseBtn')?.addEventListener('click', () => {
+    toggleAnnotationSuite(false);
+  });
+
+  // 3. Color Chips Listeners
+  document.querySelectorAll('.color-chip[data-color]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setActiveColor(chip.dataset.color);
+    });
+  });
+
+  $('rainbowColorBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    $('customColorPicker')?.click();
+  });
+
+  $('customColorPicker')?.addEventListener('input', (e) => {
+    setActiveColor(e.target.value);
+  });
+
+  // 4. Drawing Tool Cards Listeners
+  document.querySelectorAll('.drawing-tool-card[data-tool]').forEach(card => {
+    card.addEventListener('click', () => {
+      setActiveTool(card.dataset.tool);
+    });
+  });
+
+  $('closeDrawingTools')?.addEventListener('click', () => {
+    closeDrawingToolsSheet();
+  });
+
+  $('drawingToolsBackdrop')?.addEventListener('click', () => {
+    closeDrawingToolsSheet();
+  });
+
+  // 5. Hide color palette on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#colorPalettePopup') && !e.target.closest('#annotColorBtn')) {
+      $('colorPalettePopup')?.classList.add('hidden');
+    }
+  });
+}
 
 // Expose globals for inline HTML event handlers & dynamic router
 window.openReader = openReader;
@@ -2569,3 +3015,7 @@ window.handleRoute = handleRoute;
 window.exportBackup = exportBackup;
 window.showToast = showToast;
 window.toggleTafsirDrawer = toggleTafsirDrawer;
+window.toggleAnnotationSuite = toggleAnnotationSuite;
+window.saveCurrentPageAnnotation = saveCurrentPageAnnotation;
+window.loadPageAnnotation = loadPageAnnotation;
+window.clearPageAnnotation = clearPageAnnotation;
