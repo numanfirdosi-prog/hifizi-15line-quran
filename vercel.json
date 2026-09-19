@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "cleanUrls": true,
+  "cleanUrls": false,
   "framework": null,
   "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/index.html", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/sw.js",
@@ -20,6 +24,10 @@
     {
       "source": "/manifest.json",
       "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
         {
           "key": "Content-Type",
           "value": "application/manifest+json; charset=utf-8"

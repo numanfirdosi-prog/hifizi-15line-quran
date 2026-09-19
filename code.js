@@ -2587,8 +2587,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Service Worker Registration for PWA Offline Functionality
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Nūr Al-Quran Service Worker active:', reg.scope))
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => {
+          console.log('Nūr Al-Quran Service Worker active:', reg.scope);
+          if (reg.update) reg.update();
+        })
         .catch(err => console.log('Service Worker registration failed:', err));
     });
   }

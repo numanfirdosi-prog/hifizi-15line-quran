@@ -3,9 +3,11 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v2.5.0';
+const CACHE_NAME = 'nur-al-quran-v2.6.0';
 
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   './',
   './index.html',
   './code.js',
@@ -23,9 +25,15 @@ const STATIC_ASSETS = [
 // Install Event - Precache App Shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
       console.log('[SW] Precaching Nūr Al-Quran core assets');
-      return cache.addAll(STATIC_ASSETS);
+      for (const asset of STATIC_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn('[SW] Failed to precache:', asset, err);
+        }
+      }
     }).then(() => self.skipWaiting())
   );
 });
@@ -90,7 +98,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static Local Assets: Cache-first
+  // Navigation requests (HTML document): Network-first with fallback to cached index
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          const rootCached = (await caches.match('/')) || 
+                             (await caches.match('/index.html')) || 
+                             (await caches.match('./index.html'));
+          if (rootCached) return rootCached;
+          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+        })
+    );
+    return;
+  }
+
+  // Static Local Assets: Cache-first with network fallback
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -101,10 +133,8 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       });
-    }).catch(() => {
-      if (event.request.mode === 'navigate') {
-        return caches.match('./index.html');
-      }
+    }).catch(async () => {
+      return new Response('Offline resource not found', { status: 503, headers: { 'Content-Type': 'text/plain' } });
     })
   );
 });
