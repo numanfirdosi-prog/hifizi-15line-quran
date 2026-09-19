@@ -1062,16 +1062,24 @@
 
 				<!-- Center Mushaf Card (From Step 1 - Complete 15 Line / Lauh) -->
 				<div class="quran-page" id="quranPageContainer">
+					<!-- Hanging Bookmark Ribbon in Top Right (Screenshots 1-4) -->
+					<button class="mushaf-ribbon-bookmark" id="mushafRibbonBookmark" title="Toggle Bookmark" aria-label="Bookmark page">
+						<svg viewBox="0 0 24 32" width="18" height="26" fill="currentColor">
+							<path d="M2 0h20v30l-10-6-10 6V0z"/>
+						</svg>
+					</button>
+
 					<div class="mushaf-header-bar" id="mushafHeaderBar">
 						<span class="mushaf-header-surah" id="mushafHeaderSurah">سُورَةُ الْبَقَرَةِ ۲</span>
-						<span class="mushaf-header-page" id="mushafHeaderPage">2 / <b>٢</b></span>
-						<span class="mushaf-header-juz" id="mushafHeaderJuz">تِلْكَ الرُّسُلُ ۳</span>
+						<span class="mushaf-header-page" id="mushafHeaderPage">4 / <b>۲</b></span>
+						<span class="mushaf-header-juz" id="mushafHeaderJuz">الٓمّٓ ۱</span>
 					</div>
 					<div class="mushaf-layout-wrapper">
 						<aside class="mushaf-side-margin" id="mushafSideMargin">
 							<span class="margin-badge juz-badge" id="mushafMarginJuz">الْجُزْءُ ۱</span>
-							<span class="margin-badge ruku-badge" id="mushafMarginRuku">۱<small>ع</small></span>
-							<span class="margin-badge waqf-badge">احتياط</span>
+							<span class="margin-badge ruku-badge" id="mushafMarginRuku">۲/ع</span>
+							<span class="margin-badge waqf-badge">وقف لازم</span>
+							<span class="margin-vertical-note" id="mushafMarginNote">اِحْتِيَاطٌ ↓</span>
 						</aside>
 						<div class="mushaf-bordered-frame" id="mushafBorderedFrame">
 							<div class="reader-status" id="readerStatus">Loading verified Quran text...</div>
@@ -1080,12 +1088,50 @@
 						</div>
 					</div>
 					<div class="mushaf-footer-bar" id="mushafFooterBar">
+						<!-- Floating Circular Notepad Action Button (Screenshots 1-4) -->
+						<button class="mushaf-floating-note-btn" id="floatingNoteBtn" title="Study & Notes (Drawing, Highlighting, Reflection)" aria-label="Study & Notes">
+							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+								<polyline points="14 2 14 8 20 8"></polyline>
+								<line x1="16" y1="13" x2="8" y2="13"></line>
+								<line x1="16" y1="17" x2="8" y2="17"></line>
+								<line x1="10" y1="9" x2="8" y2="9"></line>
+							</svg>
+						</button>
 						<span class="mushaf-footer-manzil" id="mushafFooterManzil">منزل ۱</span>
 					</div>
 				</div>
 			</div>
 
-			<!-- Bottom Page Navigation Bar (Screenshot 1) -->
+			<!-- Bottom Audio & Recitation Deck (Screenshots 1-4) -->
+			<div class="reader-bottom-deck" id="readerBottomDeck">
+				<button class="deck-item-btn" id="deckSpeedBtn" title="Recitation Speed">
+					<span class="deck-item-val" id="deckSpeedVal">1x</span>
+					<span class="deck-item-lbl">Speed</span>
+				</button>
+				<button class="deck-item-btn deck-play-wrap" id="deckPlayBtn" title="Play / Pause Recitation">
+					<div class="deck-circle-play" id="deckPlayIcon">▶</div>
+					<span class="deck-item-lbl" id="deckPlayLabel">Play</span>
+				</button>
+				<button class="deck-item-btn" id="deckRepeatBtn" title="Repeat Ayah Mode">
+					<div class="deck-repeat-box">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+							<path d="M17 1l4 4-4 4"></path>
+							<path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+							<path d="M7 23l-4-4 4-4"></path>
+							<path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+						</svg>
+						<span class="deck-repeat-badge" id="deckRepeatNum">1</span>
+					</div>
+					<span class="deck-item-lbl">Repeat</span>
+				</button>
+				<button class="deck-item-btn" id="deckMoreBtn" title="More Options & Qaris">
+					<span class="deck-dots-icon">⋮</span>
+					<span class="deck-item-lbl">Options</span>
+				</button>
+			</div>
+
+			<!-- Bottom Page Navigation Bar (Slide / Jump) -->
 			<div class="bottom-page-nav-bar">
 				<button class="btn-outline-green" id="prevPage">← Prev Page</button>
 				<div class="page-jump-slider-wrap">

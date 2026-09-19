@@ -3361,5 +3361,350 @@ body.theme-parchment select option {
   }
 }
 
+/* ==========================================================================
+   AUTHENTIC 15-LINE MUSHAF DESIGN (Matched to User Reference Screenshots)
+   ========================================================================== */
+
+/* 1. Hanging Ribbon Bookmark at Top Right (Screenshots 1-4) */
+.mushaf-ribbon-bookmark {
+  position: absolute;
+  top: -1px;
+  right: 22px;
+  width: 24px;
+  height: 38px;
+  background: var(--bg-surface, #ffffff);
+  border: 1.5px solid var(--mushaf-border-green, #617f46);
+  border-top: none;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 78%, 0% 100%);
+  z-index: 25;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 6px;
+  color: var(--mushaf-border-green, #617f46);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.mushaf-ribbon-bookmark:hover {
+  height: 44px;
+  transform: translateY(2px);
+}
+
+.mushaf-ribbon-bookmark.bookmarked {
+  background: var(--mushaf-border-green, #295738) !important;
+  color: #ffd700 !important;
+  border-color: var(--mushaf-border-gold, #c99e32) !important;
+  box-shadow: 0 4px 12px rgba(41, 87, 56, 0.35);
+  height: 42px;
+}
+
+/* 2. Floating Circular Notepad Action Button (Screenshots 1-4) */
+.mushaf-floating-note-btn {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card-subtle, #eef4e8);
+  border: 1.5px solid var(--border-line, rgba(97, 127, 70, 0.3));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mushaf-border-green, #4e6e37);
+  cursor: pointer;
+  z-index: 25;
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+  outline: none;
+}
+
+.mushaf-floating-note-btn:hover {
+  transform: scale(1.1);
+  background: #e2ecd9;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.mushaf-floating-note-btn:active {
+  transform: scale(0.94);
+}
+
+body.dark .mushaf-floating-note-btn {
+  background: #25392d;
+  border-color: #4a6652;
+  color: #9eccad;
+}
+
+/* 3. The Authentic Interlaced Chain Border for 15-Line Frame */
+.mushaf-bordered-frame {
+  flex: 1;
+  position: relative;
+  background: var(--mushaf-paper);
+  border: 11px solid transparent;
+  border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='0' y='0' width='32' height='32' fill='%23fdfcf7'/%3E%3Cline x1='0' y1='3' x2='32' y2='3' stroke='%23648247' stroke-width='1.5'/%3E%3Cline x1='0' y1='29' x2='32' y2='29' stroke='%23648247' stroke-width='1.5'/%3E%3Cline x1='3' y1='0' x2='3' y2='32' stroke='%23648247' stroke-width='1.5'/%3E%3Cline x1='29' y1='0' x2='29' y2='32' stroke='%23648247' stroke-width='1.5'/%3E%3Cpath d='M0 16 Q8 6 16 16 Q24 26 32 16' stroke='%23648247' stroke-width='1.8' fill='none'/%3E%3Cpath d='M0 16 Q8 26 16 16 Q24 6 32 16' stroke='%23c19b38' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  border-image-slice: 10 fill;
+  border-image-repeat: repeat;
+  border-radius: 4px;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 0 0 1px rgba(100, 130, 71, 0.25);
+}
+
+body.dark .mushaf-bordered-frame {
+  border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='0' y='0' width='32' height='32' fill='%23192720'/%3E%3Cline x1='0' y1='3' x2='32' y2='3' stroke='%23416e51' stroke-width='1.5'/%3E%3Cline x1='0' y1='29' x2='32' y2='29' stroke='%23416e51' stroke-width='1.5'/%3E%3Cline x1='3' y1='0' x2='3' y2='32' stroke='%23416e51' stroke-width='1.5'/%3E%3Cline x1='29' y1='0' x2='29' y2='32' stroke='%23416e51' stroke-width='1.5'/%3E%3Cpath d='M0 16 Q8 6 16 16 Q24 26 32 16' stroke='%23416e51' stroke-width='1.8' fill='none'/%3E%3Cpath d='M0 16 Q8 26 16 16 Q24 6 32 16' stroke='%239f7d29' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  box-shadow: inset 0 0 0 1px rgba(65, 110, 81, 0.35);
+}
+
+/* 4. Lauh Arch Structure (Screenshots 3 & 4) */
+.lauh-twin-badges {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.lauh-badge-oval {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 14px;
+  background: #ffffff;
+  border: 1.5px solid var(--mushaf-border-green, #648247);
+  border-radius: 18px;
+  font-family: 'Amiri', serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+body.dark .lauh-badge-oval {
+  background: #1c2b23;
+  border-color: #4b735a;
+}
+
+.lauh-badge-oval .badge-label {
+  font-size: 13px;
+  color: var(--text-secondary, #4a6352);
+  font-weight: bold;
+}
+
+.lauh-badge-oval .badge-val {
+  font-size: 15px;
+  color: var(--mushaf-border-green, #295738);
+  font-weight: bold;
+}
+
+.lauh-surah-tablet {
+  background: linear-gradient(135deg, #fffcf2 0%, #f7ecd2 50%, #fffcf2 100%);
+  border: 1.8px solid var(--mushaf-border-green, #648247);
+  border-radius: 20px;
+  padding: 5px 24px;
+  font-family: 'Amiri', serif;
+  font-size: 19px;
+  font-weight: bold;
+  color: var(--mushaf-ink, #12241b);
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  margin-bottom: 6px;
+  max-width: 94%;
+}
+
+body.dark .lauh-surah-tablet {
+  background: linear-gradient(135deg, #25372d 0%, #30473a 50%, #25372d 100%);
+  border-color: #4b735a;
+  color: #f0f7f2;
+}
+
+.lauh-bismillah-cartouche {
+  background: linear-gradient(135deg, #fffcf2 0%, #f7ecd2 50%, #fffcf2 100%);
+  border: 1.5px solid var(--mushaf-border-gold, #c49d3e);
+  border-radius: 20px;
+  padding: 5px 20px;
+  font-family: 'Amiri', serif;
+  font-size: 21px;
+  color: var(--mushaf-ink, #12241b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+body.dark .lauh-bismillah-cartouche {
+  background: linear-gradient(135deg, #25372d 0%, #30473a 50%, #25372d 100%);
+  border-color: #9f7d29;
+  color: #f0f7f2;
+}
+
+.lauh-verses-table {
+  width: 100%;
+  border: 1.5px solid var(--mushaf-border-green, #648247);
+  border-radius: 4px;
+  background: var(--mushaf-paper);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.dark .lauh-verses-table {
+  border-color: #416e51;
+}
+
+.lauh-verse-row {
+  min-height: 48px;
+  border-bottom: 1px solid var(--mushaf-rule, #dbe4d8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-family: 'Amiri', serif;
+  font-size: 23px;
+  line-height: 48px;
+  color: var(--mushaf-ink);
+  direction: rtl;
+}
+
+.lauh-verse-row:last-child {
+  border-bottom: none;
+}
+
+/* 5. 15 Ruled Lines on Standard Pages */
+.margin-vertical-note {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: 'Amiri', serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--mushaf-border-green, #4e6e37);
+  letter-spacing: 1px;
+  padding-top: 8px;
+}
+
+body.dark .margin-vertical-note {
+  color: #9eccad;
+}
+
+/* 6. Clean Bottom Audio & Recitation Deck (Screenshots 1-4) */
+.reader-bottom-deck {
+  position: fixed;
+  bottom: 0;
+  left: 240px;
+  right: 0;
+  height: 64px;
+  background: var(--bg-surface, #ffffff);
+  border-top: 1px solid var(--border-line);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 32px;
+  z-index: 40;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 900px) {
+  .reader-bottom-deck {
+    left: 0;
+    padding: 0 14px;
+  }
+}
+
+.deck-item-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  transition: all 0.16s ease;
+  min-width: 56px;
+  user-select: none;
+}
+
+.deck-item-btn:hover {
+  background: var(--bg-card-subtle);
+  color: var(--text-primary);
+}
+
+.deck-item-btn:active {
+  transform: scale(0.95);
+}
+
+.deck-item-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.deck-item-lbl {
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  color: var(--text-secondary);
+}
+
+.deck-play-wrap {
+  margin-top: -6px;
+}
+
+.deck-circle-play {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #111827;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.16s ease;
+}
+
+body.dark .deck-circle-play {
+  background: #1f2937;
+  border-color: #e5e7eb;
+  color: #22c55e;
+}
+
+.deck-play-wrap:hover .deck-circle-play {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
+}
+
+.deck-repeat-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deck-repeat-badge {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.deck-dots-icon {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: bold;
+}
+
+
 
 

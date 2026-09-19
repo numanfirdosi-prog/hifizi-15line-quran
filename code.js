@@ -675,6 +675,27 @@ const offlineFallbackPages = {
   }
 };
 
+function updateReaderDeckUI() {
+  const audio = $('quranAudio');
+  const isPlaying = audio && !audio.paused;
+
+  const playIcon = $('deckPlayIcon');
+  const playLabel = $('deckPlayLabel');
+  if (playIcon) playIcon.textContent = isPlaying ? '⏸' : '▶';
+  if (playLabel) playLabel.textContent = isPlaying ? 'Pause' : 'Play';
+
+  const speedVal = $('deckSpeedVal');
+  if (speedVal && audio) {
+    speedVal.textContent = `${audio.playbackRate || 1}x`;
+  }
+
+  const repeatNum = $('deckRepeatNum');
+  if (repeatNum) {
+    const r = $('audioRepeat')?.value || 'off';
+    repeatNum.textContent = r === 'ayah' ? '1' : (r === 'page' ? 'P' : '0');
+  }
+}
+
 async function loadQuranPage(page) {
   const status = $('readerStatus');
   const ayahs = $('readerAyahs');
@@ -736,34 +757,40 @@ async function loadQuranPage(page) {
     if ($('pageSlider')) $('pageSlider').value = page;
     if ($('pageNumber')) $('pageNumber').textContent = page;
 
-    // Mushaf Page Margins & Header
+    // Mushaf Page Margins & Header (Screenshots 1-4)
     if ($('mushafHeaderSurah')) $('mushafHeaderSurah').textContent = `سُورَةُ ${cleanSurahName} ${toArabicDigits(surahNum)}`;
     if ($('mushafHeaderPage')) $('mushafHeaderPage').innerHTML = `${page} / <b>${toArabicDigits(page)}</b>`;
     if ($('mushafHeaderJuz')) $('mushafHeaderJuz').textContent = `${juzArabicNames[juzNum - 1] || 'الم'} ${toArabicDigits(juzNum)}`;
     if ($('mushafMarginJuz')) $('mushafMarginJuz').textContent = `الْجُزْءُ ${toArabicDigits(juzNum)}`;
-    if ($('mushafMarginRuku')) $('mushafMarginRuku').innerHTML = `${toArabicDigits(page)}<small>ع</small>`;
+    if ($('mushafMarginRuku')) $('mushafMarginRuku').innerHTML = `${toArabicDigits(rukuNum)}<small>ع</small>`;
+    if ($('mushafMarginNote')) $('mushafMarginNote').textContent = (page % 2 === 0 ? 'اِحْتِيَاطٌ ↓' : 'مُعَانَقَةٌ ↓');
     if ($('mushafFooterManzil')) $('mushafFooterManzil').textContent = `منزل ${toArabicDigits(manzil)}`;
 
-    // Sync Bottom Audio Player Track Info
+    // Sync Ribbon Bookmark state
+    const isBookmarked = state.bookmarks.includes(page);
+    $('mushafRibbonBookmark')?.classList.toggle('bookmarked', isBookmarked);
+
+    // Sync Bottom Audio Player Track Info & Deck
     if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(surahNum);
     if ($('playerSurahTitle')) $('playerSurahTitle').textContent = `سُورَةُ ${cleanSurahName}`;
     if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Surah ${firstSurah.englishName} · Ready to recite`;
+    updateReaderDeckUI();
 
     let html = '';
 
     if (page === 1) {
-      // Surah Al-Fatihah (Illuminated Lauh Arch)
+      // Surah Al-Fatihah (Illuminated Lauh Arch - Screenshot 4)
       const fatihahAyahs = pageAyahs;
       html += `
         <div class="lauh-page-container">
-          <div class="lauh-arch-header">
-            <div class="lauh-arch-niche">
-              <div class="lauh-cartouche-surah">سُوْرَةُ الفَاتِحَةِ مَكِّيَّةٌ وَهِيَ سَبْعُ آيَاتٍ</div>
-              <div class="lauh-cartouche-bismillah" data-surah="1" data-ayah="${fatihahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
-                <button class="bismillah-play" data-surah="1" data-ayah="${fatihahAyahs[0].number}" aria-label="Play Bismillah">▶</button>
-                <span class="lauh-bismillah-text">بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
-              </div>
-            </div>
+          <div class="lauh-twin-badges">
+            <div class="lauh-badge-oval"><span class="badge-label">رُكُوْعَاتُهَا</span><span class="badge-val">۱</span></div>
+            <div class="lauh-badge-oval"><span class="badge-label">آيَاتُهَا</span><span class="badge-val">۷</span></div>
+          </div>
+          <div class="lauh-surah-tablet">(۱) سُوْرَةُ الفَاتِحَةِ مَكِّيَّةٌ (۵)</div>
+          <div class="lauh-bismillah-cartouche bismillah-play" data-surah="1" data-ayah="${fatihahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
+            <span style="font-size:15px;margin-left:8px;color:#16a34a;">▶</span>
+            <span>بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
           </div>
           <div class="lauh-verses-table">`;
 
@@ -785,18 +812,18 @@ async function loadQuranPage(page) {
         <div class="tajweed-footer-guide">غنہ: نون اور میم پر تشدید ہو تو غنہ ہو گا۔ قلقلہ: حروفِ قلقلہ پانچ ہیں (ق، ط، ب، ج، د)</div>
       </div>`;
     } else if (page === 2) {
-      // Surah Al-Baqarah (Illuminated Lauh Arch Spread)
+      // Surah Al-Baqarah (Illuminated Lauh Arch Spread - Screenshot 3)
       const baqarahAyahs = pageAyahs;
       html += `
         <div class="lauh-page-container">
-          <div class="lauh-arch-header">
-            <div class="lauh-arch-niche">
-              <div class="lauh-cartouche-surah">سُوْرَةُ البَقَرَةِ مَدَنِيَّةٌ وَهِيَ ٢٨٦ آيَةً</div>
-              <div class="lauh-cartouche-bismillah" data-surah="2" data-ayah="${baqarahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
-                <button class="bismillah-play" data-surah="2" data-ayah="${baqarahAyahs[0].number}" aria-label="Play Bismillah">▶</button>
-                <span class="lauh-bismillah-text">بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
-              </div>
-            </div>
+          <div class="lauh-twin-badges">
+            <div class="lauh-badge-oval"><span class="badge-label">رُكُوْعَاتُهَا</span><span class="badge-val">۴۰</span></div>
+            <div class="lauh-badge-oval"><span class="badge-label">آيَاتُهَا</span><span class="badge-val">۲۸۶</span></div>
+          </div>
+          <div class="lauh-surah-tablet">(۲) سُوْرَةُ البَقَرَةِ مَدَنِيَّةٌ (۸۷)</div>
+          <div class="lauh-bismillah-cartouche bismillah-play" data-surah="2" data-ayah="${baqarahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
+            <span style="font-size:15px;margin-left:8px;color:#16a34a;">▶</span>
+            <span>بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
           </div>
           <div class="lauh-verses-table">`;
 
@@ -2271,6 +2298,76 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(`Holy Quran 15-Line Mushaf · Page ${state.page}`);
       showToast('Page reference copied');
+    }
+  });
+
+  // Hanging Ribbon Bookmark at Top Right (Screenshots 1-4)
+  $('mushafRibbonBookmark')?.addEventListener('click', () => {
+    const p = state.page;
+    if (state.bookmarks.includes(p)) {
+      state.bookmarks = state.bookmarks.filter(b => b !== p);
+      $('mushafRibbonBookmark')?.classList.remove('bookmarked');
+      showToast(`Page ${p} removed from bookmarks`);
+    } else {
+      state.bookmarks.push(p);
+      $('mushafRibbonBookmark')?.classList.add('bookmarked');
+      showToast(`Page ${p} saved to bookmarks ⚑`);
+    }
+    saveState();
+    updateBookmarkButton();
+    updateKhatmTracker();
+  });
+
+  // Floating Circular Notepad Action Button (Screenshots 1-4)
+  $('floatingNoteBtn')?.addEventListener('click', () => {
+    toggleAnnotationSuite();
+  });
+
+  // Clean Reader Audio Deck (Screenshots 1-4)
+  $('deckPlayBtn')?.addEventListener('click', () => {
+    const audio = $('quranAudio');
+    if (audio) {
+      if (audio.paused) {
+        if (!audio.src && audioState.ayahs.length) {
+          playAyah(audioState.ayahs[0].number, true);
+        } else {
+          audio.play();
+        }
+      } else {
+        audio.pause();
+      }
+    }
+    updateReaderDeckUI();
+  });
+
+  const speedCycle = [1.0, 1.25, 1.5, 0.75];
+  let speedIdx = 0;
+  $('deckSpeedBtn')?.addEventListener('click', () => {
+    speedIdx = (speedIdx + 1) % speedCycle.length;
+    const newSpeed = speedCycle[speedIdx];
+    const audio = $('quranAudio');
+    if (audio) audio.playbackRate = newSpeed;
+    if ($('audioSpeed')) $('audioSpeed').value = newSpeed;
+    if ($('deckSpeedVal')) $('deckSpeedVal').textContent = `${newSpeed}x`;
+    showToast(`Recitation speed: ${newSpeed}x`);
+  });
+
+  const repeatCycle = ['off', 'ayah', 'page'];
+  let repeatIdx = 0;
+  $('deckRepeatBtn')?.addEventListener('click', () => {
+    repeatIdx = (repeatIdx + 1) % repeatCycle.length;
+    const newRepeat = repeatCycle[repeatIdx];
+    if ($('audioRepeat')) $('audioRepeat').value = newRepeat;
+    if ($('deckRepeatNum')) $('deckRepeatNum').textContent = newRepeat === 'ayah' ? '1' : (newRepeat === 'page' ? 'P' : '0');
+    showToast(newRepeat === 'ayah' ? 'Repeating Ayah (1)' : (newRepeat === 'page' ? 'Repeating Page' : 'Repeat Off'));
+  });
+
+  $('deckMoreBtn')?.addEventListener('click', () => {
+    const popover = $('headerQariPopover');
+    if (popover) {
+      popover.classList.toggle('hidden');
+    } else {
+      showToast('Select reciter or adjust settings in header');
     }
   });
 
