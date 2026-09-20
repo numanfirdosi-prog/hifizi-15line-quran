@@ -611,6 +611,9 @@ function openReader(surahIndex = null, syncHash = true) {
       return;
     }
   }
+  // Ensure Tafsir commentary drawer is closed so the Quran page opens full screen
+  toggleTafsirDrawer(false);
+
   $('readerOverlay')?.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   syncResume();
