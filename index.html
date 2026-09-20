@@ -17,11 +17,11 @@
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
 	<link rel="stylesheet" href="mushaf-15line.css">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.1">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.2">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
-			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua) || (window.innerWidth <= 1024) || (screen && screen.width <= 900);
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
 			if (isMobile) {
 				document.documentElement.classList.add('is-mobile-app');
 			}
@@ -344,7 +344,6 @@
 							<button class="btn-outline-green" style="width:100%;justify-content:center;" onclick="showToast('IndexedDB storage verified 100% integral')">↺ Force Integrity Recheck</button>
 						</div>
 					</div>
-				</div>
 			</section>
 
 			<!-- 2. SURAHS LIST VIEW (Screenshot 3) -->
@@ -1406,7 +1405,7 @@
 		<div id="surahList"></div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=2.9.1"></script>
-	<script src="code.js?v=2.9.1"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=2.9.2"></script>
+	<script src="code.js?v=2.9.2"></script>
 </body>
 </html>

@@ -10,9 +10,9 @@ function detectAndApplyMobile() {
   const ua = navigator.userAgent || '';
   const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
   const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  const isNarrow = window.innerWidth <= 1024 || (screen && screen.width <= 900);
+  const isNarrowMobile = (isTouch && window.innerWidth <= 768);
   
-  if (isMobileUA || (isTouch && isNarrow) || window.innerWidth <= 1024) {
+  if (isMobileUA || isNarrowMobile) {
     document.documentElement.classList.add('is-mobile-app');
     if (document.body) document.body.classList.add('is-mobile-app');
   } else {
@@ -969,57 +969,162 @@ async function renderPageAyahOverlay(page) {
   // Title pages (page 1) don't have Quran ayahs
   if (page === 1) return;
 
-  // Create 15 interactive line rows with exact sub-line ayah segments
-  for (let l = 1; l <= 15; l++) {
-    const lineRow = document.createElement('div');
-    lineRow.className = 'mushaf-line-row';
-    lineRow.dataset.line = l;
+  // Special Handling for Ornamental Frontispiece (Lauh) Opening Pages: Page 2 & Page 3
+  if (page === 2 || page === 3) {
+    overlay.classList.add('page-lauh-overlay');
 
-    // Collect all ayah segments on line l
-    const segsOnLine = [];
-    ayahs.forEach(ayah => {
-      if (ayah.segments && ayah.segments.length) {
-        ayah.segments.filter(s => s.line === l).forEach(s => {
-          segsOnLine.push({ ayah, segment: s });
-        });
-      } else if (ayah.lines && ayah.lines.includes(l)) {
-        segsOnLine.push({ ayah, segment: { line: l, right: 0, width: 100 } });
-      }
-    });
+    // 1. Line 0: Bismillah cartouche in the upper arch
+    const bismillahLine = document.createElement('div');
+    bismillahLine.className = 'mushaf-line-row lauh-bismillah-row';
+    bismillahLine.dataset.line = '0';
 
-    if (!segsOnLine.length) {
-      // Empty decorative row (e.g. Surah title / Bismillah banner line)
-      const emptyBand = document.createElement('div');
-      emptyBand.className = 'ayah-segment empty-line';
-      emptyBand.dataset.line = l;
-      lineRow.appendChild(emptyBand);
-    } else {
-      // Sort segments from right (0%) to left
-      segsOnLine.sort((a, b) => a.segment.right - b.segment.right);
-      segsOnLine.forEach(({ ayah, segment }) => {
+    if (page === 2) {
+      // For Surah Al-Fatihah, Bismillah is Ayah 1
+      const ayah1 = ayahs.find(a => a.numberInSurah === 1);
+      if (ayah1) {
         const segDiv = document.createElement('div');
-        segDiv.className = 'ayah-segment';
-        segDiv.dataset.line = l;
-        segDiv.dataset.ayah = ayah.number;
-        segDiv.dataset.ayahInSurah = ayah.numberInSurah;
-        segDiv.style.right = `${segment.right}%`;
-        segDiv.style.width = `${segment.width}%`;
-        segDiv.title = `Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Tap to play`;
-
+        segDiv.className = 'ayah-segment lauh-cartouche-bismillah';
+        segDiv.dataset.line = '0';
+        segDiv.dataset.ayah = ayah1.number;
+        segDiv.dataset.ayahInSurah = '1';
+        segDiv.dataset.surah = '1';
+        segDiv.style.right = '0%';
+        segDiv.style.width = '100%';
+        segDiv.title = `Ayah 1 (Bismillah) - Tap to play`;
         segDiv.addEventListener('click', (e) => {
-          // If annotation mode is active, do not trigger audio click
           if (typeof annotState !== 'undefined' && annotState.isActive) return;
           e.stopPropagation();
-          populateTafsirAyah(ayah);
-          highlightPlayingAyah(ayah.number);
-          playAyah(ayah.number, true);
+          populateTafsirAyah(ayah1);
+          highlightPlayingAyah(ayah1.number);
+          playAyah(ayah1.number, true);
         });
-
-        lineRow.appendChild(segDiv);
+        bismillahLine.appendChild(segDiv);
+      }
+    } else if (page === 3) {
+      // For Surah Al-Baqarah, Bismillah is the opening invocation
+      const segDiv = document.createElement('div');
+      segDiv.className = 'ayah-segment lauh-cartouche-bismillah';
+      segDiv.dataset.line = '0';
+      segDiv.dataset.surah = '2';
+      segDiv.style.right = '0%';
+      segDiv.style.width = '100%';
+      segDiv.title = `Bismillah - Surah Al-Baqarah`;
+      segDiv.addEventListener('click', (e) => {
+        if (typeof annotState !== 'undefined' && annotState.isActive) return;
+        e.stopPropagation();
+        const ayah1 = ayahs.find(a => a.numberInSurah === 1);
+        if (ayah1) {
+          populateTafsirAyah(ayah1);
+          highlightPlayingAyah(ayah1.number);
+          playAyah(ayah1.number, true);
+        }
       });
+      bismillahLine.appendChild(segDiv);
     }
+    overlay.appendChild(bismillahLine);
 
-    overlay.appendChild(lineRow);
+    // 2. Lines 1 to 6 inside the lower bordered box
+    for (let l = 1; l <= 6; l++) {
+      const lineRow = document.createElement('div');
+      lineRow.className = `mushaf-line-row lauh-line-row lauh-line-${l}`;
+      lineRow.dataset.line = l;
+
+      const segsOnLine = [];
+      ayahs.forEach(ayah => {
+        if (ayah.segments && ayah.segments.length) {
+          ayah.segments.filter(s => s.line === l).forEach(s => {
+            segsOnLine.push({ ayah, segment: s });
+          });
+        } else if (ayah.lines && ayah.lines.includes(l)) {
+          segsOnLine.push({ ayah, segment: { line: l, right: 0, width: 100 } });
+        }
+      });
+
+      if (!segsOnLine.length) {
+        const emptyBand = document.createElement('div');
+        emptyBand.className = 'ayah-segment empty-line';
+        emptyBand.dataset.line = l;
+        lineRow.appendChild(emptyBand);
+      } else {
+        segsOnLine.sort((a, b) => a.segment.right - b.segment.right);
+        segsOnLine.forEach(({ ayah, segment }) => {
+          const segDiv = document.createElement('div');
+          segDiv.className = 'ayah-segment';
+          segDiv.dataset.line = l;
+          segDiv.dataset.ayah = ayah.number;
+          segDiv.dataset.ayahInSurah = ayah.numberInSurah;
+          segDiv.style.right = `${segment.right}%`;
+          segDiv.style.width = `${segment.width}%`;
+          segDiv.title = `Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Tap to play`;
+
+          segDiv.addEventListener('click', (e) => {
+            if (typeof annotState !== 'undefined' && annotState.isActive) return;
+            e.stopPropagation();
+            populateTafsirAyah(ayah);
+            highlightPlayingAyah(ayah.number);
+            playAyah(ayah.number, true);
+          });
+
+          lineRow.appendChild(segDiv);
+        });
+      }
+      overlay.appendChild(lineRow);
+    }
+  } else {
+    // Standard 15-line layout for pages 4 to 611
+    overlay.classList.remove('page-lauh-overlay');
+
+    for (let l = 1; l <= 15; l++) {
+      const lineRow = document.createElement('div');
+      lineRow.className = 'mushaf-line-row';
+      lineRow.dataset.line = l;
+
+      // Collect all ayah segments on line l
+      const segsOnLine = [];
+      ayahs.forEach(ayah => {
+        if (ayah.segments && ayah.segments.length) {
+          ayah.segments.filter(s => s.line === l).forEach(s => {
+            segsOnLine.push({ ayah, segment: s });
+          });
+        } else if (ayah.lines && ayah.lines.includes(l)) {
+          segsOnLine.push({ ayah, segment: { line: l, right: 0, width: 100 } });
+        }
+      });
+
+      if (!segsOnLine.length) {
+        // Empty decorative row (e.g. Surah title / Bismillah banner line)
+        const emptyBand = document.createElement('div');
+        emptyBand.className = 'ayah-segment empty-line';
+        emptyBand.dataset.line = l;
+        lineRow.appendChild(emptyBand);
+      } else {
+        // Sort segments from right (0%) to left
+        segsOnLine.sort((a, b) => a.segment.right - b.segment.right);
+        segsOnLine.forEach(({ ayah, segment }) => {
+          const segDiv = document.createElement('div');
+          segDiv.className = 'ayah-segment';
+          segDiv.dataset.line = l;
+          segDiv.dataset.ayah = ayah.number;
+          segDiv.dataset.ayahInSurah = ayah.numberInSurah;
+          segDiv.style.right = `${segment.right}%`;
+          segDiv.style.width = `${segment.width}%`;
+          segDiv.title = `Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Tap to play`;
+
+          segDiv.addEventListener('click', (e) => {
+            // If annotation mode is active, do not trigger audio click
+            if (typeof annotState !== 'undefined' && annotState.isActive) return;
+            e.stopPropagation();
+            populateTafsirAyah(ayah);
+            highlightPlayingAyah(ayah.number);
+            playAyah(ayah.number, true);
+          });
+
+          lineRow.appendChild(segDiv);
+        });
+      }
+
+      overlay.appendChild(lineRow);
+    }
   }
 
   // Create interactive Quick Ayah Selector Pills

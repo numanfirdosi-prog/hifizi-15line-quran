@@ -1835,33 +1835,22 @@ body.theme-parchment .bottom-page-nav-bar {
   font-size: 21px;
 }
 
-/* Responsive Overrides & Mobile App Force Layout */
-.is-mobile-app .mobile-menu-btn,
+/* ==========================================================================
+   RESPONSIVE OVERRIDES (TABLET & MOBILE)
+   ========================================================================== */
 @media (max-width: 1024px) {
   .mobile-menu-btn {
     display: flex !important;
   }
-}
-
-.is-mobile-app .mobile-bottom-nav,
-@media (max-width: 1024px) {
   .mobile-bottom-nav {
     display: flex !important;
   }
-}
-
-.is-mobile-app .main-wrapper,
-@media (max-width: 1024px) {
   .main-wrapper {
     width: 100% !important;
     max-width: 100vw !important;
     margin-left: 0 !important;
     padding-bottom: 74px !important;
   }
-}
-
-.is-mobile-app .sidebar,
-@media (max-width: 1024px) {
   .sidebar {
     display: flex !important;
     position: fixed !important;
@@ -1878,10 +1867,6 @@ body.theme-parchment .bottom-page-nav-bar {
   .sidebar.open {
     left: 0 !important;
   }
-}
-
-.is-mobile-app .top-global-header,
-@media (max-width: 1024px) {
   .top-global-header {
     padding: 0 12px !important;
     height: 54px !important;
@@ -1898,12 +1883,28 @@ body.theme-parchment .bottom-page-nav-bar {
     max-width: 140px !important;
   }
   #headerQariDisplayName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     max-width: 90px !important;
   }
-}
-
-.is-mobile-app .audio-bar-v2,
-@media (max-width: 1024px) {
+  .global-search-bar {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .reader-toolbar-v2 {
+    padding: 0 10px;
+    height: 48px;
+  }
+  #readerJuzBadge,
+  #readerRukuBadge,
+  .view-mode-toggle-group {
+    display: none;
+  }
+  .page-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
   .audio-bar-v2 {
     left: 0 !important;
     bottom: 58px !important;
@@ -1911,16 +1912,6 @@ body.theme-parchment .bottom-page-nav-bar {
     padding: 0 14px !important;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.08) !important;
   }
-}
-
-.is-mobile-app .surahs-cards-grid,
-.is-mobile-app .quick-tools-grid,
-.is-mobile-app .juz-cards-grid,
-.is-mobile-app .bookmarks-cards-grid,
-.is-mobile-app .duas-cards-grid,
-.is-mobile-app .dashboard-bottom-split,
-.is-mobile-app .settings-grid-layout,
-@media (max-width: 1024px) {
   .surahs-cards-grid { grid-template-columns: 1fr !important; }
   .quick-tools-grid { grid-template-columns: 1fr !important; }
   .juz-cards-grid { grid-template-columns: 1fr !important; }
@@ -1928,26 +1919,13 @@ body.theme-parchment .bottom-page-nav-bar {
   .duas-cards-grid { grid-template-columns: 1fr !important; }
   .dashboard-bottom-split { grid-template-columns: 1fr !important; }
   .settings-grid-layout { grid-template-columns: 1fr !important; }
-}
-
-.is-mobile-app .tafsir-drawer,
-@media (max-width: 1024px) {
   .tafsir-drawer {
     width: 100% !important;
     max-width: 100% !important;
   }
-}
-
-.is-mobile-app .page-view,
-@media (max-width: 1024px) {
   .page-view {
     padding: 16px 12px 90px !important;
   }
-}
-
-.is-mobile-app .last-recited-hero-card,
-.is-mobile-app .ayah-of-day-card,
-@media (max-width: 1024px) {
   .last-recited-hero-card {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -1990,28 +1968,52 @@ body.theme-parchment .bottom-page-nav-bar {
     box-sizing: border-box !important;
   }
 }
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 90px;
-  }
-  .global-search-bar {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  .reader-toolbar-v2 {
-    padding: 0 10px;
-    height: 48px;
-  }
-  #readerJuzBadge,
-  #readerRukuBadge,
-  .view-mode-toggle-group {
-    display: none;
-  }
-  .page-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-  }
+
+/* Standalone .is-mobile-app rules */
+.is-mobile-app .mobile-menu-btn { display: flex !important; }
+.is-mobile-app .mobile-bottom-nav { display: flex !important; }
+.is-mobile-app .main-wrapper {
+  width: 100% !important;
+  max-width: 100vw !important;
+  margin-left: 0 !important;
+  padding-bottom: 74px !important;
+}
+.is-mobile-app .sidebar {
+  display: flex !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: -290px !important;
+  bottom: 0 !important;
+  width: 275px !important;
+  z-index: 10000 !important;
+  background: var(--bg-surface) !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+  transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow-y: auto !important;
+}
+.is-mobile-app .sidebar.open {
+  left: 0 !important;
+}
+.is-mobile-app .audio-bar-v2 {
+  left: 0 !important;
+  bottom: 58px !important;
+  height: 56px !important;
+  padding: 0 14px !important;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08) !important;
+}
+.is-mobile-app .surahs-cards-grid { grid-template-columns: 1fr !important; }
+.is-mobile-app .quick-tools-grid { grid-template-columns: 1fr !important; }
+.is-mobile-app .juz-cards-grid { grid-template-columns: 1fr !important; }
+.is-mobile-app .bookmarks-cards-grid { grid-template-columns: 1fr !important; }
+.is-mobile-app .duas-cards-grid { grid-template-columns: 1fr !important; }
+.is-mobile-app .dashboard-bottom-split { grid-template-columns: 1fr !important; }
+.is-mobile-app .settings-grid-layout { grid-template-columns: 1fr !important; }
+.is-mobile-app .tafsir-drawer {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.is-mobile-app .page-view {
+  padding: 16px 12px 90px !important;
 }
 
 /* ==========================================================================
@@ -4387,8 +4389,50 @@ body.dark .circle-1, body.dark .circle-2, body.dark .circle-3 {
   margin-top: 2px;
 }
 
+/* Ornamental Frontispiece (Lauh) Ayah Overlay for Pages 2 and 3 */
+.mushaf-ayah-overlay.page-lauh-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.mushaf-line-row.lauh-bismillah-row {
+  position: absolute !important;
+  top: 36.5% !important;
+  height: 6.2% !important;
+  left: 28% !important;
+  right: 28% !important;
+  width: auto !important;
+  border-radius: 20px !important;
+  pointer-events: none;
+}
+
+.mushaf-line-row.lauh-line-row {
+  position: absolute !important;
+  left: 24.6% !important;
+  right: 24.6% !important;
+  width: auto !important;
+  pointer-events: none;
+}
+
+.mushaf-line-row.lauh-line-1 { top: 42.8% !important; height: 6.85% !important; }
+.mushaf-line-row.lauh-line-2 { top: 49.65% !important; height: 6.85% !important; }
+.mushaf-line-row.lauh-line-3 { top: 56.5% !important; height: 6.85% !important; }
+.mushaf-line-row.lauh-line-4 { top: 63.35% !important; height: 6.85% !important; }
+.mushaf-line-row.lauh-line-5 { top: 70.2% !important; height: 6.85% !important; }
+.mushaf-line-row.lauh-line-6 { top: 77.05% !important; height: 7.15% !important; }
+
+.lauh-cartouche-bismillah {
+  border-radius: 20px !important;
+}
+
 /* Mobile media query & mobile app forced layout */
-@media (max-width: 768px), body.is-mobile-app {
+@media (max-width: 768px) {
   /* Header matches screenshot */
   .top-global-header {
     display: flex !important;
