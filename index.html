@@ -17,7 +17,7 @@
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
 	<link rel="stylesheet" href="mushaf-15line.css">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.0">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.1">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -71,6 +71,19 @@
 			<!-- Top Global Header (Screenshots 1-4) -->
 			<header class="top-global-header">
 				<button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation Menu">☰</button>
+				<!-- Mobile Brand Center (Screenshots 2 & 3) -->
+				<div class="mobile-header-brand" id="mobileHeaderBrand">
+					<div class="brand-book-icon">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+							<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+						</svg>
+					</div>
+					<div class="brand-text">
+						<span class="brand-arabic">القرآن الكريم</span>
+						<span class="brand-sub">AL-MUSHAF 15-LINE</span>
+					</div>
+				</div>
 				<div class="global-search-bar">
 					<span>⌕</span>
 					<input id="globalSearch" placeholder="Search Surah, Ayah, Juz, or translation (e.g. Al-Baqarah...)" aria-label="Search Quran">
@@ -99,6 +112,11 @@
 						<button class="theme-pill-btn" id="btnThemeDark">Dark</button>
 						<button class="theme-pill-btn" id="btnThemeParchment">Parchment</button>
 					</div>
+					<!-- Mobile Capsule Theme Toggle -->
+					<div class="mobile-theme-capsule" id="mobileThemeCapsule" title="Toggle Theme">
+						<span class="capsule-moon">🌙</span>
+						<span class="capsule-sun-dot">☀️</span>
+					</div>
 					<div class="badge-pwa-ready">
 						<span>☁</span> PWA Ready
 					</div>
@@ -108,154 +126,207 @@
 				</div>
 			</header>
 
+			<!-- Mobile Search Bar Pill (Matching Mobile Reference Image) -->
+			<div class="mobile-search-pill-container" id="mobileSearchContainer">
+				<div class="mobile-search-pill-box">
+					<span class="search-glass-icon">⌕</span>
+					<input type="text" id="mobileSearchInput" placeholder="Search Surah, Ayah, word..." aria-label="Search Quran">
+					<button class="search-mic-icon-btn" id="mobileMicBtn" title="World Qari / Voice" aria-label="Reciter Voice Search">🎙</button>
+				</div>
+			</div>
+
 			<!-- 1. HOME / DASHBOARD VIEW (Screenshot 2) -->
 			<section class="page-view" id="homeView">
 				<div class="dashboard-grid">
-					<!-- Last Recited Card with Khatm Donut -->
+					<!-- Last Read Card with Khatm Donut (Pixel-Perfect from Reference Image) -->
 					<div class="last-recited-hero-card">
 						<div class="last-recited-info">
-							<span class="recited-tag">● Last Recited · Read 15 minutes ago</span>
+							<span class="recited-tag">● Last Read · 15 minutes ago</span>
 							<h2 class="recited-title" id="homeResumeSurah">Surah Al-Baqarah <span class="arabic-name" id="homeResumeArabic">سُورَةُ البَقَرَةِ</span></h2>
-							<p class="recited-meta" id="homeResumeMeta">Page 2 • Juz 1 • Ayah 2 • Ruku 1 • The Cow (Madani)</p>
+							<p class="recited-meta" id="homeResumeMeta">Page 3 · Juz 1 · The Cow (Medinan)</p>
 							<div class="recited-actions">
-								<button class="btn-primary-green" id="homeContinueBtn"><span>📖</span> Continue Reading (Page 2)</button>
-								<button class="btn-outline-green" id="homeListenBtn"><span>🔊</span> Listen from Ayah 2</button>
+								<button class="btn-primary-green" id="homeContinueBtn"><span>📖</span> Continue Reading (Page 3)</button>
+								<button class="btn-outline-green" id="homeListenBtn"><span>🎧</span> Listen from Ayah 2</button>
 							</div>
 						</div>
 						<div class="khatm-tracker-donut">
 							<div class="donut-circle-wrap">
 								<svg viewBox="0 0 36 36">
 									<path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#d5e7dd" stroke-width="3"/>
-									<path id="khatmProgressPath" stroke-dasharray="1.4, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0d4734" stroke-width="3" stroke-linecap="round"/>
+									<path id="khatmProgressPath" stroke-dasharray="0.5, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#2e7d32" stroke-width="3" stroke-linecap="round"/>
 								</svg>
-								<span class="donut-label" id="khatmPercentText">1.4%</span>
+								<span class="donut-label" id="khatmPercentText">0.5%</span>
 							</div>
 							<div class="khatm-details">
-								<span class="khatm-title">KHATM TRACKER</span>
-								<strong class="khatm-progress" id="khatmPageText">9 of 611 Pages</strong>
+								<strong class="khatm-progress" id="khatmPageText">3 of 611 Pages</strong>
 								<span class="khatm-target">Target: 4 pages / day (Ramzan pace)</span>
-								<span class="khatm-velocity">⚑ 149 days left at current velocity</span>
+								<span class="khatm-velocity-red" id="khatmDaysLeft">149 days left</span>
 							</div>
 						</div>
 					</div>
 
-					<!-- Ayah of the Day -->
+					<!-- Ayah of the Day Card -->
 					<div class="ayah-of-day-card">
 						<div class="ayah-day-main">
 							<div class="ayah-day-header">
 								<span class="ayah-day-label">● AYAH OF THE DAY · Surah Al-Baqarah 2:152</span>
 								<div style="display:flex;gap:8px;">
-									<button class="btn-outline-green" id="playDailyVerse" style="padding:4px 10px;font-size:11px;">▶ Listen</button>
-									<button class="btn-outline-green" id="shareDailyVerse" style="padding:4px 10px;font-size:11px;">↗ Share</button>
+									<button class="btn-outline-green" id="shareDailyVerse" style="padding:4px 10px;font-size:11px;"><span>&lt;</span> Share</button>
+									<button class="btn-outline-green" id="playDailyVerse" style="padding:4px 10px;font-size:11px;"><span>▶</span> Listen</button>
 								</div>
 							</div>
 							<p class="ayah-day-arabic">فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ</p>
 							<p class="ayah-day-translation">“So remember Me; I will remember you. And be grateful to Me and do not deny Me.”</p>
-							<small style="color:var(--text-muted);">Sahih International Translation</small>
+							<small style="color:var(--text-muted);">— Sahih International</small>
 						</div>
 						<div class="tafsir-reflection-callout">
-							<span class="callout-tag">TAFSIR REFLECTION</span>
+							<span class="callout-tag">📖 Tafsir Reflection</span>
 							<p>Ibn Kathir notes: Dhikr of Allah elevates human consciousness to divine communion, promising return in divine grace.</p>
-							<span class="link-tafsir" id="btnReadDailyTafsir">Read full Ibn Kathir Tafsir →</span>
+							<span class="link-tafsir" id="btnReadDailyTafsir">Read Full Tafsir →</span>
 						</div>
 					</div>
 
-					<!-- Quick Navigation & Tools (8 Cards) -->
-					<div>
-						<div class="quick-tools-section-title">
-							<h3>Quick Navigation & Tools</h3>
-							<span>Tap to launch any view instantly</span>
+					<!-- Quick Access Section (10 Rounded Cards in 2 Rows of 5) -->
+					<div class="quick-access-section-wrap">
+						<div class="quick-access-header">
+							<h3 class="quick-access-title">Quick Access</h3>
+							<button class="btn-see-all-link" id="btnSeeAllTools" data-view="surahs">See All</button>
 						</div>
-						<div class="quick-tools-grid" style="margin-top:10px;">
-							<div class="tool-card" data-view="surahs">
-								<div class="tool-card-top"><div class="tool-card-icon">☷</div><span class="tool-card-badge">114</span></div>
-								<strong>All 114 Surahs</strong>
-								<small>Direct jump, Meccan & Medinan chronological filters</small>
+						<div class="quick-tools-grid-10" id="quickToolsGrid">
+							<!-- Row 1 -->
+							<div class="tool-card-box card-mint" data-view="surahs">
+								<div class="tool-card-icon-wrap mint-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+								</div>
+								<span class="tool-box-label">All 114<br>Surahs</span>
 							</div>
-							<div class="tool-card" data-view="juz">
-								<div class="tool-card-top"><div class="tool-card-icon">▦</div><span class="tool-card-badge">30</span></div>
-								<strong>30 Juz / Paras</strong>
-								<small>Rub el Hizb quarters, Hizb halves, and Ruku partitions</small>
+							<div class="tool-card-box card-lavender" data-view="juz">
+								<div class="tool-card-icon-wrap lavender-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5e35b1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+								</div>
+								<span class="tool-box-label">Juz<br>Index</span>
 							</div>
-							<div class="tool-card highlight-specialist" id="cardSpecialistMushaf">
-								<div class="tool-card-top"><div class="tool-card-icon">📖</div><span class="tool-card-badge">Specialist</span></div>
-								<strong>15-Line Mushaf</strong>
-								<small>Hafizi / South Asian layout with standardized page endings</small>
+							<div class="tool-card-box card-peach" data-view="bookmarks">
+								<div class="tool-card-icon-wrap peach-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e65100" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+								</div>
+								<span class="tool-box-label">Bookmarks<br>& Saved</span>
 							</div>
-							<div class="tool-card" data-view="bookmarks">
-								<div class="tool-card-top"><div class="tool-card-icon">⚑</div><span class="tool-card-badge" id="badgeSavedCount">5 Saved</span></div>
-								<strong>Bookmarks & Notes</strong>
-								<small>Ayah pins, colored tags, and personal Tadabbur journal</small>
+							<div class="tool-card-box card-blue" data-view="search">
+								<div class="tool-card-icon-wrap blue-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0288d1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+								</div>
+								<span class="tool-box-label">Search<br>Quran</span>
 							</div>
-							<div class="tool-card" data-view="audio">
-								<div class="tool-card-top"><div class="tool-card-icon">🎧</div><span class="tool-card-badge">Gapless High-Res</span></div>
-								<strong>Audio Recitations</strong>
-								<small>Top reciters, verse loop repeat, and word sync</small>
+							<div class="tool-card-box card-mint" data-view="audio">
+								<div class="tool-card-icon-wrap mint-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00796b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+								</div>
+								<span class="tool-box-label">Audio<br>Recitations</span>
 							</div>
-							<div class="tool-card" data-view="search">
-								<div class="tool-card-top"><div class="tool-card-icon">⌕</div><span class="tool-card-badge">30K+</span></div>
-								<strong>Search & Explore</strong>
-								<small>Root words, translations, and thematic Quran indexes</small>
+
+							<!-- Row 2 -->
+							<div class="tool-card-box card-pink" data-view="ramadan">
+								<div class="tool-card-icon-wrap pink-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c2185b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+								</div>
+								<span class="tool-box-label">Ramzan<br>& Duas</span>
 							</div>
-							<div class="tool-card" data-view="ramadan">
-								<div class="tool-card-top"><div class="tool-card-icon">☾</div><span class="tool-card-badge">Ramzan Ready</span></div>
-								<strong>Ramzan & Duas</strong>
-								<small>Daily intentions, Ashra prayers, and Taraweeh milestones</small>
+							<div class="tool-card-box card-yellow" data-view="settings">
+								<div class="tool-card-icon-wrap yellow-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f57f17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+								</div>
+								<span class="tool-box-label">Preferences</span>
 							</div>
-							<div class="tool-card" data-view="settings">
-								<div class="tool-card-top"><div class="tool-card-icon">⚡</div><span class="tool-card-badge" id="badgeStreak">Streak: 12d</span></div>
-								<strong>Daily Rhythm & Streak</strong>
-								<small>Maintain persistent hifz momentum and consistency</small>
+							<div class="tool-card-box card-violet" data-view="faq">
+								<div class="tool-card-icon-wrap violet-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7b1fa2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+								</div>
+								<span class="tool-box-label">Questions<br>& FAQ</span>
+							</div>
+							<div class="tool-card-box card-cyan" data-view="backup">
+								<div class="tool-card-icon-wrap cyan-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00838f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/><polyline points="12 13 12 17 12 13"/><polyline points="9 14 12 17 15 14"/></svg>
+								</div>
+								<span class="tool-box-label">Backup<br>& Restore</span>
+							</div>
+							<div class="tool-card-box card-gray" data-view="about">
+								<div class="tool-card-icon-wrap gray-bg">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#455a64" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+								</div>
+								<span class="tool-box-label">About &<br>Licenses</span>
 							</div>
 						</div>
 					</div>
 
-					<!-- Bottom Split: Saved Ayahs & Bookmarks + Storage & Sync -->
-					<div class="dashboard-bottom-split">
-						<div class="saved-ayahs-panel">
-							<div>
-								<div class="saved-ayahs-header">
-									<h4><span>⚑</span> Saved Ayahs & Bookmarks</h4>
-									<button class="btn-outline-green" style="padding:4px 10px;font-size:11px;" data-view="bookmarks">View All (5)</button>
-								</div>
-								<div class="saved-items-list" id="homeSavedList">
-									<div class="saved-ayah-row" onclick="openReaderPage(1)">
-										<div class="saved-row-left">
-											<div class="saved-surah-num-badge">١</div>
-											<div class="saved-surah-text-info">
-												<strong>Surah Al-Fatihah <small>Ayah 5</small></strong>
-												<p>“You alone we worship, and You alone we ask for help.”</p>
-											</div>
-										</div>
-										<div class="saved-row-right">Page 1 ›</div>
-									</div>
-									<div class="saved-ayah-row" onclick="openReaderPage(88)">
-										<div class="saved-row-left">
-											<div class="saved-surah-num-badge">٣</div>
-											<div class="saved-surah-text-info">
-												<strong>Surah Ali 'Imran <small>Ayah 144</small></strong>
-												<p>“Muhammad is not but a messenger; [other] messengers have passed...”</p>
-											</div>
-										</div>
-										<div class="saved-row-right">Page 88 ›</div>
-									</div>
-									<div class="saved-ayah-row" onclick="openReaderPage(562)">
-										<div class="saved-row-left">
-											<div class="saved-surah-num-badge">٦٧</div>
-											<div class="saved-surah-text-info">
-												<strong>Surah Al-Mulk <small>Ayah 1 · Night Sunnah</small></strong>
-												<p>“Blessed is He in whose hand is dominion, and He is over all things competent...”</p>
-											</div>
-										</div>
-										<div class="saved-row-right">Page 562 ›</div>
-									</div>
-								</div>
+					<!-- 15-Line Mushaf Specialist Banner Card (Matching Reference Image) -->
+					<div class="specialist-mushaf-card" id="cardSpecialistMushaf">
+						<div class="specialist-card-left">
+							<div class="specialist-icon-box">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+									<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+								</svg>
 							</div>
-							<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-size:11px;color:var(--text-muted);">
-								<span>Synced with cloud backup • Today at 14:10</span>
-								<button class="btn-outline-green" id="btnAddQuickNote" style="padding:3px 8px;font-size:10px;">+ Add Custom Quick Note</button>
+							<div class="specialist-card-content">
+								<div class="specialist-title-line">
+									<strong>15-Line Mushaf</strong>
+									<span class="badge-specialist-orange">Specialist</span>
+								</div>
+								<p class="specialist-subtitle">Hafizi / South Asian layout with standardized page endings</p>
 							</div>
 						</div>
+						<div class="specialist-arrow">›</div>
+					</div>
+
+					<!-- Saved Ayahs & Bookmarks (Matching Reference Image) -->
+					<div class="dashboard-saved-ayahs-wrap">
+						<div class="saved-section-header">
+							<h4><span class="bm-icon">🔖</span> Saved Ayahs & Bookmarks</h4>
+							<button class="btn-view-all-pill" data-view="bookmarks">View All (5)</button>
+						</div>
+						<div class="saved-items-list" id="homeSavedList">
+							<div class="saved-ayah-row" onclick="openReaderPage(1)">
+								<div class="saved-row-left">
+									<div class="saved-num-circle circle-1">1</div>
+									<div class="saved-surah-text-info">
+										<strong>Surah Al-Fatihah Ayah 5</strong>
+										<p>“You alone we worship, and You alone we ask for help.”</p>
+									</div>
+								</div>
+								<div class="saved-row-right">
+									<span class="saved-page-tag">Page 1</span>
+									<span class="saved-row-dots">⋮</span>
+								</div>
+							</div>
+							<div class="saved-ayah-row" onclick="openReaderPage(88)">
+								<div class="saved-row-left">
+									<div class="saved-num-circle circle-2">2</div>
+									<div class="saved-surah-text-info">
+										<strong>Surah Ali 'Imran Ayah 144</strong>
+										<p>“Muhammad is not but a messenger; [other] messengers have passed...”</p>
+									</div>
+								</div>
+								<div class="saved-row-right">
+									<span class="saved-page-tag">Page 88</span>
+									<span class="saved-row-dots">⋮</span>
+								</div>
+							</div>
+							<div class="saved-ayah-row" onclick="openReaderPage(562)">
+								<div class="saved-row-left">
+									<div class="saved-num-circle circle-3">3</div>
+									<div class="saved-surah-text-info">
+										<strong>Surah Al-Mulk Ayah 1</strong>
+										<p>“Blessed is He in whose hand is dominion, and He is over all things competent...”</p>
+									</div>
+								</div>
+								<div class="saved-row-right">
+									<span class="saved-page-tag">Page 562</span>
+									<span class="saved-row-dots">⋮</span>
+								</div>
+							</div>
+						</div>
+					</div>
 
 						<div class="storage-sync-panel">
 							<div>
@@ -968,30 +1039,36 @@
 			</section>
 		</main>
 
-		<!-- Mobile Bottom Navigation Bar (Screens <= 768px) -->
+		<!-- Mobile Bottom Navigation Bar (Matching Reference Image - 5 Items) -->
 		<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation">
 			<button class="mobile-nav-tab active" data-view="home">
-				<span class="tab-icon">⌂</span>
+				<span class="tab-icon">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+				</span>
 				<span class="tab-label">Home</span>
 			</button>
 			<button class="mobile-nav-tab" data-view="surahs">
-				<span class="tab-icon">☷</span>
+				<span class="tab-icon">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+				</span>
 				<span class="tab-label">Surahs</span>
 			</button>
-			<button class="mobile-nav-tab primary-tab" data-view="reader">
-				<span class="tab-icon">📖</span>
-				<span class="tab-label">Mushaf</span>
+			<button class="mobile-nav-fab" id="mobileMushafFab" title="Open 15-Line Mushaf" aria-label="Open 15-Line Mushaf">
+				<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+					<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+				</svg>
 			</button>
 			<button class="mobile-nav-tab" data-view="audio">
-				<span class="tab-icon">🎧</span>
+				<span class="tab-icon">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+				</span>
 				<span class="tab-label">Audio</span>
 			</button>
-			<button class="mobile-nav-tab" data-view="ramadan">
-				<span class="tab-icon">☾</span>
-				<span class="tab-label">Ramzan</span>
-			</button>
 			<button class="mobile-nav-tab" id="mobileMoreTab">
-				<span class="tab-icon">☰</span>
+				<span class="tab-icon">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+				</span>
 				<span class="tab-label">More</span>
 			</button>
 		</nav>
@@ -1329,7 +1406,7 @@
 		<div id="surahList"></div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=2.9.0"></script>
-	<script src="code.js?v=2.9.0"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=2.9.1"></script>
+	<script src="code.js?v=2.9.1"></script>
 </body>
 </html>

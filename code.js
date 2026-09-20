@@ -309,6 +309,9 @@ function setTheme(theme) {
   $('themeCardEmerald')?.classList.toggle('active', state.theme === 'emerald');
   $('themeCardNight')?.classList.toggle('active', state.theme === 'night');
   $('themeCardParchment')?.classList.toggle('active', state.theme === 'parchment');
+
+  // Sync Mobile Capsule Toggle
+  $('mobileThemeCapsule')?.classList.toggle('dark-active', state.theme === 'night');
 }
 
 // -----------------------------------------------------------------------------
@@ -838,6 +841,7 @@ async function fetchAyahsForPage(page) {
         number: item.id,
         numberInSurah: item.ayah,
         lines: item.lines || [],
+        segments: item.segments || [],
         verseKey: item.verseKey || `${item.surah}:${item.ayah}`,
         text: '',
         surah: {
@@ -901,7 +905,7 @@ function highlightPlayingAyah(number) {
   audioState.currentPlayingAyah = number;
 
   // Remove previous highlights
-  document.querySelectorAll('.ayah-line-band.playing, .ayah-pill.playing, .mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => {
+  document.querySelectorAll('.ayah-segment.playing, .ayah-line-band.playing, .ayah-pill.playing, .mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => {
     el.classList.remove('playing');
   });
 
@@ -914,15 +918,21 @@ function highlightPlayingAyah(number) {
     el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
   });
 
-  // 2. Find which printed lines this ayah belongs to on the current 15-line page
-  const currentAyahObj = (audioState.ayahs || []).find(a => a.number === number);
-  if (currentAyahObj && currentAyahObj.lines && currentAyahObj.lines.length) {
-    currentAyahObj.lines.forEach(lineNum => {
-      const bands = document.querySelectorAll(`.ayah-line-band[data-line="${lineNum}"]`);
-      bands.forEach(b => b.classList.add('playing'));
-    });
+  // 2. Find and highlight exact sub-line ayah segments on the 15-line page
+  const activeSegments = document.querySelectorAll(`.ayah-segment[data-ayah="${number}"]`);
+  if (activeSegments.length) {
+    activeSegments.forEach(el => el.classList.add('playing'));
   } else {
-    document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+    // Fallback to line bands if segments are not present
+    const currentAyahObj = (audioState.ayahs || []).find(a => a.number === number);
+    if (currentAyahObj && currentAyahObj.lines && currentAyahObj.lines.length) {
+      currentAyahObj.lines.forEach(lineNum => {
+        const bands = document.querySelectorAll(`.ayah-line-band[data-line="${lineNum}"]`);
+        bands.forEach(b => b.classList.add('playing'));
+      });
+    } else {
+      document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+    }
   }
 
   // Also highlight legacy elements if any
@@ -959,35 +969,57 @@ async function renderPageAyahOverlay(page) {
   // Title pages (page 1) don't have Quran ayahs
   if (page === 1) return;
 
-  // Create 15 interactive line bands over the authentic page image
+  // Create 15 interactive line rows with exact sub-line ayah segments
   for (let l = 1; l <= 15; l++) {
-    // Find all ayahs on this line
-    const onThisLine = ayahs.filter(a => a.lines && a.lines.includes(l));
-    const targetAyah = onThisLine.length ? onThisLine[0] : null;
+    const lineRow = document.createElement('div');
+    lineRow.className = 'mushaf-line-row';
+    lineRow.dataset.line = l;
 
-    const band = document.createElement('div');
-    band.className = 'ayah-line-band';
-    band.dataset.line = l;
-    if (targetAyah) {
-      band.dataset.ayah = targetAyah.number;
-      band.dataset.ayahInSurah = targetAyah.numberInSurah;
-      band.title = `Line ${l} · Ayah ${targetAyah.numberInSurah} (${targetAyah.surah?.englishName || ''}) - Click to play`;
-    } else {
-      band.title = `Line ${l}`;
-    }
-
-    band.addEventListener('click', (e) => {
-      // If annotation mode is active, do not trigger audio click
-      if (typeof annotState !== 'undefined' && annotState.isActive) return;
-      e.stopPropagation();
-      if (targetAyah) {
-        populateTafsirAyah(targetAyah);
-        highlightPlayingAyah(targetAyah.number);
-        playAyah(targetAyah.number, true);
+    // Collect all ayah segments on line l
+    const segsOnLine = [];
+    ayahs.forEach(ayah => {
+      if (ayah.segments && ayah.segments.length) {
+        ayah.segments.filter(s => s.line === l).forEach(s => {
+          segsOnLine.push({ ayah, segment: s });
+        });
+      } else if (ayah.lines && ayah.lines.includes(l)) {
+        segsOnLine.push({ ayah, segment: { line: l, right: 0, width: 100 } });
       }
     });
 
-    overlay.appendChild(band);
+    if (!segsOnLine.length) {
+      // Empty decorative row (e.g. Surah title / Bismillah banner line)
+      const emptyBand = document.createElement('div');
+      emptyBand.className = 'ayah-segment empty-line';
+      emptyBand.dataset.line = l;
+      lineRow.appendChild(emptyBand);
+    } else {
+      // Sort segments from right (0%) to left
+      segsOnLine.sort((a, b) => a.segment.right - b.segment.right);
+      segsOnLine.forEach(({ ayah, segment }) => {
+        const segDiv = document.createElement('div');
+        segDiv.className = 'ayah-segment';
+        segDiv.dataset.line = l;
+        segDiv.dataset.ayah = ayah.number;
+        segDiv.dataset.ayahInSurah = ayah.numberInSurah;
+        segDiv.style.right = `${segment.right}%`;
+        segDiv.style.width = `${segment.width}%`;
+        segDiv.title = `Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Tap to play`;
+
+        segDiv.addEventListener('click', (e) => {
+          // If annotation mode is active, do not trigger audio click
+          if (typeof annotState !== 'undefined' && annotState.isActive) return;
+          e.stopPropagation();
+          populateTafsirAyah(ayah);
+          highlightPlayingAyah(ayah.number);
+          playAyah(ayah.number, true);
+        });
+
+        lineRow.appendChild(segDiv);
+      });
+    }
+
+    overlay.appendChild(lineRow);
   }
 
   // Create interactive Quick Ayah Selector Pills
@@ -2250,7 +2282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  document.querySelectorAll('.tool-card[data-view]').forEach(card => {
+  document.querySelectorAll('.tool-card[data-view], .tool-card-box[data-view]').forEach(card => {
     card.onclick = () => showView(card.dataset.view);
   });
 
@@ -2758,6 +2790,54 @@ document.addEventListener('DOMContentLoaded', () => {
   $('mobileMoreTab')?.addEventListener('click', () => {
     $('sidebar')?.classList.toggle('open');
     $('sidebarBackdrop')?.classList.toggle('active');
+  });
+
+  // Mobile Mushaf FAB (Center Elevated Button)
+  $('mobileMushafFab')?.addEventListener('click', () => {
+    openReader();
+  });
+
+  // Mobile Theme Capsule Toggle
+  $('mobileThemeCapsule')?.addEventListener('click', () => {
+    setTheme(state.theme === 'night' ? 'emerald' : 'night');
+  });
+
+  // Mobile Full-Width Search Bar
+  $('mobileSearchInput')?.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    if (val) {
+      showView('surahs');
+      if ($('surahSearch')) {
+        $('surahSearch').value = val;
+        renderSurahsCardGrid();
+      }
+    }
+  });
+
+  $('mobileSearchInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = e.target.value.trim();
+      if (val) {
+        showView('search');
+        if ($('dedicatedSearchInput')) {
+          $('dedicatedSearchInput').value = val;
+          handleSearch(val);
+        }
+      }
+    }
+  });
+
+  // Mobile Search Mic button triggers Qari/Voice modal
+  $('mobileMicBtn')?.addEventListener('click', () => {
+    const popover = $('headerQariPopover');
+    if (popover) {
+      popover.classList.toggle('hidden');
+    }
+  });
+
+  // Quick Access "See All" button
+  $('btnSeeAllTools')?.addEventListener('click', () => {
+    showView('surahs');
   });
 
   // Touch Swipe Gestures for 15-Line Quran Reader on Mobile
