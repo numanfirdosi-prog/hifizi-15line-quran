@@ -16,9 +16,17 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
-	<link rel="stylesheet" href="audio-advanced.css">
 	<link rel="stylesheet" href="mushaf-15line.css">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=2.8.0">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.0">
+	<script>
+		(function() {
+			var ua = navigator.userAgent || '';
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua) || (window.innerWidth <= 1024) || (screen && screen.width <= 900);
+			if (isMobile) {
+				document.documentElement.classList.add('is-mobile-app');
+			}
+		})();
+	</script>
 </head>
 <body class="theme-emerald">
 	<div class="app-shell">
@@ -1321,6 +1329,7 @@
 		<div id="surahList"></div>
 	</div>
 
-	<script src="code.js"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=2.9.0"></script>
+	<script src="code.js?v=2.9.0"></script>
 </body>
 </html>

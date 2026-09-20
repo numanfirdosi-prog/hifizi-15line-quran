@@ -5,6 +5,32 @@
  * Khatm Tracker, Slide-out Tafsir Drawer, and Full Surah Index.
  */
 
+// Force Mobile App Sizing & Layout on Mobile / Touch Devices
+function detectAndApplyMobile() {
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const isNarrow = window.innerWidth <= 1024 || (screen && screen.width <= 900);
+  
+  if (isMobileUA || (isTouch && isNarrow) || window.innerWidth <= 1024) {
+    document.documentElement.classList.add('is-mobile-app');
+    if (document.body) document.body.classList.add('is-mobile-app');
+  } else {
+    document.documentElement.classList.remove('is-mobile-app');
+    if (document.body) document.body.classList.remove('is-mobile-app');
+  }
+}
+detectAndApplyMobile();
+window.addEventListener('resize', detectAndApplyMobile);
+window.addEventListener('orientationchange', () => setTimeout(detectAndApplyMobile, 100));
+
+// Wipe legacy mismatched caches
+try {
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('nur-page-ayahs-')) localStorage.removeItem(k);
+  });
+} catch (e) {}
+
 // 114 Surah Metadata [English, Meaning, Arabic, Ayahs, Revelation, StartPage]
 const surahNames = [
   ['Al-Fatihah','The Opener','الفاتحة',7,'Meccan'],['Al-Baqarah','The Cow','البقرة',286,'Medinan'],['Ali Imran','Family of Imran','آل عمران',200,'Medinan'],['An-Nisa','The Women','النساء',176,'Medinan'],['Al-Ma’idah','The Table Spread','المائدة',120,'Medinan'],['Al-An’am','The Cattle','الأنعام',165,'Meccan'],['Al-A’raf','The Heights','الأعراف',206,'Meccan'],['Al-Anfal','The Spoils of War','الأنفal',75,'Medinan'],['At-Tawbah','The Repentance','التوبة',129,'Medinan'],['Yunus','Jonah','يونس',109,'Meccan'],['Hud','Hud','هود',123,'Meccan'],['Yusuf','Joseph','يوسف',111,'Meccan'],['Ar-Ra’d','The Thunder','الرعد',43,'Medinan'],['Ibrahim','Abraham','إبراهيم',52,'Meccan'],['Al-Hijr','The Rocky Tract','الحجر',99,'Meccan'],['An-Nahl','The Bee','النحل',128,'Meccan'],['Al-Isra','The Night Journey','الإسراء',111,'Meccan'],['Al-Kahf','The Cave','الكهف',110,'Meccan'],['Maryam','Mary','مريم',98,'Meccan'],['Ta-Ha','Ta-Ha','طه',135,'Meccan'],['Al-Anbiya','The Prophets','الأنبياء',112,'Meccan'],['Al-Hajj','The Pilgrimage','الحج',78,'Medinan'],['Al-Mu’minun','The Believers','المؤمنون',118,'Meccan'],['An-Nur','The Light','النور',64,'Medinan'],['Al-Furqan','The Criterion','الفرقان',77,'Meccan'],['Ash-Shu’ara','The Poets','الشعراء',227,'Meccan'],['An-Naml','The Ant','النمل',93,'Meccan'],['Al-Qasas','The Stories','القصص',88,'Meccan'],['Al-Ankabut','The Spider','العنكبوت',69,'Meccan'],['Ar-Rum','The Romans','الروم',60,'Meccan'],['Luqman','Luqman','لقمان',34,'Meccan'],['As-Sajdah','The Prostration','السجدة',30,'Meccan'],['Al-Ahzab','The Combined Forces','الأحزاب',73,'Medinan'],['Saba','Sheba','سبأ',54,'Meccan'],['Fatir','Originator','فاطر',45,'Meccan'],['Ya-Sin','Ya-Sin','يس',83,'Meccan'],['As-Saffat','Those Ranges in Ranks','الصافات',182,'Meccan'],['Sad','The Letter Sad','ص',88,'Meccan'],['Az-Zumar','The Groups','الزمر',75,'Meccan'],['Ghafir','The Forgiver','غافر',85,'Meccan'],['Fussilat','Explained in Detail','فصلت',54,'Meccan'],['Ash-Shura','The Consultation','الشورى',53,'Meccan'],['Az-Zukhruf','The Ornaments of Gold','الزخرف',89,'Meccan'],['Ad-Dukhan','The Smoke','الدخان',59,'Meccan'],['Al-Jathiyah','The Crouching','الجاثية',37,'Meccan'],['Al-Ahqaf','The Wind-Curved Sandhills','الأحقاف',35,'Meccan'],['Muhammad','Muhammad','محمد',38,'Medinan'],['Al-Fath','The Victory','الفتح',29,'Medinan'],['Al-Hujurat','The Rooms','الحجرات',18,'Medinan'],['Qaf','The Letter Qaf','ق',45,'Meccan'],['Adh-Dhariyat','The Winnowing Winds','الذاريات',60,'Meccan'],['At-Tur','The Mount','الطور',49,'Meccan'],['An-Najm','The Star','النجم',62,'Meccan'],['Al-Qamar','The Moon','القمر',55,'Meccan'],['Ar-Rahman','The Beneficent','الرحمن',78,'Medinan'],['Al-Waqi’ah','The Inevitable','الواقعة',96,'Meccan'],['Al-Hadid','The Iron','الحديد',29,'Medinan'],['Al-Mujadila','The Pleading Woman','المجادلة',22,'Medinan'],['Al-Hashr','The Exile','الحشر',24,'Medinan'],['Al-Mumtahanah','She That Is to Be Examined','الممتحنة',13,'Medinan'],['As-Saff','The Ranks','الصف',14,'Medinan'],['Al-Jumu’ah','Friday','الجمعة',11,'Medinan'],['Al-Munafiqun','The Hypocrites','المنافقون',11,'Medinan'],['At-Taghabun','Mutual Disillusion','التغابن',18,'Medinan'],['At-Talaq','The Divorce','الطلاق',12,'Medinan'],['At-Tahrim','The Prohibition','التحريم',12,'Medinan'],['Al-Mulk','The Sovereignty','الملك',30,'Meccan'],['Al-Qalam','The Pen','القلم',52,'Meccan'],['Al-Haqqah','The Reality','الحاقة',52,'Meccan'],['Al-Ma’arij','The Ascending Stairways','المعارج',44,'Meccan'],['Nuh','Noah','نوح',28,'Meccan'],['Al-Jinn','The Jinn','الجن',28,'Meccan'],['Al-Muzzammil','The Enshrouded One','المزمل',20,'Meccan'],['Al-Muddaththir','The Cloaked One','المدثر',56,'Meccan'],['Al-Qiyamah','The Resurrection','القيامة',40,'Meccan'],['Al-Insan','Man','الإنسان',31,'Medinan'],['Al-Mursalat','The Emissaries','المرسلات',50,'Meccan'],['An-Naba','The Tidings','النبأ',40,'Meccan'],['An-Nazi’at','Those Who Drag Forth','النازعات',46,'Meccan'],['Abasa','He Frowned','عبس',42,'Meccan'],['At-Takwir','The Overthrowing','التكوير',29,'Meccan'],['Al-Infitar','The Cleaving','الانفطار',19,'Meccan'],['Al-Mutaffifin','The Defrauders','المطففين',36,'Meccan'],['Al-Inshiqaq','The Sundering','الانشقاق',25,'Meccan'],['Al-Buruj','The Mansions of the Stars','البروج',22,'Meccan'],['At-Tariq','The Nightcomer','الطارق',17,'Meccan'],['Al-A’la','The Most High','الأعلى',19,'Meccan'],['Al-Ghashiyah','The Overwhelming','الغاشية',26,'Meccan'],['Al-Fajr','The Dawn','الفجر',30,'Meccan'],['Al-Balad','The City','البلد',20,'Meccan'],['Ash-Shams','The Sun','الشمس',15,'Meccan'],['Al-Layl','The Night','الليل',21,'Meccan'],['Ad-Duha','The Morning Hours','الضحى',11,'Meccan'],['Ash-Sharh','The Relief','الشرح',8,'Meccan'],['At-Tin','The Fig','التين',8,'Meccan'],['Al-Alaq','The Clot','العلق',19,'Meccan'],['Al-Qadr','The Power','القدر',5,'Meccan'],['Al-Bayyinah','The Clear Proof','البينة',8,'Medinan'],['Az-Zalzalah','The Earthquake','الزلزلة',8,'Medinan'],['Al-Adiyat','The Courser','العاديات',11,'Meccan'],['Al-Qari’ah','The Calamity','القارعة',11,'Meccan'],['At-Takathur','The Rivalry in World Increase','التكاثر',8,'Meccan'],['Al-Asr','The Declining Day','العصر',3,'Meccan'],['Al-Humazah','The Traducer','الهمزة',9,'Meccan'],['Al-Fil','The Elephant','الفيل',5,'Meccan'],['Quraysh','Quraysh','قريش',4,'Meccan'],['Al-Ma’un','Small Kindnesses','الماعون',7,'Meccan'],['Al-Kawthar','Abundance','الكوثر',3,'Meccan'],['Al-Kafirun','The Disbelievers','الكافرون',6,'Meccan'],['An-Nasr','The Divine Support','النصر',3,'Medinan'],['Al-Masad','The Palm Fiber','المسد',5,'Meccan'],['Al-Ikhlas','Sincerity','الإخلاص',4,'Meccan'],['Al-Falaq','The Daybreak','الفلق',5,'Meccan'],['An-Nas','Mankind','الناس',6,'Meccan']
@@ -790,37 +816,82 @@ const pageAyahsCache = {};
 
 async function fetchAyahsForPage(page) {
   if (pageAyahsCache[page]) return pageAyahsCache[page];
-  const storageKey = `nur-page-ayahs-${page}`;
-  const localCached = localStorage.getItem(storageKey);
-  if (localCached) {
+
+  // 1. First Priority: Use authentic 611-page 15-line dataset from window.MUSHAF_15LINES_PAGES
+  let rawList = null;
+  if (typeof window !== 'undefined' && window.MUSHAF_15LINES_PAGES && window.MUSHAF_15LINES_PAGES[page]) {
+    rawList = window.MUSHAF_15LINES_PAGES[page];
+  } else {
     try {
-      const parsed = JSON.parse(localCached);
-      if (parsed && parsed.length) {
-        pageAyahsCache[page] = parsed;
-        return parsed;
+      const res = await fetch('assets/data/page_ayahs_15lines.json');
+      if (res.ok) {
+        window.MUSHAF_15LINES_PAGES = await res.json();
+        rawList = window.MUSHAF_15LINES_PAGES[page];
       }
     } catch (e) {}
   }
 
-  // 15-line Quran page mapping: Page 2 is Surah 1 (7 ayahs), Page 3 is Surah 2:1-5, etc.
-  const apiPage = Math.max(1, Math.min(604, page >= 2 ? page - 1 : 1));
-  try {
-    const res = await fetch(`https://api.alquran.cloud/v1/page/${apiPage}/quran-uthmani`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.data && json.data.ayahs && json.data.ayahs.length) {
-        pageAyahsCache[page] = json.data.ayahs;
-        try { localStorage.setItem(storageKey, JSON.stringify(json.data.ayahs)); } catch(e) {}
-        return json.data.ayahs;
-      }
-    }
-  } catch (err) {}
+  if (rawList && rawList.length) {
+    const mapped = rawList.map(item => {
+      const sMeta = surahs[item.surah - 1] || [];
+      return {
+        number: item.id,
+        numberInSurah: item.ayah,
+        lines: item.lines || [],
+        verseKey: item.verseKey || `${item.surah}:${item.ayah}`,
+        text: '',
+        surah: {
+          number: item.surah,
+          name: sMeta[2] ? sMeta[2].replace(/^سُورَةُ\s*/, '') : '',
+          englishName: sMeta[0] || `Surah ${item.surah}`
+        }
+      };
+    });
+    pageAyahsCache[page] = mapped;
+    return mapped;
+  }
 
-  // Fallback to Surah ayahs
+  // 2. Second Priority: Live API fetch for IndoPak 15-lines (Mushaf 6)
+  if (page >= 2 && page <= 611) {
+    const mushafPage = page - 1;
+    try {
+      const res = await fetch(`https://api.qurancdn.com/api/qdc/verses/by_page/${mushafPage}?mushaf=6&words=true&per_page=50`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.verses && json.verses.length) {
+          const mapped = json.verses.map(v => {
+            const parts = (v.verse_key || '').split(':');
+            const sNum = parseInt(parts[0], 10) || 1;
+            const aNum = parseInt(parts[1], 10) || 1;
+            const sMeta = surahs[sNum - 1] || [];
+            const lines = [...new Set(v.words.map(w => w.line_number).filter(Boolean))].sort((a, b) => a - b);
+            return {
+              number: v.id,
+              numberInSurah: aNum,
+              lines: lines,
+              verseKey: v.verse_key,
+              text: '',
+              surah: {
+                number: sNum,
+                name: sMeta[2] ? sMeta[2].replace(/^سُورَةُ\s*/, '') : '',
+                englishName: sMeta[0] || `Surah ${sNum}`
+              }
+            };
+          });
+          pageAyahsCache[page] = mapped;
+          return mapped;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 3. Fallback to Surah ayahs
   const currentSurah = getSurahForPage(page);
   return [{
     number: surahStartAyahs[currentSurah.number - 1] || 1,
     numberInSurah: 1,
+    lines: [1],
+    verseKey: `${currentSurah.number}:1`,
     text: '',
     surah: { number: currentSurah.number, name: currentSurah.name, englishName: currentSurah.englishName }
   }];
@@ -836,15 +907,23 @@ function highlightPlayingAyah(number) {
 
   if (!number) return;
 
-  // Apply glowing playing highlight to all bands and pills matching this ayah
-  const activeBands = document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`);
-  activeBands.forEach(el => el.classList.add('playing'));
-
+  // 1. Highlight in the Ayah Quick Selector Bar
   const activePills = document.querySelectorAll(`.ayah-pill[data-ayah="${number}"]`);
   activePills.forEach(el => {
     el.classList.add('playing');
     el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
   });
+
+  // 2. Find which printed lines this ayah belongs to on the current 15-line page
+  const currentAyahObj = (audioState.ayahs || []).find(a => a.number === number);
+  if (currentAyahObj && currentAyahObj.lines && currentAyahObj.lines.length) {
+    currentAyahObj.lines.forEach(lineNum => {
+      const bands = document.querySelectorAll(`.ayah-line-band[data-line="${lineNum}"]`);
+      bands.forEach(b => b.classList.add('playing'));
+    });
+  } else {
+    document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+  }
 
   // Also highlight legacy elements if any
   document.querySelectorAll(`[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
@@ -864,36 +943,48 @@ async function renderPageAyahOverlay(page) {
   // Sync to audioState so recitation knows all ayahs on this page
   audioState.ayahs = ayahs;
 
+  // Update Surah and Juz badges to reflect the actual starting ayah of this page
+  if (ayahs[0] && ayahs[0].surah) {
+    if ($('readerSurahBadge')) {
+      $('readerSurahBadge').textContent = `سُورَةُ ${ayahs[0].surah.name} | ${ayahs[0].surah.englishName}`;
+    }
+    if ($('playerSurahTitle')) {
+      $('playerSurahTitle').textContent = `سُورَةُ ${ayahs[0].surah.name}`;
+    }
+    if ($('playerSurahNum')) {
+      $('playerSurahNum').textContent = toArabicDigits(ayahs[0].surah.number);
+    }
+  }
+
   // Title pages (page 1) don't have Quran ayahs
   if (page === 1) return;
 
-  const totalLines = 15;
-  const numAyahs = ayahs.length;
-
-  // Distribute the ayahs smoothly across the 15 lines of the page
-  const lineToAyah = [];
-  for (let l = 0; l < totalLines; l++) {
-    const ayahIndex = Math.min(numAyahs - 1, Math.floor((l / totalLines) * numAyahs));
-    lineToAyah.push(ayahs[ayahIndex]);
-  }
-
   // Create 15 interactive line bands over the authentic page image
-  for (let l = 0; l < totalLines; l++) {
-    const ayah = lineToAyah[l];
+  for (let l = 1; l <= 15; l++) {
+    // Find all ayahs on this line
+    const onThisLine = ayahs.filter(a => a.lines && a.lines.includes(l));
+    const targetAyah = onThisLine.length ? onThisLine[0] : null;
+
     const band = document.createElement('div');
     band.className = 'ayah-line-band';
-    band.dataset.line = l + 1;
-    band.dataset.ayah = ayah.number;
-    band.dataset.ayahInSurah = ayah.numberInSurah;
-    band.title = `Line ${l + 1} · Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Click to play`;
+    band.dataset.line = l;
+    if (targetAyah) {
+      band.dataset.ayah = targetAyah.number;
+      band.dataset.ayahInSurah = targetAyah.numberInSurah;
+      band.title = `Line ${l} · Ayah ${targetAyah.numberInSurah} (${targetAyah.surah?.englishName || ''}) - Click to play`;
+    } else {
+      band.title = `Line ${l}`;
+    }
 
     band.addEventListener('click', (e) => {
       // If annotation mode is active, do not trigger audio click
       if (typeof annotState !== 'undefined' && annotState.isActive) return;
       e.stopPropagation();
-      populateTafsirAyah(ayah);
-      highlightPlayingAyah(ayah.number);
-      playAyah(ayah.number, true);
+      if (targetAyah) {
+        populateTafsirAyah(targetAyah);
+        highlightPlayingAyah(targetAyah.number);
+        playAyah(targetAyah.number, true);
+      }
     });
 
     overlay.appendChild(band);
