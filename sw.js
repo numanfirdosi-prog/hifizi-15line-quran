@@ -3,7 +3,7 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v2.6.0';
+const CACHE_NAME = 'nur-al-quran-v2.7.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -19,7 +19,11 @@ const STATIC_ASSETS = [
   './faq.css',
   './manifest.json',
   './assets/icon-192.png',
-  './assets/icon-512.png'
+  './assets/icon-512.png',
+  './assets/pages/1.webp',
+  './assets/pages/2.webp',
+  './assets/pages/3.webp',
+  './assets/pages/4.webp'
 ];
 
 // Install Event - Precache App Shell

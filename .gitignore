@@ -21,3 +21,7 @@ node_modules/
 # Vercel
 .vercel
 
+# Large binary master assets (PDF)
+*.pdf
+QuraneKareem15Line_copy.pdf
+

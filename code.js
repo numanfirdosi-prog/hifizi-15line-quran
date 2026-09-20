@@ -10,7 +10,22 @@ const surahNames = [
   ['Al-Fatihah','The Opener','الفاتحة',7,'Meccan'],['Al-Baqarah','The Cow','البقرة',286,'Medinan'],['Ali Imran','Family of Imran','آل عمران',200,'Medinan'],['An-Nisa','The Women','النساء',176,'Medinan'],['Al-Ma’idah','The Table Spread','المائدة',120,'Medinan'],['Al-An’am','The Cattle','الأنعام',165,'Meccan'],['Al-A’raf','The Heights','الأعراف',206,'Meccan'],['Al-Anfal','The Spoils of War','الأنفal',75,'Medinan'],['At-Tawbah','The Repentance','التوبة',129,'Medinan'],['Yunus','Jonah','يونس',109,'Meccan'],['Hud','Hud','هود',123,'Meccan'],['Yusuf','Joseph','يوسف',111,'Meccan'],['Ar-Ra’d','The Thunder','الرعد',43,'Medinan'],['Ibrahim','Abraham','إبراهيم',52,'Meccan'],['Al-Hijr','The Rocky Tract','الحجر',99,'Meccan'],['An-Nahl','The Bee','النحل',128,'Meccan'],['Al-Isra','The Night Journey','الإسراء',111,'Meccan'],['Al-Kahf','The Cave','الكهف',110,'Meccan'],['Maryam','Mary','مريم',98,'Meccan'],['Ta-Ha','Ta-Ha','طه',135,'Meccan'],['Al-Anbiya','The Prophets','الأنبياء',112,'Meccan'],['Al-Hajj','The Pilgrimage','الحج',78,'Medinan'],['Al-Mu’minun','The Believers','المؤمنون',118,'Meccan'],['An-Nur','The Light','النور',64,'Medinan'],['Al-Furqan','The Criterion','الفرقان',77,'Meccan'],['Ash-Shu’ara','The Poets','الشعراء',227,'Meccan'],['An-Naml','The Ant','النمل',93,'Meccan'],['Al-Qasas','The Stories','القصص',88,'Meccan'],['Al-Ankabut','The Spider','العنكبوت',69,'Meccan'],['Ar-Rum','The Romans','الروم',60,'Meccan'],['Luqman','Luqman','لقمان',34,'Meccan'],['As-Sajdah','The Prostration','السجدة',30,'Meccan'],['Al-Ahzab','The Combined Forces','الأحزاب',73,'Medinan'],['Saba','Sheba','سبأ',54,'Meccan'],['Fatir','Originator','فاطر',45,'Meccan'],['Ya-Sin','Ya-Sin','يس',83,'Meccan'],['As-Saffat','Those Ranges in Ranks','الصافات',182,'Meccan'],['Sad','The Letter Sad','ص',88,'Meccan'],['Az-Zumar','The Groups','الزمر',75,'Meccan'],['Ghafir','The Forgiver','غافر',85,'Meccan'],['Fussilat','Explained in Detail','فصلت',54,'Meccan'],['Ash-Shura','The Consultation','الشورى',53,'Meccan'],['Az-Zukhruf','The Ornaments of Gold','الزخرف',89,'Meccan'],['Ad-Dukhan','The Smoke','الدخان',59,'Meccan'],['Al-Jathiyah','The Crouching','الجاثية',37,'Meccan'],['Al-Ahqaf','The Wind-Curved Sandhills','الأحقاف',35,'Meccan'],['Muhammad','Muhammad','محمد',38,'Medinan'],['Al-Fath','The Victory','الفتح',29,'Medinan'],['Al-Hujurat','The Rooms','الحجرات',18,'Medinan'],['Qaf','The Letter Qaf','ق',45,'Meccan'],['Adh-Dhariyat','The Winnowing Winds','الذاريات',60,'Meccan'],['At-Tur','The Mount','الطور',49,'Meccan'],['An-Najm','The Star','النجم',62,'Meccan'],['Al-Qamar','The Moon','القمر',55,'Meccan'],['Ar-Rahman','The Beneficent','الرحمن',78,'Medinan'],['Al-Waqi’ah','The Inevitable','الواقعة',96,'Meccan'],['Al-Hadid','The Iron','الحديد',29,'Medinan'],['Al-Mujadila','The Pleading Woman','المجادلة',22,'Medinan'],['Al-Hashr','The Exile','الحشر',24,'Medinan'],['Al-Mumtahanah','She That Is to Be Examined','الممتحنة',13,'Medinan'],['As-Saff','The Ranks','الصف',14,'Medinan'],['Al-Jumu’ah','Friday','الجمعة',11,'Medinan'],['Al-Munafiqun','The Hypocrites','المنافقون',11,'Medinan'],['At-Taghabun','Mutual Disillusion','التغابن',18,'Medinan'],['At-Talaq','The Divorce','الطلاق',12,'Medinan'],['At-Tahrim','The Prohibition','التحريم',12,'Medinan'],['Al-Mulk','The Sovereignty','الملك',30,'Meccan'],['Al-Qalam','The Pen','القلم',52,'Meccan'],['Al-Haqqah','The Reality','الحاقة',52,'Meccan'],['Al-Ma’arij','The Ascending Stairways','المعارج',44,'Meccan'],['Nuh','Noah','نوح',28,'Meccan'],['Al-Jinn','The Jinn','الجن',28,'Meccan'],['Al-Muzzammil','The Enshrouded One','المزمل',20,'Meccan'],['Al-Muddaththir','The Cloaked One','المدثر',56,'Meccan'],['Al-Qiyamah','The Resurrection','القيامة',40,'Meccan'],['Al-Insan','Man','الإنسان',31,'Medinan'],['Al-Mursalat','The Emissaries','المرسلات',50,'Meccan'],['An-Naba','The Tidings','النبأ',40,'Meccan'],['An-Nazi’at','Those Who Drag Forth','النازعات',46,'Meccan'],['Abasa','He Frowned','عبس',42,'Meccan'],['At-Takwir','The Overthrowing','التكوير',29,'Meccan'],['Al-Infitar','The Cleaving','الانفطار',19,'Meccan'],['Al-Mutaffifin','The Defrauders','المطففين',36,'Meccan'],['Al-Inshiqaq','The Sundering','الانشقاق',25,'Meccan'],['Al-Buruj','The Mansions of the Stars','البروج',22,'Meccan'],['At-Tariq','The Nightcomer','الطارق',17,'Meccan'],['Al-A’la','The Most High','الأعلى',19,'Meccan'],['Al-Ghashiyah','The Overwhelming','الغاشية',26,'Meccan'],['Al-Fajr','The Dawn','الفجر',30,'Meccan'],['Al-Balad','The City','البلد',20,'Meccan'],['Ash-Shams','The Sun','الشمس',15,'Meccan'],['Al-Layl','The Night','الليل',21,'Meccan'],['Ad-Duha','The Morning Hours','الضحى',11,'Meccan'],['Ash-Sharh','The Relief','الشرح',8,'Meccan'],['At-Tin','The Fig','التين',8,'Meccan'],['Al-Alaq','The Clot','العلق',19,'Meccan'],['Al-Qadr','The Power','القدر',5,'Meccan'],['Al-Bayyinah','The Clear Proof','البينة',8,'Medinan'],['Az-Zalzalah','The Earthquake','الزلزلة',8,'Medinan'],['Al-Adiyat','The Courser','العاديات',11,'Meccan'],['Al-Qari’ah','The Calamity','القارعة',11,'Meccan'],['At-Takathur','The Rivalry in World Increase','التكاثر',8,'Meccan'],['Al-Asr','The Declining Day','العصر',3,'Meccan'],['Al-Humazah','The Traducer','الهمزة',9,'Meccan'],['Al-Fil','The Elephant','الفيل',5,'Meccan'],['Quraysh','Quraysh','قريش',4,'Meccan'],['Al-Ma’un','Small Kindnesses','الماعون',7,'Meccan'],['Al-Kawthar','Abundance','الكوثر',3,'Meccan'],['Al-Kafirun','The Disbelievers','الكافرون',6,'Meccan'],['An-Nasr','The Divine Support','النصر',3,'Medinan'],['Al-Masad','The Palm Fiber','المسد',5,'Meccan'],['Al-Ikhlas','Sincerity','الإخلاص',4,'Meccan'],['Al-Falaq','The Daybreak','الفلق',5,'Meccan'],['An-Nas','Mankind','الناس',6,'Meccan']
 ];
 
-const startPages = [1,2,50,77,106,128,151,177,187,208,221,235,249,255,262,267,282,293,305,312,322,332,342,350,359,367,377,385,396,404,411,415,418,428,434,440,446,453,458,467,477,483,489,496,499,502,507,511,515,518,520,523,526,528,531,534,537,542,545,549,551,553,554,556,558,560,562,564,566,568,570,572,574,575,577,578,580,582,583,584,585,586,587,589,590,591,591,592,592,593,594,594,595,595,596,596,597,597,598,598,599,599,600,600,601,601,602,602,603,603,604,604,604,604];
+const TOTAL_PAGES = 611;
+
+const startPages = [
+  2, 3, 50, 77, 106, 128, 151, 177, 187, 208, 
+  221, 235, 249, 255, 262, 267, 282, 293, 305, 312, 
+  322, 332, 342, 350, 359, 367, 377, 385, 396, 404, 
+  411, 415, 418, 428, 434, 440, 446, 453, 458, 467, 
+  477, 483, 489, 496, 499, 502, 507, 511, 515, 518, 
+  520, 523, 526, 528, 531, 534, 537, 542, 545, 549, 
+  551, 553, 554, 556, 558, 560, 562, 564, 566, 568, 
+  570, 572, 574, 575, 577, 578, 580, 587, 589, 590, 
+  591, 592, 593, 594, 595, 596, 597, 597, 598, 599, 
+  600, 601, 602, 602, 603, 603, 604, 604, 605, 605, 
+  606, 606, 607, 607, 608, 608, 608, 609, 609, 610, 
+  610, 610, 611, 611
+];
 const surahs = surahNames.map((s, i) => [...s, startPages[i]]);
 
 const qarisData = [
@@ -352,7 +367,7 @@ function handleRoute() {
 
   if (clean.startsWith('quran/page/')) {
     const p = parseInt(clean.split('/')[2], 10);
-    if (!isNaN(p) && p >= 1 && p <= 604) {
+    if (!isNaN(p) && p >= 1 && p <= TOTAL_PAGES) {
       state.page = p;
       openReader(null, false);
       return;
@@ -502,7 +517,7 @@ function renderSurahsCardGrid() {
 // 5. HOME DASHBOARD & KHATM TRACKER
 // -----------------------------------------------------------------------------
 function updateKhatmTracker() {
-  const percent = Math.min(100, Math.max(0, (state.page / 604 * 100))).toFixed(1);
+  const percent = Math.min(100, Math.max(0, (state.page / TOTAL_PAGES * 100))).toFixed(1);
   if ($('khatmProgressPath')) {
     $('khatmProgressPath').setAttribute('stroke-dasharray', `${percent}, 100`);
   }
@@ -510,7 +525,7 @@ function updateKhatmTracker() {
     $('khatmPercentText').textContent = `${percent}%`;
   }
   if ($('khatmPageText')) {
-    $('khatmPageText').textContent = `${state.page} of 604 Pages`;
+    $('khatmPageText').textContent = `${state.page} of ${TOTAL_PAGES} Pages`;
   }
   if ($('badgeSavedCount')) {
     $('badgeSavedCount').textContent = `${state.bookmarks.length} Saved`;
@@ -580,7 +595,7 @@ function openReaderPage(page) {
   if (typeof saveCurrentPageAnnotation === 'function') {
     saveCurrentPageAnnotation();
   }
-  state.page = Math.min(604, Math.max(1, Number(page)));
+  state.page = Math.min(TOTAL_PAGES, Math.max(1, Number(page)));
   openReader(null, true);
 }
 
@@ -603,7 +618,7 @@ function navigatePage(step) {
   if (typeof saveCurrentPageAnnotation === 'function') {
     saveCurrentPageAnnotation();
   }
-  state.page = Math.min(604, Math.max(1, state.page + step));
+  state.page = Math.min(TOTAL_PAGES, Math.max(1, state.page + step));
   const mode = state.mode;
   const overlay = $('readerOverlay');
   if (overlay) {
@@ -697,217 +712,102 @@ function updateReaderDeckUI() {
 }
 
 async function loadQuranPage(page) {
-  const status = $('readerStatus');
-  const ayahs = $('readerAyahs');
-  const pageContainer = $('quranPageContainer');
+  page = Math.min(TOTAL_PAGES, Math.max(1, Number(page) || 1));
+  state.page = page;
 
-  if (status) {
-    status.textContent = 'Loading verified 15-line Quran page...';
-    status.className = 'reader-status loading';
+  const pageImg = $('mushafPageImage');
+  const pageSlider = $('pageSlider');
+  const pageNumber = $('pageNumber');
+  const pageBadge = $('readerPageBadge');
+  const ribbon = $('mushafRibbonBookmark');
+
+  // 1. Instant Authentic 15-Line Page Image Loading
+  if (pageImg) {
+    pageImg.classList.add('loading');
+    pageImg.src = `assets/pages/${page}.webp`;
+    pageImg.onload = () => {
+      pageImg.classList.remove('loading');
+      resizeAnnotationCanvas();
+      loadPageAnnotation(page);
+    };
+    if (pageImg.complete) {
+      pageImg.classList.remove('loading');
+      resizeAnnotationCanvas();
+      loadPageAnnotation(page);
+    }
   }
-  if (ayahs) ayahs.innerHTML = '';
 
-  const cacheKey = `nur-quran-page-${page}`;
+  // Preload adjacent pages for zero-latency page flips
+  if (page < TOTAL_PAGES) {
+    const nextImg = new Image();
+    nextImg.src = `assets/pages/${page + 1}.webp`;
+  }
+  if (page > 1) {
+    const prevImg = new Image();
+    prevImg.src = `assets/pages/${page - 1}.webp`;
+  }
+
+  // 2. Update Slider & Page Counters
+  if (pageSlider) {
+    pageSlider.max = TOTAL_PAGES;
+    pageSlider.value = page;
+  }
+  if (pageNumber) pageNumber.textContent = page;
+  if (pageBadge) pageBadge.textContent = `Page ${page} of ${TOTAL_PAGES}`;
+
+  // 3. Ribbon Bookmark State
+  const isBookmarked = state.bookmarks.includes(page);
+  ribbon?.classList.toggle('bookmarked', isBookmarked);
+
+  // 4. Update Khatm Tracker
+  updateKhatmTracker();
+
+  // 5. Update Surah & Juz Badges
+  const currentJuz = getJuzForPage(page);
+  const currentSurah = getSurahForPage(page);
+
+  if ($('readerSurahBadge')) {
+    $('readerSurahBadge').textContent = `سُورَةُ ${currentSurah.name} | ${currentSurah.englishName}`;
+  }
+  if ($('readerJuzBadge')) {
+    $('readerJuzBadge').textContent = `Juz ${currentJuz.num}`;
+  }
+  if ($('readerRukuBadge')) {
+    $('readerRukuBadge').textContent = `Ruku 1`;
+  }
+
+  // 6. Sync Bottom Audio Deck Track Info
+  if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(currentSurah.number);
+  if ($('playerSurahTitle')) $('playerSurahTitle').textContent = `سُورَةُ ${currentSurah.name}`;
+  if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Surah ${currentSurah.englishName} · Page ${page}`;
+  updateReaderDeckUI();
+
+  // 7. Background Audio State Sync
+  syncAudioForPage(page, currentSurah);
+}
+
+async function syncAudioForPage(page, currentSurah) {
   try {
-    let payload = localStorage.getItem(cacheKey);
-    payload = payload ? JSON.parse(payload) : null;
-
-    if (!payload) {
-      try {
-        const response = await fetch(`${quranApi}${page}/quran-uthmani`);
-        if (response.ok) {
-          const result = await response.json();
-          payload = result.data;
-          localStorage.setItem(cacheKey, JSON.stringify(payload));
-        }
-      } catch (e) {}
-    }
-
-    if (!payload && offlineFallbackPages[page]) {
-      payload = offlineFallbackPages[page];
-    }
-
-    if (!payload) throw new Error('Quran source unavailable');
-
-    const pageAyahs = payload.ayahs || [];
-    if (!pageAyahs.length) throw new Error('No ayahs found');
-    audioState.ayahs = pageAyahs;
-
-    const BISMILLAH_STR = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
-    const first = pageAyahs[0];
-    const firstSurah = first.surah || { number: 1, name: 'الفاتحة', englishName: 'Al-Fatihah' };
-    const cleanSurahName = (firstSurah.name || '').replace(/^سُورَةُ\s*/, '');
-    const surahNum = firstSurah.number || 1;
-    const juzNum = first.juz || 1;
-    const rukuNum = first.ruku || 1;
-    const manzil = getManzil(surahNum);
-
-    if (pageContainer) {
-      pageContainer.classList.toggle('page-lauh', page === 1 || page === 2);
-      pageContainer.classList.toggle('page-15lines', page >= 3);
-    }
-
-    // Sub-Header Badges (Screenshot 1)
-    if ($('readerSurahBadge')) $('readerSurahBadge').textContent = `سُورَةُ ${cleanSurahName} | ${firstSurah.englishName}`;
-    if ($('readerJuzBadge')) $('readerJuzBadge').textContent = `Juz ${juzNum}`;
-    if ($('readerRukuBadge')) $('readerRukuBadge').textContent = `Ruku ${rukuNum}`;
-    if ($('readerPageBadge')) $('readerPageBadge').textContent = `Page ${page} of 604`;
-
-    // Slider & Page input
-    if ($('pageSlider')) $('pageSlider').value = page;
-    if ($('pageNumber')) $('pageNumber').textContent = page;
-
-    // Mushaf Page Margins & Header (Screenshots 1-4)
-    if ($('mushafHeaderSurah')) $('mushafHeaderSurah').textContent = `سُورَةُ ${cleanSurahName} ${toArabicDigits(surahNum)}`;
-    if ($('mushafHeaderPage')) $('mushafHeaderPage').innerHTML = `${page} / <b>${toArabicDigits(page)}</b>`;
-    if ($('mushafHeaderJuz')) $('mushafHeaderJuz').textContent = `${juzArabicNames[juzNum - 1] || 'الم'} ${toArabicDigits(juzNum)}`;
-    if ($('mushafMarginJuz')) $('mushafMarginJuz').textContent = `الْجُزْءُ ${toArabicDigits(juzNum)}`;
-    if ($('mushafMarginRuku')) $('mushafMarginRuku').innerHTML = `${toArabicDigits(rukuNum)}<small>ع</small>`;
-    if ($('mushafMarginNote')) $('mushafMarginNote').textContent = (page % 2 === 0 ? 'اِحْتِيَاطٌ ↓' : 'مُعَانَقَةٌ ↓');
-    if ($('mushafFooterManzil')) $('mushafFooterManzil').textContent = `منزل ${toArabicDigits(manzil)}`;
-
-    // Sync Ribbon Bookmark state
-    const isBookmarked = state.bookmarks.includes(page);
-    $('mushafRibbonBookmark')?.classList.toggle('bookmarked', isBookmarked);
-
-    // Sync Bottom Audio Player Track Info & Deck
-    if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(surahNum);
-    if ($('playerSurahTitle')) $('playerSurahTitle').textContent = `سُورَةُ ${cleanSurahName}`;
-    if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Surah ${firstSurah.englishName} · Ready to recite`;
-    updateReaderDeckUI();
-
-    let html = '';
-
-    if (page === 1) {
-      // Surah Al-Fatihah (Illuminated Lauh Arch - Screenshot 4)
-      const fatihahAyahs = pageAyahs;
-      html += `
-        <div class="lauh-page-container">
-          <div class="lauh-twin-badges">
-            <div class="lauh-badge-oval"><span class="badge-label">رُكُوْعَاتُهَا</span><span class="badge-val">۱</span></div>
-            <div class="lauh-badge-oval"><span class="badge-label">آيَاتُهَا</span><span class="badge-val">۷</span></div>
-          </div>
-          <div class="lauh-surah-tablet">(۱) سُوْرَةُ الفَاتِحَةِ مَكِّيَّةٌ (۵)</div>
-          <div class="lauh-bismillah-cartouche bismillah-play" data-surah="1" data-ayah="${fatihahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
-            <span style="font-size:15px;margin-left:8px;color:#16a34a;">▶</span>
-            <span>بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
-          </div>
-          <div class="lauh-verses-table">`;
-
-      for (let i = 0; i < fatihahAyahs.length; i++) {
-        const ayah = fatihahAyahs[i];
-        let text = ayah.text || '';
-        if (ayah.numberInSurah === 1) continue;
-        html += `
-          <div class="lauh-verse-row">
-            <span class="mushaf-ayah" data-ayah="${ayah.number}" role="button" tabindex="0" title="Play Ayah ${ayah.numberInSurah}">
-              ${escapeHtml(text)}
-              <span class="ayah-marker" data-ayah="${ayah.number}">
-                <span class="ayah-flower">۝</span><span class="ayah-num">${toArabicDigits(ayah.numberInSurah)}</span>
-              </span>
-            </span>
-          </div>`;
-      }
-      html += `</div>
-        <div class="tajweed-footer-guide">غنہ: نون اور میم پر تشدید ہو تو غنہ ہو گا۔ قلقلہ: حروفِ قلقلہ پانچ ہیں (ق، ط، ب، ج، د)</div>
-      </div>`;
-    } else if (page === 2) {
-      // Surah Al-Baqarah (Illuminated Lauh Arch Spread - Screenshot 3)
-      const baqarahAyahs = pageAyahs;
-      html += `
-        <div class="lauh-page-container">
-          <div class="lauh-twin-badges">
-            <div class="lauh-badge-oval"><span class="badge-label">رُكُوْعَاتُهَا</span><span class="badge-val">۴۰</span></div>
-            <div class="lauh-badge-oval"><span class="badge-label">آيَاتُهَا</span><span class="badge-val">۲۸۶</span></div>
-          </div>
-          <div class="lauh-surah-tablet">(۲) سُوْرَةُ البَقَرَةِ مَدَنِيَّةٌ (۸۷)</div>
-          <div class="lauh-bismillah-cartouche bismillah-play" data-surah="2" data-ayah="${baqarahAyahs[0].number}" role="button" tabindex="0" title="Play Bismillah">
-            <span style="font-size:15px;margin-left:8px;color:#16a34a;">▶</span>
-            <span>بِسْمِ اللَّهِ الرَّحْمٰنِ الرَّحِيمِ</span>
-          </div>
-          <div class="lauh-verses-table">`;
-
-      for (let i = 0; i < baqarahAyahs.length; i++) {
-        const ayah = baqarahAyahs[i];
-        let text = ayah.text || '';
-        if (ayah.numberInSurah === 1) {
-          text = text.replace(/^\uFEFF/, '').trim();
-          if (text.startsWith(BISMILLAH_STR)) {
-            text = text.slice(BISMILLAH_STR.length).trim();
-          }
-        }
-        html += `
-          <div class="lauh-verse-row">
-            <span class="mushaf-ayah" data-ayah="${ayah.number}" role="button" tabindex="0" title="Play Ayah ${ayah.numberInSurah}">
-              ${escapeHtml(text)}
-              <span class="ayah-marker" data-ayah="${ayah.number}">
-                <span class="ayah-flower">۝</span><span class="ayah-num">${toArabicDigits(ayah.numberInSurah)}</span>
-              </span>
-            </span>
-          </div>`;
-      }
-      html += `</div>
-        <div class="tajweed-footer-guide">غنہ: نون اور میم پر تشدید ہو تو غنہ ہو گا۔ قلقلہ: حروفِ قلقلہ پانچ ہیں (ق، ط، ب، ج، د)</div>
-      </div>`;
+    const cacheKey = `nur-quran-page-audio-${page}`;
+    let pageAyahs = null;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      pageAyahs = JSON.parse(cached);
     } else {
-      // Standard 15-Line Mushaf (Pages 3 to 604)
-      html += `<div class="mushaf-15lines-container"><div class="mushaf-flow-grid">`;
-      for (let i = 0; i < pageAyahs.length; i++) {
-        const ayah = pageAyahs[i];
-        let text = ayah.text || '';
-        const sNum = ayah.surah ? ayah.surah.number : 1;
-        const sName = ayah.surah ? (ayah.surah.name || '') : '';
-        const cleanName = sName.replace(/^سُورَةُ\s*/, '');
-
-        if (ayah.numberInSurah === 1) {
-          if (sNum === 9) {
-            // Surah At-Tawbah: NO Bismillah
-            html += `<div class="mushaf-surah-box"><span class="mushaf-surah-title">سُورَةُ ${escapeHtml(cleanName)}</span></div>`;
-          } else {
-            text = text.replace(/^\uFEFF/, '').trim();
-            if (text.startsWith(BISMILLAH_STR)) {
-              text = text.slice(BISMILLAH_STR.length).trim();
-            }
-            html += `
-              <div class="mushaf-surah-box"><span class="mushaf-surah-title">سُورَةُ ${escapeHtml(cleanName)}</span></div>
-              <div class="bismillah-banner" data-surah="${sNum}">
-                <button class="bismillah-play" data-surah="${sNum}" data-ayah="${ayah.number}" aria-label="Play Bismillah">▶</button>
-                <span class="bismillah-calligraphy">${BISMILLAH_STR}</span>
-              </div>`;
-          }
+      const res = await fetch(`https://api.alquran.cloud/v1/surah/${currentSurah.number}/${audioState.qari}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && json.data.ayahs) {
+          pageAyahs = json.data.ayahs;
+          localStorage.setItem(cacheKey, JSON.stringify(pageAyahs.slice(0, 15)));
         }
-
-        html += `
-          <span class="mushaf-ayah" data-ayah="${ayah.number}" role="button" tabindex="0" title="Play Ayah ${ayah.numberInSurah}">
-            ${escapeHtml(text)}
-            <span class="ayah-marker" data-ayah="${ayah.number}">
-              <span class="ayah-flower">۝</span><span class="ayah-num">${toArabicDigits(ayah.numberInSurah)}</span>
-            </span>
-          </span> `;
       }
-      html += `</div></div>`;
     }
-
-    if (ayahs) ayahs.innerHTML = html;
-    renderAudioAyahControls();
-
-    // Default Tafsir populator for first ayah of page
-    if (pageAyahs.length) {
-      populateTafsirAyah(pageAyahs[0]);
+    if (pageAyahs && pageAyahs.length) {
+      audioState.ayahs = pageAyahs;
     }
-
-    // Apply font scale
-    setFontScale(state.scale);
-
-    if (status) {
-      status.textContent = `15-Line Mushaf · Page ${page} · ${pageAyahs.length} ayahs`;
-      status.className = 'reader-status ready';
-    }
-  } catch (error) {
-    if (status) {
-      status.textContent = 'Quran text could not load. Check your connection and try again.';
-      status.className = 'reader-status error';
-    }
+  } catch (err) {
+    // Audio sync silent fallback
   }
 }
 
@@ -1472,36 +1372,69 @@ function bindAudioStudioControls() {
 // -----------------------------------------------------------------------------
 const juzData = [
   { num: 1, arabic: 'الم', name: 'Alif Lam Mim', page: 1, surahs: 'Al-Fatihah 1 - Al-Baqarah 141' },
-  { num: 2, arabic: 'سَيَقُولُ', name: 'Sayaqul', page: 22, surahs: 'Al-Baqarah 142 - Al-Baqarah 252' },
-  { num: 3, arabic: 'تِلْكَ الرُّسُلُ', name: 'Tilkal Rusul', page: 42, surahs: 'Al-Baqarah 253 - Ali \'Imran 92' },
-  { num: 4, arabic: 'لَنْ تَنَالُوا', name: 'Lan Tanalu', page: 62, surahs: 'Ali \'Imran 93 - An-Nisa 23' },
-  { num: 5, arabic: 'وَالْمُحْصَنَاتُ', name: 'Wal Muhsanat', page: 82, surahs: 'An-Nisa 24 - An-Nisa 147' },
-  { num: 6, arabic: 'لَا يُحِبُّ اللَّهُ', name: 'La Yuhibbullah', page: 102, surahs: 'An-Nisa 148 - Al-Ma\'idah 81' },
-  { num: 7, arabic: 'وَإِذَا سَمِعُوا', name: 'Wa Iza Sami\'u', page: 122, surahs: 'Al-Ma\'idah 82 - Al-An\'am 110' },
-  { num: 8, arabic: 'وَلَوْ أَنَّنَا', name: 'Wa Lau Annana', page: 142, surahs: 'Al-An\'am 111 - Al-A\'raf 87' },
-  { num: 9, arabic: 'قَالَ الْمَلَأُ', name: 'Qalal Mala\'u', page: 162, surahs: 'Al-A\'raf 88 - Al-Anfal 40' },
-  { num: 10, arabic: 'وَاعْلَمُوا', name: 'Wa\'lamu', page: 182, surahs: 'Al-Anfal 41 - At-Tawbah 92' },
-  { num: 11, arabic: 'يَعْتَذِرُونَ', name: 'Ya\'taziroon', page: 202, surahs: 'At-Tawbah 93 - Hud 5' },
-  { num: 12, arabic: 'وَمَا مِنْ دَابَّةٍ', name: 'Wa Ma Min Dabbah', page: 222, surahs: 'Hud 6 - Yusuf 52' },
-  { num: 13, arabic: 'وَمَا أُبَرِّئُ', name: 'Wa Ma Ubarri\'u', page: 242, surahs: 'Yusuf 53 - Ibrahim 52' },
-  { num: 14, arabic: 'رُبَمَا', name: 'Rubama', page: 262, surahs: 'Al-Hijr 1 - An-Nahl 128' },
-  { num: 15, arabic: 'سُبْحَانَ الَّذِي', name: 'Subhanalladhi', page: 282, surahs: 'Al-Isra 1 - Al-Kahf 74' },
-  { num: 16, arabic: 'قَالَ أَلَمْ', name: 'Qala Alam', page: 302, surahs: 'Al-Kahf 75 - Ta-Ha 135' },
-  { num: 17, arabic: 'اقْتَرَبَ', name: 'Iqtaraba', page: 322, surahs: 'Al-Anbiya 1 - Al-Hajj 78' },
-  { num: 18, arabic: 'قَدْ أَفْلَحَ', name: 'Qad Aflaha', page: 342, surahs: 'Al-Mu\'minun 1 - Al-Furqan 20' },
-  { num: 19, arabic: 'وَقَالَ الَّذِينَ', name: 'Wa Qalalladhina', page: 362, surahs: 'Al-Furqan 21 - An-Naml 55' },
-  { num: 20, arabic: 'أَمَّنْ خَلَقَ', name: 'Amman Khalaqa', page: 382, surahs: 'An-Naml 56 - Al-\'Ankabut 45' },
-  { num: 21, arabic: 'اتْلُ مَا أُوحِيَ', name: 'Utlu Ma Oohiya', page: 402, surahs: 'Al-\'Ankabut 46 - Al-Ahzab 30' },
-  { num: 22, arabic: 'وَمَنْ يَقْنُتْ', name: 'Wa Manyaqnut', page: 422, surahs: 'Al-Ahzab 31 - Ya-Sin 27' },
-  { num: 23, arabic: 'وَمَا لِيَ', name: 'Wa Maliya', page: 442, surahs: 'Ya-Sin 28 - Az-Zumar 31' },
-  { num: 24, arabic: 'فَمَنْ أَظْلَمُ', name: 'Faman Azlamu', page: 462, surahs: 'Az-Zumar 32 - Fussilat 46' },
-  { num: 25, arabic: 'إِلَيْهِ يُرَدُّ', name: 'Ilayhi Yuraddu', page: 482, surahs: 'Fussilat 47 - Al-Jathiyah 37' },
-  { num: 26, arabic: 'حم', name: 'Ha Mim', page: 502, surahs: 'Al-Ahqaf 1 - Adh-Dhariyat 30' },
-  { num: 27, arabic: 'قَالَ فَمَا خَطْبُكُمْ', name: 'Qala Fama Khatbukum', page: 522, surahs: 'Adh-Dhariyat 31 - Al-Hadid 29' },
-  { num: 28, arabic: 'قَدْ سَمِعَ اللَّهُ', name: 'Qad Sami\'allah', page: 542, surahs: 'Al-Mujadila 1 - At-Tahrim 12' },
-  { num: 29, arabic: 'تَبَارَكَ الَّذِي', name: 'Tabarakalladhi', page: 562, surahs: 'Al-Mulk 1 - Al-Mursalat 50' },
-  { num: 30, arabic: 'عَمَّ', name: 'Amma', page: 582, surahs: 'An-Naba 1 - An-Nas 6' }
+  { num: 2, arabic: 'سَيَقُولُ', name: 'Sayaqul', page: 23, surahs: 'Al-Baqarah 142 - Al-Baqarah 252' },
+  { num: 3, arabic: 'تِلْكَ الرُّسُلُ', name: 'Tilkal Rusul', page: 43, surahs: 'Al-Baqarah 253 - Ali \'Imran 92' },
+  { num: 4, arabic: 'لَنْ تَنَالُوا', name: 'Lan Tanalu', page: 63, surahs: 'Ali \'Imran 93 - An-Nisa 23' },
+  { num: 5, arabic: 'وَالْمُحْصَنَاتُ', name: 'Wal Muhsanat', page: 83, surahs: 'An-Nisa 24 - An-Nisa 147' },
+  { num: 6, arabic: 'لَا يُحِبُّ اللَّهُ', name: 'La Yuhibbullah', page: 103, surahs: 'An-Nisa 148 - Al-Ma\'idah 81' },
+  { num: 7, arabic: 'وَإِذَا سَمِعُوا', name: 'Wa Iza Sami\'u', page: 123, surahs: 'Al-Ma\'idah 82 - Al-An\'am 110' },
+  { num: 8, arabic: 'وَلَوْ أَنَّنَا', name: 'Wa Lau Annana', page: 143, surahs: 'Al-An\'am 111 - Al-A\'raf 87' },
+  { num: 9, arabic: 'قَالَ الْمَلَأُ', name: 'Qalal Mala\'u', page: 163, surahs: 'Al-A\'raf 88 - Al-Anfal 40' },
+  { num: 10, arabic: 'وَاعْلَمُوا', name: 'Wa\'lamu', page: 183, surahs: 'Al-Anfal 41 - At-Tawbah 92' },
+  { num: 11, arabic: 'يَعْتَذِرُونَ', name: 'Ya\'taziroon', page: 203, surahs: 'At-Tawbah 93 - Hud 5' },
+  { num: 12, arabic: 'وَمَا مِنْ دَابَّةٍ', name: 'Wa Ma Min Dabbah', page: 223, surahs: 'Hud 6 - Yusuf 52' },
+  { num: 13, arabic: 'وَمَا أُبَرِّئُ', name: 'Wa Ma Ubarri\'u', page: 243, surahs: 'Yusuf 53 - Ibrahim 52' },
+  { num: 14, arabic: 'رُبَمَا', name: 'Rubama', page: 263, surahs: 'Al-Hijr 1 - An-Nahl 128' },
+  { num: 15, arabic: 'سُبْحَانَ الَّذِي', name: 'Subhanalladhi', page: 283, surahs: 'Al-Isra 1 - Al-Kahf 74' },
+  { num: 16, arabic: 'قَالَ أَلَمْ', name: 'Qala Alam', page: 303, surahs: 'Al-Kahf 75 - Ta-Ha 135' },
+  { num: 17, arabic: 'اقْتَرَبَ', name: 'Iqtaraba', page: 323, surahs: 'Al-Anbiya 1 - Al-Hajj 78' },
+  { num: 18, arabic: 'قَدْ أَفْلَحَ', name: 'Qad Aflaha', page: 343, surahs: 'Al-Mu\'minun 1 - Al-Furqan 20' },
+  { num: 19, arabic: 'وَقَالَ الَّذِينَ', name: 'Wa Qalalladhina', page: 363, surahs: 'Al-Furqan 21 - An-Naml 55' },
+  { num: 20, arabic: 'أَمَّنْ خَلَقَ', name: 'Amman Khalaqa', page: 383, surahs: 'An-Naml 56 - Al-\'Ankabut 45' },
+  { num: 21, arabic: 'اتْلُ مَا أُوحِيَ', name: 'Utlu Ma Oohiya', page: 403, surahs: 'Al-\'Ankabut 46 - Al-Ahzab 30' },
+  { num: 22, arabic: 'وَمَنْ يَقْنُتْ', name: 'Wa Manyaqnut', page: 423, surahs: 'Al-Ahzab 31 - Ya-Sin 27' },
+  { num: 23, arabic: 'وَمَا لِيَ', name: 'Wa Maliya', page: 443, surahs: 'Ya-Sin 28 - Az-Zumar 31' },
+  { num: 24, arabic: 'فَمَنْ أَظْلَمُ', name: 'Faman Azlamu', page: 463, surahs: 'Az-Zumar 32 - Fussilat 46' },
+  { num: 25, arabic: 'إِلَيْهِ يُرَدُّ', name: 'Ilayhi Yuraddu', page: 483, surahs: 'Fussilat 47 - Al-Jathiyah 37' },
+  { num: 26, arabic: 'حم', name: 'Ha Mim', page: 503, surahs: 'Al-Ahqaf 1 - Adh-Dhariyat 30' },
+  { num: 27, arabic: 'قَالَ فَمَا خَطْبُكُمْ', name: 'Qala Fama Khatbukum', page: 523, surahs: 'Adh-Dhariyat 31 - Al-Hadid 29' },
+  { num: 28, arabic: 'قَدْ سَمِعَ اللَّهُ', name: 'Qad Sami\'allah', page: 543, surahs: 'Al-Mujadila 1 - At-Tahrim 12' },
+  { num: 29, arabic: 'تَبَارَكَ الَّذِي', name: 'Tabarakalladhi', page: 563, surahs: 'Al-Mulk 1 - Al-Mursalat 50' },
+  { num: 30, arabic: 'عَمَّ', name: 'Amma', page: 587, surahs: 'An-Naba 1 - An-Nas 6' }
 ];
+
+function getJuzForPage(page) {
+  for (let i = juzData.length - 1; i >= 0; i--) {
+    if (page >= juzData[i].page) {
+      return juzData[i];
+    }
+  }
+  return juzData[0];
+}
+
+function getSurahForPage(page) {
+  for (let i = startPages.length - 1; i >= 0; i--) {
+    if (page >= startPages[i]) {
+      const s = surahs[i];
+      return {
+        number: i + 1,
+        englishName: s[0],
+        meaning: s[1],
+        name: s[2].replace(/^سُورَةُ\s*/, ''),
+        ayahs: s[3],
+        type: s[4]
+      };
+    }
+  }
+  return {
+    number: 1,
+    englishName: 'Al-Fatihah',
+    meaning: 'The Opener',
+    name: 'الفاتحة',
+    ayahs: 7,
+    type: 'Meccan'
+  };
+}
 
 let currentJuzFilter = 'all';
 
@@ -1853,7 +1786,7 @@ function renderKhatamPlanner() {
     const juz = juzData[i];
     const isDone = completedDays.includes(day);
     const startP = juz.page;
-    const endP = day === 30 ? 604 : juzData[i + 1].page - 1;
+    const endP = day === 30 ? TOTAL_PAGES : juzData[i + 1].page - 1;
 
     return `
       <div class="planner-day-card ${isDone ? 'completed' : ''}" data-planner-day="${day}">
@@ -2040,7 +1973,7 @@ function initBackupDropzone() {
 const faqs = [
   {
     q: "What makes the 15-line Quran format special?",
-    a: "The 15-line Quran (Mushaf) is the gold standard used by Huffaz across Pakistan, India, Turkey, and South Asia. Every single page starts precisely at the beginning of an Ayah and ends at the end of an Ayah (known as Ayat-al-Hifz). It spans exactly 604 pages, with each Juz occupying roughly 20 pages, making memorization structured and predictable."
+    a: "The 15-line Quran (Mushaf) is the gold standard used by Huffaz across Pakistan, India, Turkey, and South Asia. Every single page starts precisely at the beginning of an Ayah and ends at the end of an Ayah (known as Ayat-al-Hifz). It spans exactly 611 pages, with each Juz occupying roughly 20 pages, making memorization structured and predictable."
   },
   {
     q: "Why does Surah At-Tawbah (Surah 9) not have a Bismillah?",
@@ -2651,7 +2584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof annotState !== 'undefined' && annotState.isActive) return; // Prevent page turn while drawing
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
         // In Arabic reading:
-        // Swipe left (diffX < 0) -> Next Page (towards page 604)
+        // Swipe left (diffX < 0) -> Next Page (towards page 611)
         // Swipe right (diffX > 0) -> Previous Page (towards page 1)
         if (diffX < 0) {
           navigatePage(1);
@@ -2732,7 +2665,7 @@ function getToolLabel(toolName) {
 
 function resizeAnnotationCanvas() {
   const canvas = $('annotationCanvas');
-  const frame = $('mushafBorderedFrame');
+  const frame = $('mushafImageWrapper') || $('mushafPageImage') || $('mushafBorderedFrame');
   if (!canvas || !frame) return;
 
   const rect = frame.getBoundingClientRect();
@@ -2915,8 +2848,9 @@ function initAnnotationSuite() {
   const ctx = canvas.getContext('2d');
 
   // Resize canvas when Mushaf frame dimensions update
-  if (window.ResizeObserver && $('mushafBorderedFrame')) {
-    new ResizeObserver(() => resizeAnnotationCanvas()).observe($('mushafBorderedFrame'));
+  const obsTarget = $('mushafImageWrapper') || $('mushafBorderedFrame');
+  if (window.ResizeObserver && obsTarget) {
+    new ResizeObserver(() => resizeAnnotationCanvas()).observe(obsTarget);
   }
   window.addEventListener('resize', () => resizeAnnotationCanvas());
 

@@ -3438,6 +3438,70 @@ body.dark .mushaf-floating-note-btn {
   color: #9eccad;
 }
 
+/* ==========================================================================
+   AUTHENTIC 15-LINE MUSHAF PAGE IMAGE DISPLAY & ANNOTATION LAYER
+   ========================================================================== */
+.quran-page {
+  position: relative;
+  width: min(650px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mushaf-image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--mushaf-paper, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(13, 71, 52, 0.1);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--border-line, rgba(13, 71, 52, 0.15));
+}
+
+body.dark .mushaf-image-wrapper {
+  background: #141f1a;
+  border-color: #2b3d34;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mushaf-page-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 160px);
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.mushaf-page-image.loading {
+  opacity: 0.5;
+}
+
+.mushaf-image-wrapper #annotationCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.mushaf-image-wrapper #annotationCanvas.active-mode {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
 /* 3. The Authentic Interlaced Chain Border for 15-Line Frame */
 .mushaf-bordered-frame {
   flex: 1;

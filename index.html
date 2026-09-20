@@ -124,7 +124,7 @@
 							</div>
 							<div class="khatm-details">
 								<span class="khatm-title">KHATM TRACKER</span>
-								<strong class="khatm-progress" id="khatmPageText">9 of 604 Pages</strong>
+								<strong class="khatm-progress" id="khatmPageText">9 of 611 Pages</strong>
 								<span class="khatm-target">Target: 4 pages / day (Ramzan pace)</span>
 								<span class="khatm-velocity">⚑ 149 days left at current velocity</span>
 							</div>
@@ -256,10 +256,10 @@
 									<span style="font-size:11px;font-weight:700;color:var(--primary);">100% Ready</span>
 								</div>
 								<h4 style="margin:10px 0 6px;">IndexedDB Complete</h4>
-								<p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px;line-height:1.4;">The full 604 high-resolution 15-line Mushaf pages and all 6,236 Ayahs are stored locally for zero-data reading.</p>
+								<p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px;line-height:1.4;">The full 611 high-resolution authentic 15-line Mushaf pages are stored locally for zero-data reading.</p>
 								
 								<div class="storage-stat-row"><span>Quran Metadata</span><strong>114 Surahs</strong></div>
-								<div class="storage-stat-row"><span>15-Line Pages</span><strong>604/604 Cached</strong></div>
+								<div class="storage-stat-row"><span>15-Line Pages</span><strong>611/611 Cached</strong></div>
 								<div class="storage-stat-row"><span>PWA State</span><strong style="color:var(--primary);">Active & Installed</strong></div>
 							</div>
 							<button class="btn-outline-green" style="width:100%;justify-content:center;" onclick="showToast('IndexedDB storage verified 100% integral')">↺ Force Integrity Recheck</button>
@@ -272,13 +272,13 @@
 			<section class="page-view hidden" id="surahsView">
 				<div class="surahs-hero-banner">
 					<div class="surahs-hero-left">
-						<span style="font-size:11px;font-weight:700;color:var(--accent-coral);letter-spacing:0.8px;">● MUSHAF AL-MADINAH STANDARD • 15-Line Ottoman Script</span>
+						<span style="font-size:11px;font-weight:700;color:var(--accent-coral);letter-spacing:0.8px;">● AUTHENTIC 15-LINE HIFZI MUSHAF • Subcontinent Script</span>
 						<h1>Index of All 114 Sacred Surahs</h1>
-						<p>Direct access to all 604 pages of the 15-line Quran. Filter by revelation period, sort by recitation weight, or stream pristine tartil recitations instantly.</p>
+						<p>Direct access to all 611 pages of the authentic 15-line Quran. Filter by revelation period, sort by recitation weight, or stream pristine tartil recitations instantly.</p>
 						<div class="surahs-hero-stats">
 							<span class="hero-stat-pill">📖 6,236 Total Verses</span>
 							<span class="hero-stat-pill">۞ 30 Ajza' • 60 Ahzab</span>
-							<span class="hero-stat-pill">📄 Pages 1 to 604</span>
+							<span class="hero-stat-pill">📄 Pages 1 to 611</span>
 						</div>
 					</div>
 					<div class="revelation-donut-card">
@@ -1000,7 +1000,7 @@
 				<span class="toolbar-badge" style="color:var(--primary);font-weight:700;">● <span id="readerSurahBadge">سُورَةُ البَقَرَةِ | Al-Baqarah</span></span>
 				<span class="toolbar-badge" id="readerJuzBadge">Juz 1</span>
 				<span class="toolbar-badge" id="readerRukuBadge">Ruku 1</span>
-				<span class="toolbar-badge page-badge" id="readerPageBadge">Page 2 of 604</span>
+				<span class="toolbar-badge page-badge" id="readerPageBadge">Page 2 of 611</span>
 			</div>
 			<div class="toolbar-center-controls">
 				<div class="view-mode-toggle-group">
@@ -1060,46 +1060,35 @@
 					<button id="bubblePlay">Play ▶</button>
 				</div>
 
-				<!-- Center Mushaf Card (From Step 1 - Complete 15 Line / Lauh) -->
+				<!-- Center Mushaf Card: Authentic 15-Line Mushaf Page View -->
 				<div class="quran-page" id="quranPageContainer">
-					<!-- Hanging Bookmark Ribbon in Top Right (Screenshots 1-4) -->
+					<!-- Hanging Bookmark Ribbon in Top Right -->
 					<button class="mushaf-ribbon-bookmark" id="mushafRibbonBookmark" title="Toggle Bookmark" aria-label="Bookmark page">
 						<svg viewBox="0 0 24 32" width="18" height="26" fill="currentColor">
 							<path d="M2 0h20v30l-10-6-10 6V0z"/>
 						</svg>
 					</button>
 
-					<div class="mushaf-header-bar" id="mushafHeaderBar">
-						<span class="mushaf-header-surah" id="mushafHeaderSurah">سُورَةُ الْبَقَرَةِ ۲</span>
-						<span class="mushaf-header-page" id="mushafHeaderPage">4 / <b>۲</b></span>
-						<span class="mushaf-header-juz" id="mushafHeaderJuz">الٓمّٓ ۱</span>
+					<!-- Authentic 15-Line Page Frame with Annotation Canvas Overlay -->
+					<div class="mushaf-image-wrapper" id="mushafImageWrapper">
+						<img id="mushafPageImage" class="mushaf-page-image" src="assets/pages/2.webp" alt="15 Line Quran Page" />
+						<canvas id="annotationCanvas" class="annotation-canvas"></canvas>
 					</div>
-					<div class="mushaf-layout-wrapper">
-						<aside class="mushaf-side-margin" id="mushafSideMargin">
-							<span class="margin-badge juz-badge" id="mushafMarginJuz">الْجُزْءُ ۱</span>
-							<span class="margin-badge ruku-badge" id="mushafMarginRuku">۲/ع</span>
-							<span class="margin-badge waqf-badge">وقف لازم</span>
-							<span class="margin-vertical-note" id="mushafMarginNote">اِحْتِيَاطٌ ↓</span>
-						</aside>
-						<div class="mushaf-bordered-frame" id="mushafBorderedFrame">
-							<div class="reader-status" id="readerStatus">Loading verified Quran text...</div>
-							<div class="reader-ayahs" id="readerAyahs"></div>
-							<canvas id="annotationCanvas" class="annotation-canvas"></canvas>
-						</div>
-					</div>
-					<div class="mushaf-footer-bar" id="mushafFooterBar">
-						<!-- Floating Circular Notepad Action Button (Screenshots 1-4) -->
-						<button class="mushaf-floating-note-btn" id="floatingNoteBtn" title="Study & Notes (Drawing, Highlighting, Reflection)" aria-label="Study & Notes">
-							<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-								<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-								<polyline points="14 2 14 8 20 8"></polyline>
-								<line x1="16" y1="13" x2="8" y2="13"></line>
-								<line x1="16" y1="17" x2="8" y2="17"></line>
-								<line x1="10" y1="9" x2="8" y2="9"></line>
-							</svg>
-						</button>
-						<span class="mushaf-footer-manzil" id="mushafFooterManzil">منزل ۱</span>
-					</div>
+
+					<!-- Floating Circular Notepad Action Button -->
+					<button class="mushaf-floating-note-btn" id="floatingNoteBtn" title="Study & Notes (Drawing, Highlighting, Reflection)" aria-label="Study & Notes">
+						<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+							<polyline points="14 2 14 8 20 8"></polyline>
+							<line x1="16" y1="13" x2="8" y2="13"></line>
+							<line x1="16" y1="17" x2="8" y2="17"></line>
+							<line x1="10" y1="9" x2="8" y2="9"></line>
+						</svg>
+					</button>
+
+					<!-- Hidden elements for backward-compatibility with background audio/listeners -->
+					<div class="reader-status" id="readerStatus" style="display:none;"></div>
+					<div class="reader-ayahs" id="readerAyahs" style="display:none;"></div>
 				</div>
 			</div>
 
@@ -1136,8 +1125,8 @@
 				<button class="btn-outline-green" id="prevPage">← Prev Page</button>
 				<div class="page-jump-slider-wrap">
 					<span>Page Jump:</span>
-					<input type="range" id="pageSlider" min="1" max="604" value="2">
-					<span><strong id="pageNumber">2</strong> / 604</span>
+					<input type="range" id="pageSlider" min="1" max="611" value="2">
+					<span><strong id="pageNumber">2</strong> / 611</span>
 				</div>
 				<span class="sync-status-badge" id="syncRecitationStatus">● Syncing Recitation: Mishary Rashid Alafasy</span>
 				<button class="btn-primary-green" id="nextPage">Next Page →</button>
