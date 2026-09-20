@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 	<meta name="theme-color" content="#edf7f1">
 	<title>القرآن الكريم | AL-MUSHAF 15-LINE</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="manifest" href="manifest.json">
 	<link rel="icon" type="image/png" href="assets/icon-192.png">
-	<link rel="apple-touch-icon" href="assets/icon-192.png">
+	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-title" content="Nūr Al-Quran">
@@ -18,7 +18,7 @@
 	<link rel="stylesheet" href="ramadan.css">
 	<link rel="stylesheet" href="audio-advanced.css">
 	<link rel="stylesheet" href="mushaf-15line.css">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=2.7.1">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=2.8.0">
 </head>
 <body class="theme-emerald">
 	<div class="app-shell">
@@ -1072,8 +1072,12 @@
 					<!-- Authentic 15-Line Page Frame with Annotation Canvas Overlay -->
 					<div class="mushaf-image-wrapper" id="mushafImageWrapper">
 						<img id="mushafPageImage" class="mushaf-page-image" src="assets/pages/2.webp" alt="15 Line Quran Page" />
+						<div id="mushafAyahOverlay" class="mushaf-ayah-overlay"></div>
 						<canvas id="annotationCanvas" class="annotation-canvas"></canvas>
 					</div>
+
+					<!-- Interactive Ayah Quick Selector Bar -->
+					<div class="mushaf-ayah-bar" id="mushafAyahBar" aria-label="Ayahs on this page"></div>
 
 					<!-- Floating Circular Notepad Action Button -->
 					<button class="mushaf-floating-note-btn" id="floatingNoteBtn" title="Study & Notes (Drawing, Highlighting, Reflection)" aria-label="Study & Notes">

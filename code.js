@@ -782,32 +782,147 @@ async function loadQuranPage(page) {
   if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Surah ${currentSurah.englishName} · Page ${page}`;
   updateReaderDeckUI();
 
-  // 7. Background Audio State Sync
-  syncAudioForPage(page, currentSurah);
+  // 7. Render Interactive 15-Line Ayah Overlay & Quick Selector Bar
+  renderPageAyahOverlay(page);
 }
 
-async function syncAudioForPage(page, currentSurah) {
+const pageAyahsCache = {};
+
+async function fetchAyahsForPage(page) {
+  if (pageAyahsCache[page]) return pageAyahsCache[page];
+  const storageKey = `nur-page-ayahs-${page}`;
+  const localCached = localStorage.getItem(storageKey);
+  if (localCached) {
+    try {
+      const parsed = JSON.parse(localCached);
+      if (parsed && parsed.length) {
+        pageAyahsCache[page] = parsed;
+        return parsed;
+      }
+    } catch (e) {}
+  }
+
+  // 15-line Quran page mapping: Page 2 is Surah 1 (7 ayahs), Page 3 is Surah 2:1-5, etc.
+  const apiPage = Math.max(1, Math.min(604, page >= 2 ? page - 1 : 1));
   try {
-    const cacheKey = `nur-quran-page-audio-${page}`;
-    let pageAyahs = null;
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      pageAyahs = JSON.parse(cached);
-    } else {
-      const res = await fetch(`https://api.alquran.cloud/v1/surah/${currentSurah.number}/${audioState.qari}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && json.data.ayahs) {
-          pageAyahs = json.data.ayahs;
-          localStorage.setItem(cacheKey, JSON.stringify(pageAyahs.slice(0, 15)));
-        }
+    const res = await fetch(`https://api.alquran.cloud/v1/page/${apiPage}/quran-uthmani`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && json.data.ayahs && json.data.ayahs.length) {
+        pageAyahsCache[page] = json.data.ayahs;
+        try { localStorage.setItem(storageKey, JSON.stringify(json.data.ayahs)); } catch(e) {}
+        return json.data.ayahs;
       }
     }
-    if (pageAyahs && pageAyahs.length) {
-      audioState.ayahs = pageAyahs;
-    }
-  } catch (err) {
-    // Audio sync silent fallback
+  } catch (err) {}
+
+  // Fallback to Surah ayahs
+  const currentSurah = getSurahForPage(page);
+  return [{
+    number: surahStartAyahs[currentSurah.number - 1] || 1,
+    numberInSurah: 1,
+    text: '',
+    surah: { number: currentSurah.number, name: currentSurah.name, englishName: currentSurah.englishName }
+  }];
+}
+
+function highlightPlayingAyah(number) {
+  audioState.currentPlayingAyah = number;
+
+  // Remove previous highlights
+  document.querySelectorAll('.ayah-line-band.playing, .ayah-pill.playing, .mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => {
+    el.classList.remove('playing');
+  });
+
+  if (!number) return;
+
+  // Apply glowing playing highlight to all bands and pills matching this ayah
+  const activeBands = document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`);
+  activeBands.forEach(el => el.classList.add('playing'));
+
+  const activePills = document.querySelectorAll(`.ayah-pill[data-ayah="${number}"]`);
+  activePills.forEach(el => {
+    el.classList.add('playing');
+    el.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+  });
+
+  // Also highlight legacy elements if any
+  document.querySelectorAll(`[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+}
+
+async function renderPageAyahOverlay(page) {
+  const overlay = $('mushafAyahOverlay');
+  const ayahBar = $('mushafAyahBar');
+  if (!overlay) return;
+
+  overlay.innerHTML = '';
+  if (ayahBar) ayahBar.innerHTML = '';
+
+  const ayahs = await fetchAyahsForPage(page);
+  if (!ayahs || !ayahs.length) return;
+
+  // Sync to audioState so recitation knows all ayahs on this page
+  audioState.ayahs = ayahs;
+
+  // Title pages (page 1) don't have Quran ayahs
+  if (page === 1) return;
+
+  const totalLines = 15;
+  const numAyahs = ayahs.length;
+
+  // Distribute the ayahs smoothly across the 15 lines of the page
+  const lineToAyah = [];
+  for (let l = 0; l < totalLines; l++) {
+    const ayahIndex = Math.min(numAyahs - 1, Math.floor((l / totalLines) * numAyahs));
+    lineToAyah.push(ayahs[ayahIndex]);
+  }
+
+  // Create 15 interactive line bands over the authentic page image
+  for (let l = 0; l < totalLines; l++) {
+    const ayah = lineToAyah[l];
+    const band = document.createElement('div');
+    band.className = 'ayah-line-band';
+    band.dataset.line = l + 1;
+    band.dataset.ayah = ayah.number;
+    band.dataset.ayahInSurah = ayah.numberInSurah;
+    band.title = `Line ${l + 1} · Ayah ${ayah.numberInSurah} (${ayah.surah?.englishName || ''}) - Click to play`;
+
+    band.addEventListener('click', (e) => {
+      // If annotation mode is active, do not trigger audio click
+      if (typeof annotState !== 'undefined' && annotState.isActive) return;
+      e.stopPropagation();
+      populateTafsirAyah(ayah);
+      highlightPlayingAyah(ayah.number);
+      playAyah(ayah.number, true);
+    });
+
+    overlay.appendChild(band);
+  }
+
+  // Create interactive Quick Ayah Selector Pills
+  if (ayahBar) {
+    ayahs.forEach((ayah) => {
+      const pill = document.createElement('button');
+      pill.className = 'ayah-pill';
+      pill.dataset.ayah = ayah.number;
+      pill.dataset.ayahInSurah = ayah.numberInSurah;
+      pill.innerHTML = `<span>Ayah ${ayah.numberInSurah}</span>`;
+      pill.title = `Play Ayah ${ayah.numberInSurah} of ${ayah.surah?.englishName || ''}`;
+
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        populateTafsirAyah(ayah);
+        highlightPlayingAyah(ayah.number);
+        playAyah(ayah.number, true);
+      });
+
+      ayahBar.appendChild(pill);
+    });
+  }
+
+  // Highlight currently playing ayah if already active
+  if (audioState.currentPlayingAyah) {
+    highlightPlayingAyah(audioState.currentPlayingAyah);
   }
 }
 
@@ -1044,18 +1159,9 @@ async function playAyah(number, withBismillah = true) {
     if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(result.data.surah.number);
     if ($('audioPlay')) $('audioPlay').textContent = 'Ⅱ';
 
-    document.querySelectorAll('.mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => el.classList.remove('playing'));
-    document.querySelectorAll(`[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+    highlightPlayingAyah(number);
 
     updateMediaSession(`Ayah ${result.data.numberInSurah} · ${result.data.surah.englishName}`, qariName, `Surah ${result.data.surah.englishName} (${result.data.surah.name})`);
-
-    // Highlight ayah glow if enabled
-    if (state.glow) {
-      const activeEl = document.querySelector(`.mushaf-ayah[data-ayah="${number}"]`);
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }
   } catch (error) {
     if ($('audioAyahLabel')) $('audioAyahLabel').textContent = 'Audio unavailable. Try again.';
   }
@@ -1090,7 +1196,7 @@ function handleAudioEnded() {
     playAyah(audioState.ayahs[audioState.index + 1].number, true);
   } else {
     if ($('audioPlay')) $('audioPlay').textContent = '▶';
-    document.querySelectorAll('.mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => el.classList.remove('playing'));
+    highlightPlayingAyah(null);
   }
 }
 
@@ -2583,10 +2689,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Swiping horizontally with at least 45px distance and horizontal dominant
       if (typeof annotState !== 'undefined' && annotState.isActive) return; // Prevent page turn while drawing
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
-        // In Arabic reading:
-        // Swipe left (diffX < 0) -> Next Page (towards page 611)
-        // Swipe right (diffX > 0) -> Previous Page (towards page 1)
-        if (diffX < 0) {
+        // Natural page turn requested:
+        // Swipe right (diffX > 0, seedha side) -> Next Page (towards page 611)
+        // Swipe left (diffX < 0, ulta side) -> Previous Page (towards page 1)
+        if (diffX > 0) {
           navigatePage(1);
         } else {
           navigatePage(-1);
