@@ -728,7 +728,10 @@ function updateReaderDeckUI() {
 
   const playIcon = $('deckPlayIcon');
   const playLabel = $('deckPlayLabel');
-  if (playIcon) playIcon.textContent = isPlaying ? '⏸' : '▶';
+  if (playIcon) {
+    playIcon.textContent = isPlaying ? '⏸' : '▶';
+    playIcon.style.marginLeft = isPlaying ? '0px' : '2px';
+  }
   if (playLabel) playLabel.textContent = isPlaying ? 'Pause' : 'Play';
 
   const speedVal = $('deckSpeedVal');
@@ -910,7 +913,7 @@ function updatePlayingAyahProgress() {
   const rawProgress = (audio.currentTime / audio.duration);
   if (isNaN(rawProgress)) return;
 
-  const activeSegments = Array.from(document.querySelectorAll('.ayah-segment.playing, .lauh-cartouche-bismillah.playing'));
+  const activeSegments = Array.from(document.querySelectorAll('.ayah-segment.playing, .lauh-cartouche-bismillah.playing, .ayah-line-band.playing'));
   if (!activeSegments.length) return;
 
   if (activeSegments.length === 1) {
@@ -1535,6 +1538,90 @@ function initHeaderQariPopover() {
       popover.classList.add('hidden');
       trigger.classList.remove('open');
     }
+  });
+}
+
+function initReaderMoreSheet() {
+  const sheet = $('readerMoreSheet');
+  const backdrop = $('readerMoreBackdrop');
+  const closeBtn = $('closeReaderMore');
+  const moreBtn = $('deckMoreBtn');
+  const grid = $('readerMoreQariGrid');
+  const slider = $('readerMorePageSlider');
+  const val = $('readerMorePageVal');
+  const tafsirBtn = $('readerMoreTafsirBtn');
+  const themeBtn = $('readerMoreThemeBtn');
+  const exitBtn = $('readerMoreExitBtn');
+
+  function openSheet() {
+    if (!sheet || !backdrop) return;
+    if (grid) {
+      grid.innerHTML = qarisData.map(q => `
+        <div class="reader-more-qari-card ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
+          <div style="font-size:16px;">🎙️</div>
+          <div style="flex:1;overflow:hidden;">
+            <strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${q.name}</strong>
+            <small style="color:var(--text-muted);font-size:10px;">${q.style}</small>
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.reader-more-qari-card').forEach(card => {
+        card.onclick = () => {
+          setQari(card.dataset.qariId);
+          closeSheet();
+        };
+      });
+    }
+
+    if (slider && val) {
+      slider.value = state.currentPage;
+      val.textContent = `${state.currentPage} / 611`;
+    }
+
+    backdrop.classList.remove('hidden');
+    sheet.classList.remove('hidden');
+  }
+
+  function closeSheet() {
+    if (sheet) sheet.classList.add('hidden');
+    if (backdrop) backdrop.classList.add('hidden');
+  }
+
+  moreBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (sheet && !sheet.classList.contains('hidden')) {
+      closeSheet();
+    } else {
+      openSheet();
+    }
+  });
+
+  closeBtn?.addEventListener('click', closeSheet);
+  backdrop?.addEventListener('click', closeSheet);
+
+  slider?.addEventListener('input', (e) => {
+    if (val) val.textContent = `${e.target.value} / 611`;
+  });
+
+  slider?.addEventListener('change', (e) => {
+    loadPage(Number(e.target.value));
+    closeSheet();
+  });
+
+  tafsirBtn?.addEventListener('click', () => {
+    closeSheet();
+    toggleTafsirDrawer();
+  });
+
+  themeBtn?.addEventListener('click', () => {
+    const nextTheme = state.theme === 'light' ? 'dark' : (state.theme === 'dark' ? 'parchment' : 'light');
+    setTheme(nextTheme);
+  });
+
+  exitBtn?.addEventListener('click', () => {
+    closeSheet();
+    closeReader();
   });
 }
 
@@ -2683,14 +2770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(newRepeat === 'ayah' ? 'Repeating Ayah (1)' : (newRepeat === 'page' ? 'Repeating Page' : 'Repeat Off'));
   });
 
-  $('deckMoreBtn')?.addEventListener('click', () => {
-    const popover = $('headerQariPopover');
-    if (popover) {
-      popover.classList.toggle('hidden');
-    } else {
-      showToast('Select reciter or adjust settings in header');
-    }
-  });
+
 
   // Settings Font Scale Slider
   $('scaleSlider')?.addEventListener('input', (e) => setFontScale(Number(e.target.value)));
@@ -2885,9 +2965,17 @@ document.addEventListener('DOMContentLoaded', () => {
   if (qAudio) {
     qAudio.addEventListener('play', () => {
       if ($('deckPlayPause')) $('deckPlayPause').textContent = 'Ⅱ Pause Recitation';
+      updateReaderDeckUI();
     });
     qAudio.addEventListener('pause', () => {
       if ($('deckPlayPause')) $('deckPlayPause').textContent = '▶ Resume Recitation';
+      updateReaderDeckUI();
+    });
+    qAudio.addEventListener('ended', () => {
+      updateReaderDeckUI();
+    });
+    qAudio.addEventListener('ratechange', () => {
+      updateReaderDeckUI();
     });
   }
 
@@ -2897,6 +2985,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTheme(state.theme);
   setQari(audioState.qari);
   initHeaderQariPopover();
+  initReaderMoreSheet();
   setReadingMode(state.mode);
   setFontScale(state.scale);
   renderSurahsCardGrid();

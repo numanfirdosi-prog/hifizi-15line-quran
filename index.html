@@ -16,8 +16,8 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
-	<link rel="stylesheet" href="mushaf-15line.css?v=2.9.5">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.5">
+	<link rel="stylesheet" href="mushaf-15line.css?v=2.9.6">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=2.9.6">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -1208,6 +1208,44 @@
 				</button>
 			</div>
 
+			<!-- Reader More Options Bottom Sheet (Qari, Jump, Tafsir, Themes) -->
+			<div class="reader-more-backdrop hidden" id="readerMoreBackdrop"></div>
+			<div class="reader-more-sheet hidden" id="readerMoreSheet">
+				<div class="drawing-sheet-handle-bar">
+					<div class="drawing-sheet-handle"></div>
+				</div>
+				<div class="reader-more-header">
+					<div style="display:flex;align-items:center;gap:8px;">
+						<span style="font-size:18px;">⚙️</span>
+						<strong style="font-size:15px;font-weight:700;">Reader & Recitation Settings</strong>
+					</div>
+					<button class="icon-button" id="closeReaderMore" aria-label="Close Settings" style="border:0;background:transparent;font-size:18px;cursor:pointer;">✕</button>
+				</div>
+				<div class="reader-more-body">
+					<!-- Qari Selector -->
+					<div class="reader-more-section">
+						<label class="reader-more-label">CHOOSE WORLD QARI / RECITER</label>
+						<div class="reader-more-qari-grid" id="readerMoreQariGrid"></div>
+					</div>
+
+					<!-- Quick Page Jump -->
+					<div class="reader-more-section">
+						<label class="reader-more-label">PAGE JUMP (1 - 611)</label>
+						<div style="display:flex;align-items:center;gap:10px;">
+							<input type="range" id="readerMorePageSlider" min="1" max="611" value="2" style="flex:1;">
+							<span id="readerMorePageVal" style="font-weight:700;min-width:60px;text-align:right;">2 / 611</span>
+						</div>
+					</div>
+
+					<!-- Quick Actions Row -->
+					<div class="reader-more-actions">
+						<button class="btn-outline-green" id="readerMoreTafsirBtn" style="flex:1;justify-content:center;">📖 Notes & Tafsir</button>
+						<button class="btn-outline-green" id="readerMoreThemeBtn" style="flex:1;justify-content:center;">🌓 Theme</button>
+						<button class="btn-primary-green" id="readerMoreExitBtn" style="flex:1;justify-content:center;">← Exit Reader</button>
+					</div>
+				</div>
+			</div>
+
 			<!-- Bottom Page Navigation Bar (Slide / Jump) -->
 			<div class="bottom-page-nav-bar">
 				<button class="btn-outline-green" id="prevPage">← Prev Page</button>
@@ -1405,7 +1443,7 @@
 		<div id="surahList"></div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=2.9.5"></script>
-	<script src="code.js?v=2.9.5"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=2.9.6"></script>
+	<script src="code.js?v=2.9.6"></script>
 </body>
 </html>

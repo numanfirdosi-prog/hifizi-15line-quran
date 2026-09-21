@@ -282,16 +282,20 @@ body.dark .mushaf-footer-manzil {
 }
 
 .mushaf-ayah.playing {
-  background: rgba(185, 121, 88, 0.28) !important;
-  color: #173d32 !important;
-  box-shadow: 0 0 0 2px rgba(185, 121, 88, 0.4) !important;
+  background: rgba(212, 175, 55, 0.35) !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
   border-radius: 4px;
 }
 
 body.dark .mushaf-ayah.playing {
-  background: rgba(212, 154, 112, 0.32) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 0 2px rgba(212, 154, 112, 0.5) !important;
+  background: rgba(240, 205, 95, 0.40) !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
 }
 
 /* Ornate Circular Golden Ayah End Marker (۝) */
@@ -485,9 +489,11 @@ body.dark .lauh-cartouche-surah {
 }
 
 .lauh-cartouche-bismillah.playing {
-  border-color: rgba(212, 175, 55, 0.95) !important;
-  background: linear-gradient(to left, rgba(212, 175, 55, 0.48) 0%, rgba(212, 175, 55, 0.48) var(--prog, 0%), rgba(212, 175, 55, 0.12) var(--prog, 0%), rgba(212, 175, 55, 0.12) 100%) !important;
-  box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.45), 0 0 6px rgba(212, 175, 55, 0.4) !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: linear-gradient(to left, rgba(212, 175, 55, 0.45) 0%, rgba(212, 175, 55, 0.45) var(--prog, 0%), transparent var(--prog, 0%), transparent 100%) !important;
 }
 
 .lauh-bismillah-text {
@@ -503,9 +509,11 @@ body.dark .lauh-cartouche-bismillah {
 }
 
 body.dark .lauh-cartouche-bismillah.playing {
-  border-color: rgba(240, 205, 95, 0.95) !important;
-  background: linear-gradient(to left, rgba(240, 205, 95, 0.52) 0%, rgba(240, 205, 95, 0.52) var(--prog, 0%), rgba(240, 205, 95, 0.14) var(--prog, 0%), rgba(240, 205, 95, 0.14) 100%) !important;
-  box-shadow: inset 0 0 12px rgba(230, 192, 80, 0.55), 0 0 8px rgba(230, 192, 80, 0.45) !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: linear-gradient(to left, rgba(240, 205, 95, 0.50) 0%, rgba(240, 205, 95, 0.50) var(--prog, 0%), transparent var(--prog, 0%), transparent 100%) !important;
 }
 
 body.dark .lauh-bismillah-text {
