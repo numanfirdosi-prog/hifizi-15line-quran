@@ -465,32 +465,29 @@ body.dark .lauh-cartouche-surah {
   color: #f7d5ca;
 }
 
-/* Bismillah Cartouche (Image 1 Style Pill Box with Audio Play Button) */
+/* Bismillah Cartouche (Transparent Overlay over Printed Lauh Calligraphy) */
 .lauh-cartouche-bismillah {
-  background: linear-gradient(135deg, #fff7df 0%, #fae6b8 50%, #fff7df 100%);
-  border: 2px solid var(--mushaf-cartouche-border);
-  outline: 1px solid #d4a340;
-  outline-offset: 1px;
+  background: transparent !important;
+  border: 1.5px solid transparent !important;
+  outline: none !important;
   border-radius: 22px;
-  padding: 5px 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(140, 30, 24, 0.15);
   max-width: 96%;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease;
 }
 
 .lauh-cartouche-bismillah:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(140, 30, 24, 0.25);
+  border-color: rgba(212, 175, 55, 0.6) !important;
 }
 
 .lauh-cartouche-bismillah.playing {
-  background: #e5efe6;
-  border-color: #3b7e52;
+  border-color: rgba(212, 175, 55, 0.95) !important;
+  background: linear-gradient(to left, rgba(212, 175, 55, 0.48) 0%, rgba(212, 175, 55, 0.48) var(--prog, 0%), rgba(212, 175, 55, 0.12) var(--prog, 0%), rgba(212, 175, 55, 0.12) 100%) !important;
+  box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.45), 0 0 6px rgba(212, 175, 55, 0.4) !important;
 }
 
 .lauh-bismillah-text {
@@ -501,7 +498,14 @@ body.dark .lauh-cartouche-surah {
 }
 
 body.dark .lauh-cartouche-bismillah {
-  background: linear-gradient(135deg, #2b3930 0%, #36493d 50%, #2b3930 100%);
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+body.dark .lauh-cartouche-bismillah.playing {
+  border-color: rgba(240, 205, 95, 0.95) !important;
+  background: linear-gradient(to left, rgba(240, 205, 95, 0.52) 0%, rgba(240, 205, 95, 0.52) var(--prog, 0%), rgba(240, 205, 95, 0.14) var(--prog, 0%), rgba(240, 205, 95, 0.14) 100%) !important;
+  box-shadow: inset 0 0 12px rgba(230, 192, 80, 0.55), 0 0 8px rgba(230, 192, 80, 0.45) !important;
 }
 
 body.dark .lauh-bismillah-text {

@@ -57,9 +57,9 @@ const surahs = surahNames.map((s, i) => [...s, startPages[i]]);
 const qarisData = [
   { id: 'ar.alafasy', name: 'Mishary Rashid Alafasy', arabic: 'مشاري راشد العفاسي', style: 'Murattal', country: 'Kuwait' },
   { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit Abdus Samad', arabic: 'عبد الباسط عبد الصمد', style: 'Murattal', country: 'Egypt' },
-  { id: 'ar.abdulbasitmujawwad', name: 'Abdul Basit (Mujawwad)', arabic: 'عبد الباسط عبد الصمد', style: 'Mujawwad', country: 'Egypt' },
+  { id: 'ar.abdulsamad', name: 'Abdul Basit (Mujawwad)', arabic: 'عبد الباسط عبد الصمد', style: 'Mujawwad', country: 'Egypt' },
   { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary', arabic: 'محمود خليل الحصري', style: 'Murattal', country: 'Egypt' },
-  { id: 'ar.husarymuallim', name: 'Al-Husary (Mu\'allim)', arabic: 'محمود خليل الحصري', style: 'Mu\'allim', country: 'Egypt' },
+  { id: 'ar.husarymujawwad', name: 'Al-Husary (Mujawwad)', arabic: 'محمود خليل الحصري', style: 'Mujawwad', country: 'Egypt' },
   { id: 'ar.minshawi', name: 'Mohamed Siddiq El-Minshawi', arabic: 'محمد صديق المنشاوي', style: 'Murattal', country: 'Egypt' },
   { id: 'ar.minshawimujawwad', name: 'El-Minshawi (Mujawwad)', arabic: 'محمد صديق المنشاوي', style: 'Mujawwad', country: 'Egypt' },
   { id: 'ar.abdurrahmaansudais', name: 'Abdur-Rahman As-Sudais', arabic: 'عبد الرحمن السديس', style: 'Murattal', country: 'Makkah' },
@@ -904,12 +904,56 @@ async function fetchAyahsForPage(page) {
   }];
 }
 
+function updatePlayingAyahProgress() {
+  const audio = $('quranAudio');
+  if (!audio || !audio.duration) return;
+  const rawProgress = (audio.currentTime / audio.duration);
+  if (isNaN(rawProgress)) return;
+
+  const activeSegments = Array.from(document.querySelectorAll('.ayah-segment.playing, .lauh-cartouche-bismillah.playing'));
+  if (!activeSegments.length) return;
+
+  if (activeSegments.length === 1) {
+    const pct = Math.min(100, Math.max(0, rawProgress * 100));
+    activeSegments[0].style.setProperty('--prog', `${pct.toFixed(1)}%`);
+    return;
+  }
+
+  // Multiple segments across lines - sort by line number ascending
+  activeSegments.sort((a, b) => Number(a.dataset.line || 0) - Number(b.dataset.line || 0));
+
+  const weights = activeSegments.map(el => {
+    const wStr = el.style.width || '100%';
+    const wVal = parseFloat(wStr) || 100;
+    return Math.max(5, wVal);
+  });
+  const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+
+  let accumulated = 0;
+  for (let i = 0; i < activeSegments.length; i++) {
+    const startFrac = accumulated / totalWeight;
+    accumulated += weights[i];
+    const endFrac = accumulated / totalWeight;
+
+    let segProg = 0;
+    if (rawProgress >= endFrac) {
+      segProg = 100;
+    } else if (rawProgress <= startFrac) {
+      segProg = 0;
+    } else {
+      segProg = ((rawProgress - startFrac) / (endFrac - startFrac)) * 100;
+    }
+    activeSegments[i].style.setProperty('--prog', `${Math.min(100, Math.max(0, segProg)).toFixed(1)}%`);
+  }
+}
+
 function highlightPlayingAyah(number) {
   audioState.currentPlayingAyah = number;
 
-  // Remove previous highlights
-  document.querySelectorAll('.ayah-segment.playing, .ayah-line-band.playing, .ayah-pill.playing, .mushaf-ayah.playing, .bismillah-banner.playing, .lauh-cartouche-bismillah.playing').forEach(el => {
+  // Cleanly remove previous highlights from ALL elements and reset progress
+  document.querySelectorAll('.playing').forEach(el => {
     el.classList.remove('playing');
+    el.style.removeProperty('--prog');
   });
 
   if (!number) return;
@@ -924,22 +968,26 @@ function highlightPlayingAyah(number) {
   // 2. Find and highlight exact sub-line ayah segments on the 15-line page
   const activeSegments = document.querySelectorAll(`.ayah-segment[data-ayah="${number}"]`);
   if (activeSegments.length) {
-    activeSegments.forEach(el => el.classList.add('playing'));
+    activeSegments.forEach(el => {
+      el.classList.add('playing');
+      el.style.setProperty('--prog', '0%');
+    });
   } else {
-    // Fallback to line bands if segments are not present
+    // Fallback to line bands only if sub-line segments do not exist for this ayah
     const currentAyahObj = (audioState.ayahs || []).find(a => a.number === number);
     if (currentAyahObj && currentAyahObj.lines && currentAyahObj.lines.length) {
       currentAyahObj.lines.forEach(lineNum => {
         const bands = document.querySelectorAll(`.ayah-line-band[data-line="${lineNum}"]`);
-        bands.forEach(b => b.classList.add('playing'));
+        bands.forEach(b => {
+          b.classList.add('playing');
+          b.style.setProperty('--prog', '0%');
+        });
       });
-    } else {
-      document.querySelectorAll(`.ayah-line-band[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
     }
   }
 
-  // Also highlight legacy elements if any
-  document.querySelectorAll(`[data-ayah="${number}"]`).forEach(el => el.classList.add('playing'));
+  // Initial progress update
+  updatePlayingAyahProgress();
 }
 
 async function renderPageAyahOverlay(page) {
@@ -1313,9 +1361,12 @@ async function getBismillahAudio(qari) {
     }
   } catch (e) {}
 
-  const fallback = qari === 'ar.abdulbasitmurattal'
-    ? 'https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3'
-    : `https://cdn.islamic.network/quran/audio/128/${qari}/1.mp3`;
+  let fallback = `https://cdn.islamic.network/quran/audio/128/${qari}/1.mp3`;
+  if (qari === 'ar.abdulbasitmurattal') {
+    fallback = 'https://cdn.islamic.network/quran/audio/192/ar.abdulbasitmurattal/1.mp3';
+  } else if (qari === 'ar.abdulsamad') {
+    fallback = 'https://cdn.islamic.network/quran/audio/64/ar.abdulsamad/1.mp3';
+  }
   bismillahAudioCache[qari] = fallback;
   return fallback;
 }
@@ -2697,6 +2748,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if ($('audioDurationTime')) {
         $('audioDurationTime').textContent = formatTime(audio.duration);
       }
+      updatePlayingAyahProgress();
     });
 
     audio.addEventListener('ended', handleAudioEnded);
