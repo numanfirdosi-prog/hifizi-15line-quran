@@ -3673,36 +3673,46 @@ body.theme-parchment select option {
 
 @media (max-width: 600px) {
   .annotation-toolbar {
-    bottom: 60px;
-    width: calc(100% - 24px);
-    justify-content: space-around;
-    padding: 6px 10px;
-    gap: 6px;
+    bottom: 84px !important;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100% - 24px) !important;
+    max-width: 380px !important;
+    justify-content: space-around !important;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    z-index: 1700 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
   }
   .annot-tool-item {
-    min-width: 44px;
-    padding: 4px 6px;
+    min-width: 44px !important;
+    padding: 4px 6px !important;
   }
   .color-palette-popup {
-    bottom: 128px;
-    width: calc(100% - 32px);
-    max-width: 320px;
+    bottom: 148px !important;
+    bottom: calc(142px + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100% - 32px) !important;
+    max-width: 320px !important;
+    z-index: 1750 !important;
+  }
+  .drawing-tools-backdrop {
+    z-index: 1800 !important;
   }
   .drawing-tools-sheet {
-    padding: 8px 14px 22px;
+    z-index: 1850 !important;
+    padding: 8px 14px max(env(safe-area-inset-bottom, 0px), 24px) !important;
   }
   .drawing-tools-grid {
-    gap: 6px;
+    gap: 6px !important;
   }
   .drawing-tool-card {
-    padding: 10px 4px;
+    padding: 10px 4px !important;
   }
   .tool-card-icon {
-    width: 32px;
-    height: 32px;
+    width: 32px !important;
+    height: 32px !important;
   }
   .tool-card-name {
-    font-size: 11px;
+    font-size: 11px !important;
   }
 }
 
@@ -5158,6 +5168,13 @@ body.dark .lauh-cartouche-bismillah.playing {
 
   .quran-page {
     padding-bottom: 70px !important;
+  }
+
+  .annotation-toolbar {
+    position: fixed !important;
+    bottom: 84px !important;
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1700 !important;
   }
 
   .tafsir-drawer {
