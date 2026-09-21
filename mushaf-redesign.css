@@ -3705,8 +3705,10 @@ body.dark .mushaf-image-wrapper {
 
 .ayah-segment {
   position: absolute;
-  top: 1px;
-  bottom: 1px;
+  height: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  bottom: auto !important;
   cursor: pointer;
   border-radius: 4px;
   pointer-events: auto;
@@ -3744,13 +3746,28 @@ body.dark .ayah-line-band.playing {
   width: 100%;
   cursor: pointer;
   border-radius: 3px;
-  margin: 0.5px 0;
   transition: background 0.18s ease;
   position: relative;
   user-select: none;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  display: flex;
+  align-items: center;
+}
+
+/* Inner pseudo-fill for line-band playing highlight centered at 15px */
+.ayah-line-band.playing::before {
+  content: '';
+  position: absolute;
+  height: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: 0;
+  right: 0;
+  background: inherit;
+  border-radius: 4px;
+  pointer-events: none;
 }
 
 .ayah-line-band:hover {
