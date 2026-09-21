@@ -3681,23 +3681,26 @@ body.dark .mushaf-image-wrapper {
 
 /* Interactive 15-Line Ayah Overlay & Highlight */
 .mushaf-ayah-overlay {
-  position: absolute;
-  top: 10.35%;
-  height: 81.05%;
-  left: 10.8%;
-  right: 10.8%;
-  z-index: 12;
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
+  position: absolute !important;
+  top: 6.62% !important;
+  height: 86.89% !important;
+  left: 10.97% !important;
+  right: 10.69% !important;
+  z-index: 12 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  pointer-events: auto !important;
+  overflow: hidden !important;
 }
 
 .mushaf-line-row {
-  flex: 1;
-  position: relative;
-  width: 100%;
-  margin: 0;
-  pointer-events: none;
+  flex: 1 !important;
+  position: relative !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
 }
 
 .ayah-segment {
@@ -4021,21 +4024,6 @@ body.theme-parchment .reader-bottom-deck {
 @media (max-width: 900px) {
   .reader-bottom-deck {
     left: 0;
-    padding: 0 10px;
-  }
-}
-
-@media (max-width: 600px) {
-  .reader-bottom-deck {
-    height: 54px;
-    padding: 0 4px;
-  }
-  .deck-item-btn {
-    padding: 4px 6px;
-    min-width: 44px;
-  }
-  .deck-item-lbl {
-    font-size: 10px;
   }
 }
 
@@ -4765,17 +4753,23 @@ body.dark .lauh-cartouche-bismillah.playing {
   }
 
   .mushaf-image-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-    max-height: calc(100dvh - 100px) !important;
+    position: relative !important;
+    width: min(100%, calc((100dvh - 116px) * 720 / 1080)) !important;
+    max-width: 580px !important;
+    aspect-ratio: 720 / 1080 !important;
+    height: auto !important;
+    max-height: calc(100dvh - 116px) !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
     border-radius: 4px !important;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
   }
 
   .mushaf-page-image {
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
-    object-fit: contain !important;
+    object-fit: fill !important;
   }
 
   /* Mobile Reader: Hide cluttering bottom bars so .reader-bottom-deck shines at bottom */
@@ -4787,23 +4781,25 @@ body.dark .lauh-cartouche-bismillah.playing {
     display: none !important;
   }
 
-  /* Mobile Reader Bottom Deck: Pixel-Perfect from media_1789986487007.jpg */
+  /* Mobile Reader Bottom Deck: Symmetrical 4-Column Grid (25% each) */
   .reader-bottom-deck {
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: 64px !important;
+    height: auto !important;
+    min-height: 62px !important;
     z-index: 1600 !important;
     background: #ffffff !important;
     border-top: 1px solid #e5e7eb !important;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05) !important;
-    padding: 0 16px !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    justify-content: space-around !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06) !important;
+    padding: 6px 0 !important;
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px) !important;
     align-items: center !important;
+    justify-items: center !important;
     box-sizing: border-box !important;
   }
 
@@ -4814,28 +4810,45 @@ body.dark .lauh-cartouche-bismillah.playing {
   }
 
   .deck-item-btn {
-    padding: 4px 6px !important;
-    min-width: 52px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 2px 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    text-align: center !important;
   }
 
   .deck-item-val,
   #deckSpeedVal {
     font-size: 16px !important;
     font-weight: 700 !important;
-    color: #4a6332 !important;
+    color: #2e7d32 !important;
     line-height: 1.1 !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 2px !important;
   }
 
   body.dark .deck-item-val,
   body.dark #deckSpeedVal {
-    color: #86efac !important;
+    color: #4ade80 !important;
   }
 
   .deck-item-lbl {
     font-size: 11px !important;
     font-weight: 500 !important;
-    color: #374151 !important;
+    color: #4b5563 !important;
     line-height: 1 !important;
+    margin: 0 !important;
+    display: block !important;
   }
 
   body.dark .deck-item-lbl {
@@ -4847,8 +4860,8 @@ body.dark .lauh-cartouche-bismillah.playing {
   }
 
   .deck-circle-play {
-    width: 46px !important;
-    height: 46px !important;
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 50% !important;
     border: 1.5px solid #1f2937 !important;
     background: #ffffff !important;
@@ -4856,9 +4869,8 @@ body.dark .lauh-cartouche-bismillah.playing {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 18px !important;
+    margin: 0 auto 2px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10) !important;
-    margin-bottom: 2px !important;
   }
 
   body.dark .deck-circle-play {
@@ -4867,13 +4879,18 @@ body.dark .lauh-cartouche-bismillah.playing {
     color: #4ade80 !important;
   }
 
+  .deck-circle-play svg {
+    display: block !important;
+  }
+
   .deck-repeat-box {
     position: relative !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    width: 26px !important;
+    width: 28px !important;
     height: 24px !important;
+    margin-bottom: 2px !important;
   }
 
   .deck-repeat-box svg {
@@ -4901,9 +4918,14 @@ body.dark .lauh-cartouche-bismillah.playing {
   }
 
   .deck-dots-icon {
-    font-size: 24px !important;
+    font-size: 22px !important;
     color: #374151 !important;
     line-height: 1 !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 2px !important;
     font-weight: 700 !important;
   }
 
@@ -4912,13 +4934,13 @@ body.dark .lauh-cartouche-bismillah.playing {
   }
 
   #deckMoreBtn .deck-item-lbl {
-    display: none !important;
+    display: block !important;
   }
 
   /* Floating Notepad Circular Action Button */
   .mushaf-floating-note-btn {
     position: fixed !important;
-    bottom: 76px !important;
+    bottom: 84px !important;
     left: 16px !important;
     z-index: 1610 !important;
     width: 46px !important;
@@ -4941,10 +4963,6 @@ body.dark .lauh-cartouche-bismillah.playing {
 
   .quran-page {
     padding-bottom: 70px !important;
-  }
-
-  .mushaf-image-wrapper {
-    max-height: calc(100dvh - 116px) !important;
   }
 
   .tafsir-drawer {

@@ -729,8 +729,9 @@ function updateReaderDeckUI() {
   const playIcon = $('deckPlayIcon');
   const playLabel = $('deckPlayLabel');
   if (playIcon) {
-    playIcon.textContent = isPlaying ? '⏸' : '▶';
-    playIcon.style.marginLeft = isPlaying ? '0px' : '2px';
+    const playSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="margin-left:2px;display:block;"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+    const pauseSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display:block;"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+    playIcon.innerHTML = isPlaying ? pauseSvg : playSvg;
   }
   if (playLabel) playLabel.textContent = isPlaying ? 'Pause' : 'Play';
 
