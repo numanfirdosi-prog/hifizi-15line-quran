@@ -3701,6 +3701,14 @@ body.dark .mushaf-image-wrapper {
   padding: 0 !important;
   pointer-events: none !important;
   overflow: hidden !important;
+  /* Kill mushaf-15line.css ghost border & background in image-overlay mode */
+  border-bottom: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  background: transparent !important;
+  min-height: 0 !important;
+  line-height: normal !important;
 }
 
 .ayah-segment {
