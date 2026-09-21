@@ -113,7 +113,7 @@ const juzArabicNames = [
 ];
 
 const $ = id => document.getElementById(id);
-const views = ['home', 'surahs', 'juz', 'bookmarks', 'search', 'audio', 'ramadan', 'settings', 'backup', 'faq', 'about', 'privacy', 'notFound'];
+const views = ['home', 'surahs', 'juz', 'bookmarks', 'search', 'audio', 'ramadan', 'settings', 'backup', 'faq', 'about', 'privacy', 'notFound', 'prayer', 'qiblah'];
 
 // Ensure duplicate overlays are removed
 document.querySelectorAll('#readerOverlay').forEach((overlay, index) => {
@@ -376,6 +376,8 @@ function showView(view, syncHash = true) {
     renderKhatamPlanner();
   }
   if (view === 'audio') renderAudioStudio();
+  if (view === 'prayer') renderPrayerView();
+  if (view === 'qiblah') renderQiblahView();
   if (view === 'home') updateKhatmTracker();
   if (view === 'backup') renderBackupView();
   if (view === 'faq') renderFAQ();
@@ -410,7 +412,7 @@ function handleRoute() {
     closeReader(false);
   }
 
-  const validViews = ['home', 'surahs', 'juz', 'bookmarks', 'search', 'audio', 'ramadan', 'settings', 'backup', 'faq', 'about', 'privacy'];
+  const validViews = ['home', 'surahs', 'juz', 'bookmarks', 'search', 'audio', 'ramadan', 'settings', 'backup', 'faq', 'about', 'privacy', 'prayer', 'qiblah'];
   if (validViews.includes(clean)) {
     showView(clean, false);
   } else {
@@ -2543,6 +2545,327 @@ function syncResume() {
 }
 
 // -----------------------------------------------------------------------------
+// 10. PRAYER TIMES, QIBLAH COMPASS & AZAN ALARM SUITE
+// -----------------------------------------------------------------------------
+let prayerCountdownInterval = null;
+let qiblahOrientationAttached = false;
+let currentQiblahBearing = 266.6;
+
+function renderPrayerView() {
+  if (!window.NurPrayerEngine) return;
+  const eng = window.NurPrayerEngine;
+  const loc = eng.state.location;
+
+  // 1. Update City Label
+  if ($('prayerCurrentCityLabel')) {
+    $('prayerCurrentCityLabel').textContent = `${loc.name} (${loc.urdu || ''})`;
+  }
+
+  // 2. Date Labels
+  const now = new Date();
+  if ($('prayerGregorianDate')) {
+    $('prayerGregorianDate').textContent = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // 3. Asr Method Pills
+  const isHanafi = eng.state.asrJuristic === 'Hanafi';
+  $('btnAsrHanafi')?.classList.toggle('active', isHanafi);
+  $('btnAsrShafi')?.classList.toggle('active', !isHanafi);
+  if ($('subAsrJuristic')) {
+    $('subAsrJuristic').textContent = isHanafi ? 'Hanafi (دومثل)' : 'Shafi/Standard (ایک مثل)';
+  }
+
+  // 4. Calculate Timings
+  updatePrayerTimesUI();
+
+  // 5. Start live countdown interval
+  if (prayerCountdownInterval) clearInterval(prayerCountdownInterval);
+  prayerCountdownInterval = setInterval(updatePrayerTimesUI, 1000);
+}
+
+function updatePrayerTimesUI() {
+  if (!window.NurPrayerEngine) return;
+  const eng = window.NurPrayerEngine;
+  const now = new Date();
+  const times = eng.calculatePrayerTimes(now, eng.state.location, eng.state.asrJuristic);
+
+  // Set All Time Elements
+  if ($('timeFajr')) $('timeFajr').textContent = times.fajr.time12;
+  if ($('timeSunrise')) $('timeSunrise').textContent = times.sunrise.time12;
+  if ($('timeZawal')) $('timeZawal').textContent = `${times.zawalStart.displayTime} - ${times.zawal.time12}`;
+  if ($('timeDhuhr')) $('timeDhuhr').textContent = times.dhuhr.time12;
+  if ($('timeAsr')) $('timeAsr').textContent = times.asr.time12;
+  if ($('timeSunset')) $('timeSunset').textContent = times.sunset.time12;
+  if ($('timeMaghrib')) $('timeMaghrib').textContent = times.maghrib.time12;
+  if ($('timeIsha')) $('timeIsha').textContent = times.isha.time12;
+
+  // Extra Sunnah
+  if ($('timeSehriEnd')) $('timeSehriEnd').textContent = times.sehriEnd.time12;
+  if ($('timeTahajjud')) $('timeTahajjud').textContent = times.tahajjud.time12;
+  if ($('timeIshraq')) {
+    const ishraqH = times.rawHours.sunrise + (15 / 60);
+    const h24 = Math.floor(ishraqH);
+    const m = Math.floor((ishraqH - h24) * 60);
+    const p = h24 >= 12 ? 'PM' : 'AM';
+    const h12 = (h24 % 12) || 12;
+    $('timeIshraq').textContent = `${h12}:${String(m).padStart(2, '0')} ${p}`;
+  }
+
+  // Alarm Toggle Buttons active states
+  const alarms = eng.state.alarmSettings;
+  document.querySelectorAll('.alarm-toggle-btn[data-prayer]').forEach(btn => {
+    const p = btn.dataset.prayer;
+    const active = !!alarms[p];
+    btn.classList.toggle('active', active);
+    btn.textContent = active ? '🔔' : '🔕';
+  });
+
+  // Determine Next Prayer & Active Prayer
+  const curFloat = now.getHours() + (now.getMinutes() / 60) + (now.getSeconds() / 3600);
+  const raw = times.rawHours;
+
+  const sequence = [
+    { key: 'fajr', name: 'Fajr', urdu: 'فجر', time: raw.fajr, timeObj: times.fajr },
+    { key: 'dhuhr', name: 'Dhuhr', urdu: 'ظہر', time: raw.dhuhr, timeObj: times.dhuhr },
+    { key: 'asr', name: 'Asr', urdu: 'عصر', time: raw.asr, timeObj: times.asr },
+    { key: 'maghrib', name: 'Maghrib', urdu: 'مغرب', time: raw.maghrib, timeObj: times.maghrib },
+    { key: 'isha', name: 'Isha', urdu: 'عشاء', time: raw.isha, timeObj: times.isha }
+  ];
+
+  let nextP = null;
+  for (const s of sequence) {
+    if (s.time > curFloat) {
+      nextP = s;
+      break;
+    }
+  }
+
+  // If after Isha, next prayer is Fajr tomorrow
+  let isTomorrow = false;
+  if (!nextP) {
+    nextP = sequence[0];
+    isTomorrow = true;
+  }
+
+  // Countdown in seconds
+  let diffSecs = 0;
+  if (isTomorrow) {
+    diffSecs = Math.round((nextP.time + 24 - curFloat) * 3600);
+  } else {
+    diffSecs = Math.round((nextP.time - curFloat) * 3600);
+  }
+
+  const hours = Math.floor(diffSecs / 3600);
+  const mins = Math.floor((diffSecs % 3600) / 60);
+  const secs = diffSecs % 60;
+
+  let countdownStr = '';
+  if (hours > 0) {
+    countdownStr = `⏳ In ${hours}h ${mins}m ${secs}s`;
+  } else {
+    countdownStr = `⏳ In ${mins}m ${secs}s`;
+  }
+
+  if ($('prayerNextName')) $('prayerNextName').textContent = `${nextP.name} (${nextP.urdu})`;
+  if ($('prayerNextTime')) $('prayerNextTime').textContent = nextP.timeObj.time12;
+  if ($('prayerCountdownBadge')) $('prayerCountdownBadge').textContent = countdownStr;
+
+  // Active Highlight
+  document.querySelectorAll('.prayer-card[data-prayer]').forEach(card => {
+    card.classList.remove('active');
+  });
+  let activeIdx = sequence.indexOf(nextP) - 1;
+  if (activeIdx < 0) activeIdx = sequence.length - 1;
+  const activeP = sequence[activeIdx];
+  $(`card${activeP.name}`)?.classList.add('active');
+}
+
+// -----------------------------------------------------------------------------
+// QIBLAH COMPASS
+// -----------------------------------------------------------------------------
+function renderQiblahView() {
+  if (!window.NurPrayerEngine) return;
+  const eng = window.NurPrayerEngine;
+  const loc = eng.state.location;
+
+  if ($('qiblahCurrentCityLabel')) {
+    $('qiblahCurrentCityLabel').textContent = `${loc.name} (${loc.urdu || ''})`;
+  }
+
+  const q = eng.calculateQiblah(loc.lat, loc.lng);
+  currentQiblahBearing = q.bearing;
+
+  if ($('qiblahDegreeDisplay')) {
+    $('qiblahDegreeDisplay').textContent = `${q.bearing}° ${q.cardinal}`;
+  }
+  if ($('qiblahDistanceText')) {
+    $('qiblahDistanceText').textContent = `Distance to Holy Kaaba: ${q.distanceKm.toLocaleString()} km`;
+  }
+
+  const needle = $('qiblahNeedleBox');
+  if (needle) {
+    needle.style.transform = `rotate(${q.bearing}deg)`;
+  }
+
+  startQiblahCompass();
+}
+
+function startQiblahCompass() {
+  if (qiblahOrientationAttached) return;
+
+  function handleOrientation(e) {
+    let heading = 0;
+    if (e.webkitCompassHeading !== undefined) {
+      heading = e.webkitCompassHeading;
+    } else if (e.alpha !== null && e.alpha !== undefined) {
+      heading = (360 - e.alpha) % 360;
+    } else {
+      return;
+    }
+
+    const dial = $('compassDialSvg');
+    const needle = $('qiblahNeedleBox');
+    const statusBanner = $('qiblahStatusBanner');
+    const statusIcon = $('qiblahStatusIcon');
+    const statusText = $('qiblahStatusText');
+
+    if (dial) {
+      dial.style.transform = `rotate(${-heading}deg)`;
+    }
+    if (needle) {
+      needle.style.transform = `rotate(${currentQiblahBearing - heading}deg)`;
+    }
+
+    const diff = Math.abs((currentQiblahBearing - heading + 360) % 360);
+    const isAligned = diff <= 3.5 || diff >= 356.5;
+
+    if (statusBanner) {
+      statusBanner.classList.toggle('aligned', isAligned);
+    }
+    if (statusIcon && statusText) {
+      if (isAligned) {
+        statusIcon.textContent = '🕋';
+        statusText.textContent = 'قبلہ رخ — You are facing the Holy Kaaba!';
+        navigator.vibrate?.(40);
+      } else {
+        statusIcon.textContent = '🧭';
+        statusText.textContent = 'Rotate your device to align with Kaaba needle';
+      }
+    }
+  }
+
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(response => {
+        if (response === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          qiblahOrientationAttached = true;
+        }
+      })
+      .catch(() => {});
+  } else {
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    qiblahOrientationAttached = true;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CITY / LOCATION SELECTOR MODAL
+// -----------------------------------------------------------------------------
+function openPrayerCityModal() {
+  const modal = $('prayerCityModal');
+  const list = $('prayerCityList');
+  const input = $('inputCitySearch');
+  if (!modal || !list || !window.NurPrayerEngine) return;
+
+  const eng = window.NurPrayerEngine;
+  const cities = eng.PRESET_CITIES;
+  const cur = eng.state.location;
+
+  function renderList(filtered) {
+    list.innerHTML = filtered.map(c => `
+      <div class="prayer-city-item ${c.id === cur.id ? 'active' : ''}" data-city-id="${c.id}">
+        <div>
+          <strong>${c.name}</strong>
+          <small style="display:block;color:var(--text-muted);font-size:11px;">${c.country} • ${c.urdu || ''}</small>
+        </div>
+        <span>${c.id === cur.id ? '✔' : '→'}</span>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('[data-city-id]').forEach(item => {
+      item.onclick = () => {
+        const found = cities.find(x => x.id === item.dataset.cityId);
+        if (found) {
+          eng.setLocation(found);
+          modal.classList.add('hidden');
+          showToast(`Location set to ${found.name}`);
+          renderPrayerView();
+          renderQiblahView();
+        }
+      };
+    });
+  }
+
+  renderList(cities);
+
+  if (input) {
+    input.value = '';
+    input.oninput = (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = cities.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.urdu && c.urdu.includes(q)) ||
+        c.country.toLowerCase().includes(q)
+      );
+      renderList(filtered);
+    };
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function handleGpsDetect() {
+  if (!navigator.geolocation) {
+    showToast('GPS geolocation is not supported on this device');
+    return;
+  }
+  showToast('Detecting your location...');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const tz = -new Date().getTimezoneOffset() / 60;
+      const customLoc = {
+        id: 'gps_custom',
+        name: `Current Location (${lat.toFixed(2)}°, ${lng.toFixed(2)}°)`,
+        urdu: 'میری لوکیشن',
+        country: 'GPS Detected',
+        lat: lat,
+        lng: lng,
+        tz: tz
+      };
+      if (window.NurPrayerEngine) {
+        window.NurPrayerEngine.setLocation(customLoc);
+        $('prayerCityModal')?.classList.add('hidden');
+        showToast('📍 GPS Location detected & saved!');
+        renderPrayerView();
+        renderQiblahView();
+      }
+    },
+    (err) => {
+      showToast('Location permission denied. Please choose a city from the list.');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// -----------------------------------------------------------------------------
 // 11. GLOBAL INITIALIZATION & EVENT WIRING
 // -----------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
@@ -3182,6 +3505,76 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.mushaf-ayah') && !e.target.closest('#ayahActionBubble') && !e.target.closest('.ayah-marker')) {
       hideAyahBubble();
+    }
+  });
+
+  // Prayer Times, Qiblah & Azan Alarm Listeners
+  $('prayerCityTrigger')?.addEventListener('click', openPrayerCityModal);
+  $('qiblahCityTrigger')?.addEventListener('click', openPrayerCityModal);
+  $('btnCloseCityModal')?.addEventListener('click', () => {
+    $('prayerCityModal')?.classList.add('hidden');
+  });
+  $('btnModalGpsDetect')?.addEventListener('click', handleGpsDetect);
+  $('btnGpsAutoDetect')?.addEventListener('click', handleGpsDetect);
+  $('btnOpenQiblahFromPrayer')?.addEventListener('click', () => showView('qiblah'));
+
+  // Juristic Asr Buttons
+  $('btnAsrHanafi')?.addEventListener('click', () => {
+    if (window.NurPrayerEngine) {
+      window.NurPrayerEngine.setAsrJuristic('Hanafi');
+      renderPrayerView();
+      showToast('Asr timing set to Hanafi (دومثل)');
+    }
+  });
+  $('btnAsrShafi')?.addEventListener('click', () => {
+    if (window.NurPrayerEngine) {
+      window.NurPrayerEngine.setAsrJuristic('Standard');
+      renderPrayerView();
+      showToast('Asr timing set to Shafi/Standard (ایک مثل)');
+    }
+  });
+
+  // Azan Sound Testing & Stopping
+  $('btnTestAzanSound')?.addEventListener('click', () => {
+    if (window.NurPrayerEngine) {
+      window.NurPrayerEngine.testAzan();
+      showToast('Playing Makkah Azan preview...');
+    }
+  });
+  $('btnStopAzanBanner')?.addEventListener('click', () => {
+    if (window.NurPrayerEngine) {
+      window.NurPrayerEngine.stopAzan();
+      $('azanActiveBanner')?.classList.add('hidden');
+      showToast('Azan stopped');
+    }
+  });
+
+  // Enable Notifications
+  $('btnEnableNotifications')?.addEventListener('click', async () => {
+    if (window.NurPrayerEngine) {
+      const granted = await window.NurPrayerEngine.requestNotificationPermission();
+      showToast(granted ? '🔔 Azan notifications allowed!' : 'Notifications blocked or dismissed');
+    }
+  });
+
+  // Prayer Alarm Bell Toggle Buttons
+  document.querySelectorAll('.alarm-toggle-btn[data-prayer]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pKey = btn.dataset.prayer;
+      if (window.NurPrayerEngine) {
+        const active = window.NurPrayerEngine.toggleAlarm(pKey);
+        btn.classList.toggle('active', active);
+        btn.textContent = active ? '🔔' : '🔕';
+        showToast(`${pKey.toUpperCase()} alarm ${active ? 'Enabled 🔔' : 'Disabled 🔕'}`);
+      }
+    });
+  });
+
+  // Close City Modal on click outside
+  $('prayerCityModal')?.addEventListener('click', (e) => {
+    if (e.target === $('prayerCityModal')) {
+      $('prayerCityModal').classList.add('hidden');
     }
   });
 

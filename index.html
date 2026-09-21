@@ -16,8 +16,8 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
-	<link rel="stylesheet" href="mushaf-15line.css?v=3.0.1">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=3.0.1">
+	<link rel="stylesheet" href="mushaf-15line.css?v=3.1.0">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=3.1.0">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -49,6 +49,8 @@
 					<button class="nav-item" data-view="bookmarks"><span class="nav-icon">⚑</span>Bookmarks & Saved</button>
 					<button class="nav-item" data-view="search"><span class="nav-icon">⌕</span>Search Quran</button>
 					<button class="nav-item" data-view="audio"><span class="nav-icon">🎧</span>Audio Recitations</button>
+					<button class="nav-item" data-view="prayer"><span class="nav-icon">🕌</span>Prayer Times & Azan (اوقات الصلوٰۃ)</button>
+					<button class="nav-item" data-view="qiblah"><span class="nav-icon">🧭</span>Qiblah Compass (قبلہ نما)</button>
 					<button class="nav-item" data-view="ramadan"><span class="nav-icon">☾</span>Ramzan & Duas</button>
 					<button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span>Preferences</button>
 					<button class="nav-item" data-view="backup"><span class="nav-icon">☁</span>Backup & Restore</button>
@@ -223,6 +225,18 @@
 									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00796b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
 								</div>
 								<span class="tool-box-label">Audio<br>Recitations</span>
+							</div>
+							<div class="tool-card-box card-mint" data-view="prayer">
+								<div class="tool-card-icon-wrap" style="background:#d1fae5;">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+								</div>
+								<span class="tool-box-label">Prayer Times<br>& Azan (اوقات)</span>
+							</div>
+							<div class="tool-card-box card-yellow" data-view="qiblah">
+								<div class="tool-card-icon-wrap" style="background:#fef3c7;">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+								</div>
+								<span class="tool-box-label">Qiblah<br>Compass (قبلہ)</span>
 							</div>
 
 							<!-- Row 2 -->
@@ -686,6 +700,267 @@
 						</div>
 					</div>
 					<div class="planner-days-grid" id="plannerDaysGrid"></div>
+				</div>
+			</section>
+
+			<!-- PRAYER TIMES & SOLAR ASTRONOMY VIEW -->
+			<section class="page-view hidden" id="prayerView">
+				<!-- Hero Card with Current Location & Next Prayer Countdown -->
+				<div class="prayer-hero-card">
+					<div class="prayer-location-bar">
+						<div class="prayer-location-pill" id="prayerCityTrigger" title="Tap to change city or use GPS">
+							<span>📍</span>
+							<span id="prayerCurrentCityLabel">Delhi / New Delhi (دہلی)</span>
+							<span style="font-size:10px;opacity:0.8;">▾</span>
+						</div>
+						<div style="display:flex;gap:8px;align-items:center;">
+							<button class="filter-pill" id="btnGpsAutoDetect" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.3);font-size:11px;">📍 Auto Detect GPS</button>
+							<button class="filter-pill" id="btnOpenQiblahFromPrayer" style="background:rgba(255,255,255,0.22);color:#fff;border-color:rgba(255,255,255,0.3);font-size:11px;">🧭 Qiblah Compass</button>
+						</div>
+					</div>
+
+					<div class="prayer-next-title">Next Prayer • اگلی نماز</div>
+					<div class="prayer-next-main">
+						<span class="prayer-next-name" id="prayerNextName">Asr (عصر)</span>
+						<span class="prayer-next-time" id="prayerNextTime">4:37 PM</span>
+						<span class="prayer-countdown-badge" id="prayerCountdownBadge">⏳ In 28 mins</span>
+					</div>
+
+					<div style="display:flex;align-items:center;gap:10px;font-size:12px;opacity:0.9;margin-top:6px;flex-wrap:wrap;">
+						<span id="prayerHijriDate">1446 AH</span>
+						<span>•</span>
+						<span id="prayerGregorianDate">Monday, 21 September 2026</span>
+					</div>
+				</div>
+
+				<!-- Asr Juristic Method & Alarm Controls Bar -->
+				<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+					<div class="asr-toggle-bar" style="margin-bottom:0;">
+						<span style="font-weight:700;color:var(--text-primary);">Asr Method (عصر کا مسلک):</span>
+						<button class="asr-toggle-pill active" id="btnAsrHanafi" data-asr="Hanafi">Hanafi (حنفی - دومثل)</button>
+						<button class="asr-toggle-pill" id="btnAsrShafi" data-asr="Standard">Shafi'i / Hanbali / Maliki (شافعی)</button>
+					</div>
+					<div style="display:flex;gap:8px;align-items:center;">
+						<button class="btn-outline-green" id="btnTestAzanSound" style="font-size:12px;padding:6px 12px;">🔊 Test Azan</button>
+						<button class="btn-outline-green" id="btnEnableNotifications" style="font-size:12px;padding:6px 12px;">🔔 Azan Notification</button>
+					</div>
+				</div>
+
+				<!-- 8-Timing Grid: 5 Prayers + Tulu-e-Aftab, Zawal, Ghuroob-e-Aftab -->
+				<div class="prayer-grid-8" id="prayerGrid8">
+					<!-- Fajr -->
+					<div class="prayer-card" id="cardFajr" data-prayer="fajr">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon">🌙</div>
+							<div>
+								<div class="prayer-card-name">Fajr <span>فجر</span></div>
+								<div class="prayer-card-sub">Dawn prayer</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeFajr">4:50 AM</div>
+							<button class="alarm-toggle-btn active" data-prayer="fajr" title="Toggle Azan Alarm">🔔</button>
+						</div>
+					</div>
+
+					<!-- Tulu-e-Aftab (Sunrise) -->
+					<div class="prayer-card solar-point" id="cardSunrise">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon" style="background:rgba(245,158,11,0.15);color:#d97706;">🌅</div>
+							<div>
+								<div class="prayer-card-name">Tulu-e-Aftab <span>طلوعِ آفتاب</span></div>
+								<div class="prayer-card-sub">Sunrise / Ishraq starts</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeSunrise" style="color:#d97706;">6:08 AM</div>
+							<span style="font-size:10px;color:var(--text-muted);">Solar Point</span>
+						</div>
+					</div>
+
+					<!-- Zawal-e-Aftab (Solar Noon / Makruh Time) -->
+					<div class="prayer-card solar-point" id="cardZawal">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon" style="background:rgba(239,68,68,0.12);color:#dc2626;">☀️</div>
+							<div>
+								<div class="prayer-card-name">Zawal-e-Aftab <span>زوالِ آفتاب</span></div>
+								<div class="prayer-card-sub">Solar Noon / Nisf-un-Nahar</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeZawal" style="color:#dc2626;">12:14 PM</div>
+							<span class="makruh-badge">⚠️ Makruh Waqt</span>
+						</div>
+					</div>
+
+					<!-- Dhuhr -->
+					<div class="prayer-card" id="cardDhuhr" data-prayer="dhuhr">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon">🕌</div>
+							<div>
+								<div class="prayer-card-name">Dhuhr <span>ظہر</span></div>
+								<div class="prayer-card-sub">Midday prayer</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeDhuhr">12:16 PM</div>
+							<button class="alarm-toggle-btn active" data-prayer="dhuhr" title="Toggle Azan Alarm">🔔</button>
+						</div>
+					</div>
+
+					<!-- Asr -->
+					<div class="prayer-card" id="cardAsr" data-prayer="asr">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon">🌤️</div>
+							<div>
+								<div class="prayer-card-name">Asr <span>عصر</span></div>
+								<div class="prayer-card-sub" id="subAsrJuristic">Hanafi standard</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeAsr">4:37 PM</div>
+							<button class="alarm-toggle-btn active" data-prayer="asr" title="Toggle Azan Alarm">🔔</button>
+						</div>
+					</div>
+
+					<!-- Ghuroob-e-Aftab (Sunset) -->
+					<div class="prayer-card solar-point" id="cardSunset">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon" style="background:rgba(217,119,6,0.15);color:#b45309;">🌇</div>
+							<div>
+								<div class="prayer-card-name">Ghuroob-e-Aftab <span>غروبِ آفتاب</span></div>
+								<div class="prayer-card-sub">Sunset / Iftar time</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeSunset" style="color:#b45309;">6:19 PM</div>
+							<span style="font-size:10px;color:var(--text-muted);">Iftar Waqt</span>
+						</div>
+					</div>
+
+					<!-- Maghrib -->
+					<div class="prayer-card" id="cardMaghrib" data-prayer="maghrib">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon">🌆</div>
+							<div>
+								<div class="prayer-card-name">Maghrib <span>مغرب</span></div>
+								<div class="prayer-card-sub">Post-sunset prayer</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeMaghrib">6:21 PM</div>
+							<button class="alarm-toggle-btn active" data-prayer="maghrib" title="Toggle Azan Alarm">🔔</button>
+						</div>
+					</div>
+
+					<!-- Isha -->
+					<div class="prayer-card" id="cardIsha" data-prayer="isha">
+						<div class="prayer-card-left">
+							<div class="prayer-card-icon">✨</div>
+							<div>
+								<div class="prayer-card-name">Isha <span>عشاء</span></div>
+								<div class="prayer-card-sub">Night prayer</div>
+							</div>
+						</div>
+						<div class="prayer-card-right">
+							<div class="prayer-card-time" id="timeIsha">7:38 PM</div>
+							<button class="alarm-toggle-btn active" data-prayer="isha" title="Toggle Azan Alarm">🔔</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Extra Sunnah Timings Bar -->
+				<div class="prayer-sunnah-bar">
+					<div class="prayer-sunnah-item">
+						<span>🍽️</span>
+						<span><strong>Sehri End (سحری ختم):</strong> <span id="timeSehriEnd">4:40 AM</span></span>
+					</div>
+					<div class="prayer-sunnah-item">
+						<span>🌌</span>
+						<span><strong>Tahajjud Begins (تہجد):</strong> <span id="timeTahajjud">1:45 AM</span></span>
+					</div>
+					<div class="prayer-sunnah-item">
+						<span>📖</span>
+						<span><strong>Ishraq Time (اشراق):</strong> <span id="timeIshraq">6:23 AM</span></span>
+					</div>
+				</div>
+			</section>
+
+			<!-- QIBLAH COMPASS VIEW -->
+			<section class="page-view hidden" id="qiblahView">
+				<div class="qiblah-container">
+					<div style="margin-bottom:12px;">
+						<span style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.8px;">SACRED MECCA DIRECTION FINDER • 100% OFFLINE</span>
+						<h1 style="font-size:26px;font-weight:800;margin:4px 0 6px;">Qiblah Direction Compass (قبلہ نما)</h1>
+						<p style="font-size:13px;color:var(--text-secondary);max-width:560px;margin:0 auto;">
+							Point the top of your device forward. Rotate until the compass aligns with the golden Kaaba needle.
+						</p>
+					</div>
+
+					<div class="prayer-location-pill" id="qiblahCityTrigger" style="margin-bottom:14px;background:var(--bg-card-subtle);color:var(--text-primary);border-color:var(--border-line);">
+						<span>📍</span>
+						<span id="qiblahCurrentCityLabel">Delhi / New Delhi (دہلی)</span>
+						<span style="font-size:10px;opacity:0.8;">▾ Change</span>
+					</div>
+
+					<!-- Big Degree & Alignment Banner -->
+					<div class="qiblah-degree-huge" id="qiblahDegreeDisplay">266.6° W</div>
+					<div class="qiblah-distance-text" id="qiblahDistanceText">Distance to Holy Kaaba: 3,835 km</div>
+
+					<div class="qiblah-status-banner" id="qiblahStatusBanner">
+						<span id="qiblahStatusIcon">🧭</span>
+						<span id="qiblahStatusText">Rotate your phone towards the Kaaba needle</span>
+					</div>
+
+					<!-- Real-Time Interactive Compass Dial -->
+					<div class="qiblah-compass-box" id="compassContainer">
+						<!-- Outer Rotating Dial SVG -->
+						<svg class="compass-dial-svg" id="compassDialSvg" viewBox="0 0 300 300">
+							<!-- Outer Ring -->
+							<circle cx="150" cy="150" r="140" fill="var(--bg-surface)" stroke="var(--border-line)" stroke-width="3"/>
+							<circle cx="150" cy="150" r="130" fill="none" stroke="var(--border-line)" stroke-width="1" stroke-dasharray="2 4"/>
+							<circle cx="150" cy="150" r="115" fill="rgba(46,125,50,0.03)"/>
+							
+							<!-- Cardinal Letter Markers -->
+							<text x="150" y="32" font-size="16" font-weight="900" fill="#ef4444" text-anchor="middle">N</text>
+							<text x="272" y="155" font-size="14" font-weight="800" fill="var(--text-primary)" text-anchor="middle">E</text>
+							<text x="150" y="278" font-size="14" font-weight="800" fill="var(--text-primary)" text-anchor="middle">S</text>
+							<text x="28" y="155" font-size="14" font-weight="800" fill="var(--text-primary)" text-anchor="middle">W</text>
+
+							<!-- Subcardinals -->
+							<text x="235" y="65" font-size="10" font-weight="600" fill="var(--text-muted)" text-anchor="middle">NE</text>
+							<text x="235" y="245" font-size="10" font-weight="600" fill="var(--text-muted)" text-anchor="middle">SE</text>
+							<text x="65" y="245" font-size="10" font-weight="600" fill="var(--text-muted)" text-anchor="middle">SW</text>
+							<text x="65" y="65" font-size="10" font-weight="600" fill="var(--text-muted)" text-anchor="middle">NW</text>
+
+							<!-- Center Pivot -->
+							<circle cx="150" cy="150" r="6" fill="var(--primary, #2e7d32)"/>
+						</svg>
+
+						<!-- Kaaba Needle Layer (Rotates to Qiblah Angle) -->
+						<div class="qiblah-needle-box" id="qiblahNeedleBox">
+							<svg viewBox="0 0 300 300" width="100%" height="100%">
+								<!-- Golden Kaaba Needle -->
+								<defs>
+									<linearGradient id="kaabaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+										<stop offset="0%" stop-color="#f59e0b"/>
+										<stop offset="100%" stop-color="#b45309"/>
+									</linearGradient>
+								</defs>
+								<!-- Arrow Needle Pointing to Kaaba -->
+								<polygon points="150,22 142,145 158,145" fill="url(#kaabaGold)"/>
+								<polygon points="150,278 145,155 155,155" fill="var(--text-muted)" opacity="0.4"/>
+								<!-- Mini Kaaba Icon at tip -->
+								<rect x="141" y="8" width="18" height="18" rx="2" fill="#18181b" stroke="#f59e0b" stroke-width="1.5"/>
+								<line x1="141" y1="13" x2="159" y2="13" stroke="#f59e0b" stroke-width="1.5"/>
+							</svg>
+						</div>
+					</div>
+
+					<!-- Sensor Calibration Tips -->
+					<div style="background:var(--bg-card-subtle);border:1px solid var(--border-line);border-radius:12px;padding:12px 18px;max-width:460px;font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:14px;">
+						💡 <strong>Compass Tip:</strong> Place device flat on your hand. If compass is inaccurate, move your device in a <strong>figure-8 motion (∞)</strong> to calibrate internal sensors.
+					</div>
 				</div>
 			</section>
 
@@ -1443,7 +1718,35 @@
 		<div id="surahList"></div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.0.1"></script>
-	<script src="code.js?v=3.0.1"></script>
+	<!-- Active Azan Recitation Banner -->
+	<div class="azan-active-banner hidden" id="azanActiveBanner">
+		<span style="font-size:24px;">🕌</span>
+		<div>
+			<strong id="azanPrayerTitle" style="display:block;font-size:14px;">اذان کا وقت ہو گیا ہے</strong>
+			<small style="font-size:11px;opacity:0.9;">Reciting Makkah Al-Mukarramah Azan</small>
+		</div>
+		<button class="btn-stop-azan" id="btnStopAzanBanner">⏹ Stop Azan</button>
+	</div>
+
+	<!-- Prayer City / Location Selector Modal -->
+	<div class="prayer-city-modal hidden" id="prayerCityModal">
+		<div class="prayer-city-box">
+			<div class="prayer-city-header">
+				<h3 style="margin:0;font-size:16px;">📍 Select City / علاقہ منتخب کریں</h3>
+				<button class="icon-button" id="btnCloseCityModal" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button>
+			</div>
+			<div class="prayer-city-search-row">
+				<input type="text" class="prayer-city-search-input" id="inputCitySearch" placeholder="Search popular city or type area..." autocomplete="off">
+			</div>
+			<div style="padding:10px 20px;border-bottom:1px solid var(--border-line);background:rgba(46,125,50,0.06);">
+				<button class="btn-primary-green" id="btnModalGpsDetect" style="width:100%;justify-content:center;padding:8px 12px;font-size:12.5px;">📍 Use Current GPS Location (میری موجودہ لوکیشن)</button>
+			</div>
+			<div class="prayer-city-list" id="prayerCityList"></div>
+		</div>
+	</div>
+
+	<script src="assets/data/page_ayahs_15lines.js?v=3.1.0"></script>
+	<script src="prayer-engine.js?v=3.1.0"></script>
+	<script src="code.js?v=3.1.0"></script>
 </body>
 </html>
