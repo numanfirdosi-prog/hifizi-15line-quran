@@ -3704,23 +3704,24 @@ body.dark .mushaf-image-wrapper {
 }
 
 .ayah-segment {
-  position: absolute;
+  position: absolute !important;
   height: 15px !important;
   top: 50% !important;
-  transform: translateY(-50%) !important;
   bottom: auto !important;
-  cursor: pointer;
-  border-radius: 4px;
-  pointer-events: auto;
-  transition: background 0.18s ease;
-  user-select: none;
+  transform: translateY(-50%) !important;
+  cursor: pointer !important;
+  border-radius: 3px !important;
+  pointer-events: auto !important;
+  transition: background 0.18s ease !important;
+  user-select: none !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  background: transparent !important;
 }
 
 .ayah-segment:hover {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(212, 175, 55, 0.12) !important;
 }
 
 .ayah-segment.playing,
