@@ -600,6 +600,10 @@ function updateStreak() {
 // 6. 15-LINE QURAN READER (Screenshot 1)
 // -----------------------------------------------------------------------------
 function openReader(surahIndex = null, syncHash = true) {
+  // Always close mobile sidebar drawer and backdrop
+  $('sidebar')?.classList.remove('open');
+  $('sidebarBackdrop')?.classList.remove('active');
+
   if (surahIndex !== null) {
     const surah = surahs[surahIndex];
     if (surah) state.page = surah[5];
@@ -1453,7 +1457,7 @@ async function playAyah(number, withBismillah = true) {
   }
 }
 
-function handleAudioEnded() {
+async function handleAudioEnded() {
   const repeat = $('audioRepeat');
   const mode = repeat ? repeat.value : 'off';
 
@@ -1478,11 +1482,33 @@ function handleAudioEnded() {
     return;
   }
 
+  // Continuous Recitation: Play next ayah on current page
   if (audioState.index < audioState.ayahs.length - 1) {
     playAyah(audioState.ayahs[audioState.index + 1].number, true);
   } else {
-    if ($('audioPlay')) $('audioPlay').textContent = '▶';
-    highlightPlayingAyah(null);
+    // Current page ended: Automatically advance to the next page and continue playing!
+    if (state.page < TOTAL_PAGES) {
+      const nextPage = state.page + 1;
+      const isReaderOpen = !$('readerOverlay')?.classList.contains('hidden');
+      if (isReaderOpen) {
+        navigatePage(1);
+      } else {
+        state.page = nextPage;
+        saveState();
+      }
+      const nextAyahs = await fetchAyahsForPage(nextPage);
+      if (nextAyahs && nextAyahs.length) {
+        audioState.ayahs = nextAyahs;
+        audioState.index = 0;
+        playAyah(nextAyahs[0].number, true);
+      } else {
+        if ($('audioPlay')) $('audioPlay').textContent = '▶';
+        highlightPlayingAyah(null);
+      }
+    } else {
+      if ($('audioPlay')) $('audioPlay').textContent = '▶';
+      highlightPlayingAyah(null);
+    }
   }
 }
 
@@ -2524,6 +2550,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
     btn.onclick = () => {
       const v = btn.dataset.view;
+      $('sidebar')?.classList.remove('open');
+      $('sidebarBackdrop')?.classList.remove('active');
       if (v === 'reader') openReader();
       else showView(v);
     };
@@ -2801,15 +2829,43 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    $('audioPrevious')?.addEventListener('click', () => {
+    $('audioPrevious')?.addEventListener('click', async () => {
       if (audioState.index > 0) {
         playAyah(audioState.ayahs[audioState.index - 1].number, false);
+      } else if (state.page > 1) {
+        const prevPage = state.page - 1;
+        if (!$('readerOverlay')?.classList.contains('hidden')) {
+          navigatePage(-1);
+        } else {
+          state.page = prevPage;
+          saveState();
+        }
+        const prevAyahs = await fetchAyahsForPage(prevPage);
+        if (prevAyahs && prevAyahs.length) {
+          audioState.ayahs = prevAyahs;
+          audioState.index = prevAyahs.length - 1;
+          playAyah(prevAyahs[prevAyahs.length - 1].number, false);
+        }
       }
     });
 
-    $('audioNext')?.addEventListener('click', () => {
+    $('audioNext')?.addEventListener('click', async () => {
       if (audioState.index < audioState.ayahs.length - 1) {
         playAyah(audioState.ayahs[audioState.index + 1].number, true);
+      } else if (state.page < TOTAL_PAGES) {
+        const nextPage = state.page + 1;
+        if (!$('readerOverlay')?.classList.contains('hidden')) {
+          navigatePage(1);
+        } else {
+          state.page = nextPage;
+          saveState();
+        }
+        const nextAyahs = await fetchAyahsForPage(nextPage);
+        if (nextAyahs && nextAyahs.length) {
+          audioState.ayahs = nextAyahs;
+          audioState.index = 0;
+          playAyah(nextAyahs[0].number, true);
+        }
       }
     });
 
