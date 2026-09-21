@@ -1912,7 +1912,7 @@ body.theme-parchment .bottom-page-nav-bar {
     bottom: 60px !important;
     bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
     height: 58px !important;
-    padding: 0 12px !important;
+    padding: 0 6px 0 12px !important;
     box-shadow: 0 -4px 14px rgba(0,0,0,0.09) !important;
     z-index: 1050 !important;
     display: flex !important;
@@ -1961,12 +1961,16 @@ body.theme-parchment .bottom-page-nav-bar {
   .audio-bar-v2 .player-center-controls {
     flex: 0 0 auto !important;
     max-width: none !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
     gap: 0 !important;
   }
   .audio-bar-v2 .player-buttons-row {
-    gap: 8px !important;
+    gap: 12px !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: flex-end !important;
+    padding-right: 2px !important;
   }
   .audio-bar-v2 .player-btn-play {
     width: 38px !important;
@@ -2085,7 +2089,7 @@ body.theme-parchment .bottom-page-nav-bar {
   bottom: 60px !important;
   bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
   height: 58px !important;
-  padding: 0 12px !important;
+  padding: 0 6px 0 12px !important;
   box-shadow: 0 -4px 14px rgba(0,0,0,0.09) !important;
   z-index: 1050 !important;
   display: flex !important;
@@ -2134,12 +2138,16 @@ body.theme-parchment .bottom-page-nav-bar {
 .is-mobile-app .audio-bar-v2 .player-center-controls {
   flex: 0 0 auto !important;
   max-width: none !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
   gap: 0 !important;
 }
 .is-mobile-app .audio-bar-v2 .player-buttons-row {
-  gap: 8px !important;
+  gap: 12px !important;
   display: flex !important;
   align-items: center !important;
+  justify-content: flex-end !important;
+  padding-right: 2px !important;
 }
 .is-mobile-app .audio-bar-v2 .player-btn-play {
   width: 38px !important;

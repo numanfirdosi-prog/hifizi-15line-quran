@@ -16,8 +16,8 @@
 	<link rel="stylesheet" href="style.css">
 	<link rel="stylesheet" href="faq.css">
 	<link rel="stylesheet" href="ramadan.css">
-	<link rel="stylesheet" href="mushaf-15line.css?v=3.1.0">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=3.1.0">
+	<link rel="stylesheet" href="mushaf-15line.css?v=3.1.1">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=3.1.1">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -913,6 +913,7 @@
 					</div>
 
 					<!-- Real-Time Interactive Compass Dial -->
+					<div id="compassLiveHeading" style="font-size:12px;color:var(--text-muted);font-weight:600;margin:6px auto 4px;">Sensor Heading: Ready (North: 0°)</div>
 					<div class="qiblah-compass-box" id="compassContainer">
 						<!-- Outer Rotating Dial SVG -->
 						<svg class="compass-dial-svg" id="compassDialSvg" viewBox="0 0 300 300">
@@ -957,9 +958,19 @@
 						</div>
 					</div>
 
+					<button class="btn-outline-green" id="btnCalibrateCompass" style="margin: 6px auto 10px;font-size:12px;padding:6px 14px;">🧭 Calibrate / Reset Compass (سینسر درست کریں)</button>
+
 					<!-- Sensor Calibration Tips -->
-					<div style="background:var(--bg-card-subtle);border:1px solid var(--border-line);border-radius:12px;padding:12px 18px;max-width:460px;font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:14px;">
-						💡 <strong>Compass Tip:</strong> Place device flat on your hand. If compass is inaccurate, move your device in a <strong>figure-8 motion (∞)</strong> to calibrate internal sensors.
+					<div style="background:var(--bg-card-subtle);border:1px solid var(--border-line);border-radius:12px;padding:12px 18px;max-width:480px;font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:10px;">
+						💡 <strong>Compass Tip:</strong> Phone ko apne hath par flat rakhein. Agar compass bhatak raha ho toh phone ko hawa mein <strong>figure-8 (∞)</strong> ke motion mein ghuma kar calibrate karein.
+					</div>
+
+					<!-- Islamic Qiblah Guide Card -->
+					<div style="background:var(--bg-card-subtle);border:1px solid var(--border-line);border-radius:12px;padding:14px 18px;max-width:480px;margin:14px auto 0;text-align:left;font-size:12.5px;color:var(--text-secondary);line-height:1.6;">
+						<strong style="color:var(--text-primary);display:block;margin-bottom:4px;">🗺️ Islamic Qiblah Direction Guide (قبلہ کا رخ):</strong>
+						India & Pakistan se Kaaba Sharif theek <strong>Pachhim / West (مغرب) se thoda sa baayein (Southwest)</strong> taraf hai — <strong id="qiblahGuideBearing" style="color:var(--primary);">266.6° (WSW)</strong>.<br>
+						• Sooraj doobne (Sunset / West) ki taraf muh karke thoda sa baayein (left) taraf mudne par seedha Qiblah Sharif hai.<br>
+						• Golden Kaaba needle jab theek upar (samne) aa jaye toh aap Kaaba Sharif ke ain samne hain.
 					</div>
 				</div>
 			</section>
@@ -1745,8 +1756,8 @@
 		</div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.1.0"></script>
-	<script src="prayer-engine.js?v=3.1.0"></script>
-	<script src="code.js?v=3.1.0"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.1.1"></script>
+	<script src="prayer-engine.js?v=3.1.1"></script>
+	<script src="code.js?v=3.1.1"></script>
 </body>
 </html>

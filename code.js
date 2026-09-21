@@ -2686,8 +2686,130 @@ function updatePrayerTimesUI() {
 }
 
 // -----------------------------------------------------------------------------
-// QIBLAH COMPASS
+// QIBLAH COMPASS (Multi-Sensor & Tilt-Compensated)
 // -----------------------------------------------------------------------------
+let qiblahAbsoluteActive = false;
+let currentDeviceHeading = 0;
+
+function calculateTiltCompensatedHeading(alpha, beta, gamma) {
+  if (alpha === null || alpha === undefined) return 0;
+  // If device is almost flat, (360 - alpha) gives direct yaw
+  if (Math.abs(beta || 0) < 6 && Math.abs(gamma || 0) < 6) {
+    return (360 - alpha) % 360;
+  }
+  const degToRad = Math.PI / 180;
+  const _x = (beta || 0) * degToRad;
+  const _y = (gamma || 0) * degToRad;
+  const _z = (alpha || 0) * degToRad;
+
+  const cX = Math.cos(_x);
+  const cY = Math.cos(_y);
+  const cZ = Math.cos(_z);
+  const sX = Math.sin(_x);
+  const sY = Math.sin(_y);
+  const sZ = Math.sin(_z);
+
+  // W3C standard 3D rotation matrix calculation
+  const rA = -cZ * sY - sZ * sX * cY;
+  const rB = -sZ * sY + cZ * sX * cY;
+  let heading = Math.atan2(rA, rB) * (180 / Math.PI);
+  return (heading + 360) % 360;
+}
+
+function updateCompassUI(heading) {
+  currentDeviceHeading = heading;
+  const dial = $('compassDialSvg');
+  const needle = $('qiblahNeedleBox');
+  const statusBanner = $('qiblahStatusBanner');
+  const statusIcon = $('qiblahStatusIcon');
+  const statusText = $('qiblahStatusText');
+  const headingVal = $('compassLiveHeading');
+
+  if (headingVal) {
+    headingVal.textContent = `Phone Heading: ${Math.round(heading)}° (North: 0°)`;
+  }
+
+  if (dial) {
+    dial.style.transform = `rotate(${-heading}deg)`;
+  }
+  if (needle) {
+    needle.style.transform = `rotate(${currentQiblahBearing - heading}deg)`;
+  }
+
+  const diff = Math.abs((currentQiblahBearing - heading + 360) % 360);
+  const isAligned = diff <= 4.0 || diff >= 356.0;
+
+  if (statusBanner) {
+    statusBanner.classList.toggle('aligned', isAligned);
+  }
+  if (statusIcon && statusText) {
+    if (isAligned) {
+      statusIcon.textContent = '🕋';
+      statusText.textContent = 'قبلہ رخ — You are facing the Holy Kaaba!';
+      try { navigator.vibrate?.(40); } catch(e) {}
+    } else {
+      statusIcon.textContent = '🧭';
+      const angleNeeded = Math.round(diff > 180 ? 360 - diff : diff);
+      const turnDir = (currentQiblahBearing - heading + 360) % 360 < 180 ? 'Right' : 'Left';
+      statusText.textContent = `Turn ${angleNeeded}° to the ${turnDir} towards Kaaba needle`;
+    }
+  }
+}
+
+function handleCompassOrientation(e, isAbsolute) {
+  let heading = 0;
+  if (typeof e.webkitCompassHeading !== 'undefined') {
+    // iOS Safari provides direct magnetic compass heading
+    heading = e.webkitCompassHeading;
+  } else if (e.alpha !== null && e.alpha !== undefined) {
+    // Android Chrome / Standard W3C
+    heading = calculateTiltCompensatedHeading(e.alpha, e.beta, e.gamma);
+  } else {
+    return;
+  }
+  updateCompassUI(heading);
+}
+
+function startQiblahCompass() {
+  if (qiblahOrientationAttached) return;
+  qiblahOrientationAttached = true;
+
+  // 1. Android Chrome Absolute Orientation (Crucial for Earth's Magnetic North)
+  window.addEventListener('deviceorientationabsolute', (e) => {
+    qiblahAbsoluteActive = true;
+    handleCompassOrientation(e, true);
+  }, true);
+
+  // 2. Standard Orientation (iOS webkitCompassHeading or fallback)
+  window.addEventListener('deviceorientation', (e) => {
+    if (qiblahAbsoluteActive && typeof e.webkitCompassHeading === 'undefined') {
+      return; // Ignore non-absolute events once absolute is active
+    }
+    handleCompassOrientation(e, false);
+  }, true);
+}
+
+function calibrateQiblahCompass() {
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(response => {
+        if (response === 'granted') {
+          showToast('🧭 Compass sensor permission granted!');
+          startQiblahCompass();
+        } else {
+          showToast('⚠️ Sensor permission denied by browser.');
+        }
+      })
+      .catch(err => {
+        showToast('Sensor initialized. Move phone in figure-8 motion.');
+        startQiblahCompass();
+      });
+  } else {
+    startQiblahCompass();
+    showToast('Compass active! Move phone in figure-8 (∞) to calibrate.');
+  }
+}
+
 function renderQiblahView() {
   if (!window.NurPrayerEngine) return;
   const eng = window.NurPrayerEngine;
@@ -2706,6 +2828,9 @@ function renderQiblahView() {
   if ($('qiblahDistanceText')) {
     $('qiblahDistanceText').textContent = `Distance to Holy Kaaba: ${q.distanceKm.toLocaleString()} km`;
   }
+  if ($('qiblahGuideBearing')) {
+    $('qiblahGuideBearing').textContent = `${q.bearing}° (${q.cardinal})`;
+  }
 
   const needle = $('qiblahNeedleBox');
   if (needle) {
@@ -2713,65 +2838,6 @@ function renderQiblahView() {
   }
 
   startQiblahCompass();
-}
-
-function startQiblahCompass() {
-  if (qiblahOrientationAttached) return;
-
-  function handleOrientation(e) {
-    let heading = 0;
-    if (e.webkitCompassHeading !== undefined) {
-      heading = e.webkitCompassHeading;
-    } else if (e.alpha !== null && e.alpha !== undefined) {
-      heading = (360 - e.alpha) % 360;
-    } else {
-      return;
-    }
-
-    const dial = $('compassDialSvg');
-    const needle = $('qiblahNeedleBox');
-    const statusBanner = $('qiblahStatusBanner');
-    const statusIcon = $('qiblahStatusIcon');
-    const statusText = $('qiblahStatusText');
-
-    if (dial) {
-      dial.style.transform = `rotate(${-heading}deg)`;
-    }
-    if (needle) {
-      needle.style.transform = `rotate(${currentQiblahBearing - heading}deg)`;
-    }
-
-    const diff = Math.abs((currentQiblahBearing - heading + 360) % 360);
-    const isAligned = diff <= 3.5 || diff >= 356.5;
-
-    if (statusBanner) {
-      statusBanner.classList.toggle('aligned', isAligned);
-    }
-    if (statusIcon && statusText) {
-      if (isAligned) {
-        statusIcon.textContent = '🕋';
-        statusText.textContent = 'قبلہ رخ — You are facing the Holy Kaaba!';
-        navigator.vibrate?.(40);
-      } else {
-        statusIcon.textContent = '🧭';
-        statusText.textContent = 'Rotate your device to align with Kaaba needle';
-      }
-    }
-  }
-
-  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
-      .then(response => {
-        if (response === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-          qiblahOrientationAttached = true;
-        }
-      })
-      .catch(() => {});
-  } else {
-    window.addEventListener('deviceorientation', handleOrientation, true);
-    qiblahOrientationAttached = true;
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -3538,7 +3604,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btnTestAzanSound')?.addEventListener('click', () => {
     if (window.NurPrayerEngine) {
       window.NurPrayerEngine.testAzan();
-      showToast('Playing Makkah Azan preview...');
+      showToast('🔊 Playing Makkah Azan preview...');
     }
   });
   $('btnStopAzanBanner')?.addEventListener('click', () => {
@@ -3552,9 +3618,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // Enable Notifications
   $('btnEnableNotifications')?.addEventListener('click', async () => {
     if (window.NurPrayerEngine) {
+      showToast('Requesting notification permission...');
       const granted = await window.NurPrayerEngine.requestNotificationPermission();
-      showToast(granted ? '🔔 Azan notifications allowed!' : 'Notifications blocked or dismissed');
+      if (granted) {
+        showToast('🔔 Azan notifications allowed!');
+        try {
+          new Notification('Nur Al-Quran • Prayer & Azan', {
+            body: 'Namaz ke waqt Azan notification on kar diya gaya hai.',
+            icon: 'icon-192.png'
+          });
+        } catch(e) {}
+      } else {
+        showToast('⚠️ Notifications blocked or dismissed by browser.');
+      }
     }
+  });
+
+  // Calibrate Compass button
+  $('btnCalibrateCompass')?.addEventListener('click', () => {
+    calibrateQiblahCompass();
   });
 
   // Prayer Alarm Bell Toggle Buttons

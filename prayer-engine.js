@@ -258,14 +258,19 @@
     initAzanAudio();
     if (azanAudioElement) {
       azanAudioElement.currentTime = 0;
-      azanAudioElement.play().catch(e => {
-        console.warn('Audio autoplay blocked; playing synthesized chime as fallback', e);
-        playSynthesizedChime();
-      });
+      const p = azanAudioElement.play();
+      if (p !== undefined) {
+        p.catch(e => {
+          console.warn('Audio autoplay blocked or failed, playing synthesized chime', e);
+          playSynthesizedChime();
+        });
+      }
+    } else {
+      playSynthesizedChime();
     }
 
-    showAzanModal(prayerName);
-    sendPrayerNotification(prayerName);
+    showAzanModal(prayerName || 'Namaz');
+    sendPrayerNotification(prayerName || 'Namaz');
   }
 
   function stopAzan() {
@@ -328,9 +333,20 @@
     }
   }
 
-  function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission !== 'granted') {
-      Notification.requestPermission();
+  async function requestNotificationPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    try {
+      const res = await Notification.requestPermission();
+      return res === 'granted';
+    } catch (e) {
+      return new Promise(resolve => {
+        try {
+          Notification.requestPermission(p => resolve(p === 'granted'));
+        } catch (err) {
+          resolve(false);
+        }
+      });
     }
   }
 
@@ -383,6 +399,9 @@
     calculatePrayerTimes,
     calculateQiblah,
     playAzan,
+    testAzan: function() {
+      playAzan('Test Azan (تجرباتی اذان)');
+    },
     stopAzan,
     requestNotificationPermission,
     checkPrayerAlarmTick,
@@ -397,8 +416,14 @@
       window.dispatchEvent(new CustomEvent('nur-prayer-settings-changed'));
     },
     toggleAlarm: function(prayerKey, isEnabled) {
-      state.alarmSettings[prayerKey] = isEnabled;
+      if (typeof isEnabled === 'boolean') {
+        state.alarmSettings[prayerKey] = isEnabled;
+      } else {
+        const current = state.alarmSettings[prayerKey] !== false;
+        state.alarmSettings[prayerKey] = !current;
+      }
       localStorage.setItem('nur-prayer-alarms', JSON.stringify(state.alarmSettings));
+      return state.alarmSettings[prayerKey];
     }
   };
 
