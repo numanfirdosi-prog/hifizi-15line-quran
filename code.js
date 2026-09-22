@@ -3790,6 +3790,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Azan Sound Testing & Stopping
   $('btnTestAzanSound')?.addEventListener('click', () => {
     if (window.NurPrayerEngine) {
+      if (window.NurPrayerEngine.unlockMobileAudio) {
+        window.NurPrayerEngine.unlockMobileAudio();
+      }
       window.NurPrayerEngine.testAzan();
       showToast('🔊 Playing Makkah Azan preview...');
     }
@@ -3809,12 +3812,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const granted = await window.NurPrayerEngine.requestNotificationPermission();
       if (granted) {
         showToast('🔔 Azan notifications allowed!');
-        try {
-          new Notification('Nur Al-Quran • Prayer & Azan', {
-            body: 'Namaz ke waqt Azan notification on kar diya gaya hai.',
-            icon: 'icon-192.png'
-          });
-        } catch(e) {}
+        if (window.NurPrayerEngine.sendPrayerNotification) {
+          window.NurPrayerEngine.sendPrayerNotification('Test');
+        }
       } else {
         showToast('⚠️ Notifications blocked or dismissed by browser.');
       }

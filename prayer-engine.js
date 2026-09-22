@@ -243,25 +243,72 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 4. AZAN AUDIO & NOTIFICATION SYSTEM
+  // 4. AZAN AUDIO & NOTIFICATION SYSTEM (Mobile Autoplay Resilient)
   // ---------------------------------------------------------------------------
   let azanAudioElement = null;
+  let isAudioUnlocked = false;
 
   function initAzanAudio() {
     if (!azanAudioElement) {
-      azanAudioElement = new Audio('assets/audio/azan.mp3');
+      azanAudioElement = document.getElementById('azanAudio');
+      if (!azanAudioElement) {
+        azanAudioElement = new Audio('assets/audio/azan.mp3');
+      }
       azanAudioElement.preload = 'auto';
+      azanAudioElement.setAttribute('playsinline', 'true');
+      azanAudioElement.setAttribute('webkit-playsinline', 'true');
     }
+    return azanAudioElement;
+  }
+
+  // Pre-unlock audio element & AudioContext on user's first touch/interaction (iOS/Android requirement)
+  function unlockMobileAudio() {
+    if (isAudioUnlocked) return;
+    const audio = initAzanAudio();
+    if (audio) {
+      const prevMuted = audio.muted;
+      audio.muted = true;
+      const p = audio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = prevMuted;
+          isAudioUnlocked = true;
+        }).catch(() => {});
+      }
+    }
+    // Also unlock Web Audio context
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        if (!window.__nurAudioCtx) {
+          window.__nurAudioCtx = new AudioContext();
+        }
+        if (window.__nurAudioCtx.state === 'suspended') {
+          window.__nurAudioCtx.resume().catch(() => {});
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evt => {
+      document.addEventListener(evt, unlockMobileAudio, { once: false, passive: true });
+    });
   }
 
   function playAzan(prayerName) {
-    initAzanAudio();
-    if (azanAudioElement) {
-      azanAudioElement.currentTime = 0;
-      const p = azanAudioElement.play();
+    const audio = initAzanAudio();
+
+    if (audio) {
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = 1.0;
+      const p = audio.play();
       if (p !== undefined) {
         p.catch(e => {
-          console.warn('Audio autoplay blocked or failed, playing synthesized chime', e);
+          console.warn('MP3 playback failed or blocked by mobile policy, playing synthesized chime fallback:', e);
           playSynthesizedChime();
         });
       }
@@ -274,9 +321,10 @@
   }
 
   function stopAzan() {
-    if (azanAudioElement) {
-      azanAudioElement.pause();
-      azanAudioElement.currentTime = 0;
+    const audio = initAzanAudio();
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
     }
     const modal = document.getElementById('azanActiveBanner');
     if (modal) modal.classList.add('hidden');
@@ -287,14 +335,18 @@
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
-      const ctx = new AudioContext();
+      const ctx = window.__nurAudioCtx || new AudioContext();
+      window.__nurAudioCtx = ctx;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
       const notes = [440, 554.37, 659.25, 880];
       notes.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.4);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.4);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.4 + 0.8);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -304,32 +356,53 @@
     } catch (e) {}
   }
 
-  function sendPrayerNotification(prayerName) {
-    if ('Notification' in window && Notification.permission === 'granted') {
+  async function sendPrayerNotification(prayerName) {
+    const urduNames = {
+      fajr: 'فجر',
+      dhuhr: 'ظہر',
+      asr: 'عصر',
+      maghrib: 'مغرب',
+      isha: 'عشاء'
+    };
+    const pKey = prayerName.toLowerCase().replace(/[^a-z]/g, '');
+    const urduName = urduNames[pKey] || prayerName;
+    const title = `حی علی الصلاۃ — وقتِ ${urduName}`;
+    const body = `Namaz ${prayerName} ka waqt ho gaya hai (${state.location.name}). Tap to open Nur Al-Quran.`;
+
+    if (!('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+
+    // 1. Android Chrome / PWA: MUST use ServiceWorkerRegistration.showNotification()
+    if ('serviceWorker' in navigator) {
       try {
-        const urduNames = {
-          fajr: 'فجر',
-          dhuhr: 'ظہر',
-          asr: 'عصر',
-          maghrib: 'مغرب',
-          isha: 'عشاء'
-        };
-        const title = `حی علی الصلاۃ — وقتِ ${urduNames[prayerName.toLowerCase()] || prayerName}`;
-        const body = `Namaz ${prayerName} time has started in ${state.location.name}. Tap to open Nur Al-Quran.`;
-        if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'PRAYER_NOTIFICATION',
-            title: title,
-            body: body
-          });
-        } else {
-          new Notification(title, {
+        const reg = await navigator.serviceWorker.ready;
+        if (reg && reg.showNotification) {
+          return reg.showNotification(title, {
             body: body,
-            icon: 'icon-192.png',
-            badge: 'icon-192.png'
+            icon: 'assets/icon-192.png',
+            badge: 'assets/icon-192.png',
+            vibrate: [200, 100, 200, 100, 200, 100, 400],
+            tag: 'prayer-alarm-' + pKey,
+            renotify: true,
+            requireInteraction: true,
+            data: { url: '/' }
           });
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('SW showNotification failed, trying desktop fallback:', e);
+      }
+    }
+
+    // 2. Desktop Fallback
+    try {
+      new Notification(title, {
+        body: body,
+        icon: 'assets/icon-192.png',
+        badge: 'assets/icon-192.png'
+      });
+    } catch (e) {
+      console.warn('Notification constructor failed:', e);
     }
   }
 
@@ -355,7 +428,9 @@
     const label = document.getElementById('azanPrayerTitle');
     if (banner && label) {
       const urduMap = { fajr: 'فجر', dhuhr: 'ظہر', asr: 'عصر', maghrib: 'مغرب', isha: 'عشاء' };
-      label.textContent = `اذانِ ${urduMap[prayerName.toLowerCase()] || prayerName} (${prayerName})`;
+      const pKey = prayerName.toLowerCase().replace(/[^a-z]/g, '');
+      const urdu = urduMap[pKey] || prayerName;
+      label.textContent = `اذانِ ${urdu} (${prayerName})`;
       banner.classList.remove('hidden');
     }
   }
@@ -365,8 +440,8 @@
   // ---------------------------------------------------------------------------
   function checkPrayerAlarmTick() {
     const now = new Date();
-    const curH = now.getHours();
-    const curM = now.getMinutes();
+    const curMinutes = now.getHours() * 60 + now.getMinutes();
+    const todayDateStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
     const times = calculatePrayerTimes(now, state.location, state.asrJuristic);
 
@@ -379,15 +454,21 @@
     ];
 
     for (const p of prayerSchedule) {
-      if (p.time.hours24 === curH && p.time.mins === curM) {
-        const alarmKey = `${p.key}_${now.toDateString()}_${curH}_${curM}`;
-        if (state.lastAlarmPlayedPrayer !== alarmKey) {
-          state.lastAlarmPlayedPrayer = alarmKey;
-          if (state.alarmSettings[p.key] && state.azanAudioEnabled) {
+      const pMinutes = p.time.hours24 * 60 + p.time.mins;
+      const diff = curMinutes - pMinutes;
+
+      // Trigger if prayer started between 0 and 10 minutes ago (grace period for background throttle)
+      if (diff >= 0 && diff <= 10) {
+        const storageKey = `nur-alarm-fired-${p.key}-${todayDateStr}`;
+        if (!storage.getItem(storageKey)) {
+          storage.setItem(storageKey, 'true');
+          state.lastAlarmPlayedPrayer = `${p.key}_${todayDateStr}`;
+
+          const isAlarmEnabled = state.alarmSettings[p.key] !== false;
+          if (isAlarmEnabled && state.azanAudioEnabled !== false) {
             playAzan(p.name);
           }
         }
-        break;
       }
     }
   }
@@ -403,6 +484,8 @@
       playAzan('Test Azan (تجرباتی اذان)');
     },
     stopAzan,
+    sendPrayerNotification,
+    unlockMobileAudio,
     requestNotificationPermission,
     checkPrayerAlarmTick,
     setLocation: function(loc) {
@@ -427,9 +510,16 @@
     }
   };
 
-  // Start minute tick for alarms in browser
+  // Start minute tick for alarms in browser + visibility change handlers
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-    setInterval(checkPrayerAlarmTick, 30000);
+    setInterval(checkPrayerAlarmTick, 15000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkPrayerAlarmTick();
+      }
+    });
+    window.addEventListener('focus', checkPrayerAlarmTick);
   }
 
 })(window);

@@ -3,7 +3,7 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v3.3.1';
+const CACHE_NAME = 'nur-al-quran-v3.3.2';
 
 const STATIC_ASSETS = [
   '/',
@@ -158,4 +158,46 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ---------------------------------------------------------------------------
+// PRAYER TIME NOTIFICATION SYSTEM (Mobile Android & PWA Background Support)
+// ---------------------------------------------------------------------------
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'PRAYER_NOTIFICATION') {
+    const title = event.data.title || 'حي علی الصلاۃ — وقتِ نماز';
+    const body = event.data.body || 'Namaz ka waqt ho gaya hai.';
+    const icon = event.data.icon || 'assets/icon-192.png';
+    const badge = event.data.badge || 'assets/icon-192.png';
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: body,
+        icon: icon,
+        badge: badge,
+        vibrate: [300, 150, 300, 150, 400],
+        tag: event.data.tag || 'prayer-alarm',
+        renotify: true,
+        requireInteraction: true,
+        data: event.data.data || { url: '/' }
+      })
+    );
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
+  );
+});
+
 
