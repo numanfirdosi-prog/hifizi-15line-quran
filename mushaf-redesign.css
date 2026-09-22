@@ -293,6 +293,67 @@ body {
   color: var(--text-muted);
 }
 
+.search-lang-toggle-btn {
+  background: var(--bg-card-subtle, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--border-line, rgba(0, 0, 0, 0.12));
+  color: var(--primary, #10b981);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 3px 6px;
+  cursor: pointer;
+  margin-right: 2px;
+  transition: all 0.2s ease;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.search-lang-toggle-btn:hover {
+  background: var(--primary-subtle, rgba(16, 185, 129, 0.12));
+  transform: scale(1.04);
+}
+
+.search-mic-icon-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+  line-height: 1;
+}
+
+.search-mic-icon-btn:hover {
+  transform: scale(1.15);
+  color: var(--primary, #10b981);
+}
+
+.search-mic-icon-btn.recording {
+  color: #ef4444 !important;
+  animation: pulseMic 1.2s infinite ease-in-out !important;
+  transform: scale(1.22);
+}
+
+@keyframes pulseMic {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.7));
+  }
+  50% {
+    transform: scale(1.28);
+    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 1));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.7));
+  }
+}
+
+
 .top-header-actions {
   display: flex;
   align-items: center;
@@ -5244,13 +5305,21 @@ body.dark .lauh-cartouche-bismillah.playing {
     color: var(--text-primary);
   }
 
+  .search-lang-toggle-btn {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 5px;
+    margin-right: 3px;
+  }
+
   .search-mic-icon-btn {
     background: none;
     border: none;
-    font-size: 15px;
+    font-size: 16px;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 0 2px;
+    padding: 0 4px;
+    line-height: 1;
   }
 
   /* Quick Access 10 cards in 2 rows of 5 */

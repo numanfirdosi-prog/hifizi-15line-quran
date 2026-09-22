@@ -89,6 +89,7 @@
 				<div class="global-search-bar">
 					<span>⌕</span>
 					<input id="globalSearch" placeholder="Search Surah, Ayah, Juz, or translation (e.g. Al-Baqarah...)" aria-label="Search Quran">
+					<button class="search-mic-icon-btn voice-search-trigger" id="globalMicBtn" title="Voice Search (آواز سے سرچ کریں)" aria-label="Voice Search">🎙️</button>
 				</div>
 				<div class="top-header-actions">
 					<div class="qari-dropdown-pill" id="headerQariTrigger" title="Select Holy Quran Reciter">
@@ -133,7 +134,8 @@
 				<div class="mobile-search-pill-box">
 					<span class="search-glass-icon">⌕</span>
 					<input type="text" id="mobileSearchInput" placeholder="Search Surah, Ayah, word..." aria-label="Search Quran">
-					<button class="search-mic-icon-btn" id="mobileMicBtn" title="World Qari / Voice" aria-label="Reciter Voice Search">🎙</button>
+					<button class="search-lang-toggle-btn" id="mobileVoiceLangToggle" title="Toggle Voice Language (EN / اردو)">EN</button>
+					<button class="search-mic-icon-btn voice-search-trigger" id="mobileMicBtn" title="Voice Search (آواز سے سرچ کریں)" aria-label="Voice Search">🎙️</button>
 				</div>
 			</div>
 
@@ -534,6 +536,8 @@
 				<div class="global-search-bar" style="max-width:540px;margin-bottom:18px;">
 					<span>⌕</span>
 					<input id="dedicatedSearchInput" placeholder="Type a word, surah, or topic..." aria-label="Dedicated Search">
+					<button class="search-lang-toggle-btn" id="dedicatedVoiceLangToggle" title="Toggle Voice Language (EN / اردو)">EN</button>
+					<button class="search-mic-icon-btn voice-search-trigger" id="dedicatedMicBtn" title="Voice Search (آواز سے سرچ کریں)" aria-label="Voice Search">🎙️</button>
 				</div>
 				<div class="search-results hidden" id="searchResults"></div>
 			</section>
@@ -1778,14 +1782,14 @@
 		</div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.3.4"></script>
-	<script src="prayer-engine.js?v=3.3.4"></script>
-	<script src="code.js?v=3.3.4"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.3.5"></script>
+	<script src="prayer-engine.js?v=3.3.5"></script>
+	<script src="code.js?v=3.3.5"></script>
 	<script>
 		if ('caches' in window) {
 			caches.keys().then(function(keys) {
 				keys.forEach(function(k) {
-					if (k !== 'nur-al-quran-v3.3.4') {
+					if (k !== 'nur-al-quran-v3.3.5') {
 						caches.delete(k);
 					}
 				});

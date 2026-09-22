@@ -2333,6 +2333,46 @@ function renderKhatamPlanner() {
   });
 }
 
+function normalizeArabicQuery(str) {
+  if (!str) return '';
+  return str
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // remove tashkeel/harakat/khanjaria
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/[ة]/g, 'ه')
+    .replace(/[يىئ]/g, 'ي')
+    .replace(/[ؤ]/g, 'و')
+    .trim();
+}
+
+const PHONETIC_SURAH_MAP = {
+  'yaseen': 'ya-sin',
+  'yasin': 'ya-sin',
+  'yaseen sharif': 'ya-sin',
+  'yasin sharif': 'ya-sin',
+  'rehman': 'rahman',
+  'ar rehman': 'rahman',
+  'ar-rehman': 'rahman',
+  'al rehman': 'rahman',
+  'baqra': 'baqarah',
+  'baqara': 'baqarah',
+  'bakra': 'baqarah',
+  'fatiha': 'fatihah',
+  'fateha': 'fatihah',
+  'fatehah': 'fatihah',
+  'kahaf': 'kahf',
+  'al kahaf': 'kahf',
+  'waqia': 'waqi',
+  'waqiah': 'waqi',
+  'ikhlas': 'ikhlas',
+  'ikhlaas': 'ikhlas',
+  'falak': 'falaq',
+  'naas': 'nas',
+  'kursi': 'baqarah',
+  'ayatal kursi': 'baqarah',
+  'ayatul kursi': 'baqarah',
+  'mariam': 'maryam'
+};
+
 async function handleSearch(query) {
   const request = ++searchRequest;
   const resultsEl = $('searchResults');
@@ -2346,7 +2386,10 @@ async function handleSearch(query) {
   }
 
   resultsEl.classList.remove('hidden');
-  const cleanQ = rawQuery.toLowerCase().replace(/^(surah|surat|para|juz)\s+/i, '').trim();
+  const cleanQ = rawQuery.toLowerCase().replace(/^(surah|surat|soorah|para|juz|سورة|سورۃ|سورہ|پارہ|جزء)\s+/iu, '').trim();
+  const cleanQNorm = cleanQ.replace(/[^a-z0-9]/g, '');
+  const phoneticTarget = PHONETIC_SURAH_MAP[cleanQ] || PHONETIC_SURAH_MAP[cleanQNorm];
+  const cleanArNorm = normalizeArabicQuery(cleanQ);
   const numQ = parseInt(cleanQ, 10);
 
   // 1. Instant Match Surahs (114 Surahs offline)
@@ -2360,11 +2403,14 @@ async function handleSearch(query) {
     const rev = s[4] || '';
     const startPage = s[5] || 1;
 
+    const surahArNorm = normalizeArabicQuery(arabic);
+
     let isMatch = false;
     if (sNum === numQ) isMatch = true;
-    if (engName.toLowerCase().includes(cleanQ) || engName.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanQ.replace(/[^a-z0-9]/g, ''))) isMatch = true;
+    if (engName.toLowerCase().includes(cleanQ) || engName.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanQNorm)) isMatch = true;
+    if (phoneticTarget && (engName.toLowerCase().includes(phoneticTarget) || engName.toLowerCase().replace(/[^a-z0-9]/g, '').includes(phoneticTarget))) isMatch = true;
     if (meaning.toLowerCase().includes(cleanQ)) isMatch = true;
-    if (arabic.includes(cleanQ)) isMatch = true;
+    if (arabic.includes(cleanQ) || (cleanArNorm && surahArNorm.includes(cleanArNorm))) isMatch = true;
 
     if (isMatch) {
       matchedSurahs.push({ num: sNum, engName, meaning, arabic, ayahs, rev, startPage });
@@ -2375,12 +2421,13 @@ async function handleSearch(query) {
   const matchedJuz = [];
   if (typeof juzData !== 'undefined') {
     juzData.forEach(j => {
+      const juzArNorm = normalizeArabicQuery(j.arabic || '');
       let isMatch = false;
       if (j.num === numQ) isMatch = true;
       if (j.name && j.name.toLowerCase().includes(cleanQ)) isMatch = true;
-      if (j.arabic && j.arabic.includes(cleanQ)) isMatch = true;
+      if (j.arabic && (j.arabic.includes(cleanQ) || (cleanArNorm && juzArNorm.includes(cleanArNorm)))) isMatch = true;
       if (j.surahs && j.surahs.toLowerCase().includes(cleanQ)) isMatch = true;
-      if (cleanQ === 'amma' && j.num === 30) isMatch = true;
+      if ((cleanQ === 'amma' || cleanQ === 'aama') && j.num === 30) isMatch = true;
       if (cleanQ === 'tabarak' && j.num === 29) isMatch = true;
 
       if (isMatch) {
@@ -2388,6 +2435,7 @@ async function handleSearch(query) {
       }
     });
   }
+
 
   function renderSearchResults(apiAyahs = []) {
     if (request !== searchRequest) return;
@@ -3075,6 +3123,163 @@ function handleGpsDetect() {
 }
 
 // -----------------------------------------------------------------------------
+// VOICE SEARCH ENGINE (Web Speech API with Urdu / Arabic / English support)
+// -----------------------------------------------------------------------------
+let activeSpeechRecognition = null;
+let isVoiceListening = false;
+let voiceSearchLang = localStorage.getItem('nur-voice-lang') || 'en-US';
+
+function updateVoiceLangDisplay() {
+  const isUrdu = voiceSearchLang === 'ur-PK';
+  const label = isUrdu ? 'اردو' : 'EN';
+  const toggles = [$('mobileVoiceLangToggle'), $('dedicatedVoiceLangToggle')].filter(Boolean);
+  toggles.forEach(btn => {
+    btn.textContent = label;
+    btn.title = `Voice language: ${isUrdu ? 'اردو (Urdu)' : 'English'}. Click to toggle.`;
+  });
+}
+
+function toggleVoiceLang() {
+  voiceSearchLang = voiceSearchLang === 'ur-PK' ? 'en-US' : 'ur-PK';
+  localStorage.setItem('nur-voice-lang', voiceSearchLang);
+  updateVoiceLangDisplay();
+  showToast(`🎙️ Voice language set to: ${voiceSearchLang === 'ur-PK' ? 'اردو (Urdu)' : 'English (EN)'}`);
+}
+
+function initVoiceSearch() {
+  updateVoiceLangDisplay();
+
+  const toggles = [$('mobileVoiceLangToggle'), $('dedicatedVoiceLangToggle')].filter(Boolean);
+  toggles.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleVoiceLang();
+    });
+  });
+
+  const micButtons = [
+    $('mobileMicBtn'),
+    $('globalMicBtn'),
+    $('dedicatedMicBtn')
+  ].filter(Boolean);
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    micButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showToast('⚠️ Voice search is not supported in this browser. Please use Google Chrome or type your search.');
+      });
+    });
+    return;
+  }
+
+  function stopListening() {
+    if (activeSpeechRecognition) {
+      try { activeSpeechRecognition.stop(); } catch (e) {}
+      activeSpeechRecognition = null;
+    }
+    isVoiceListening = false;
+    micButtons.forEach(b => {
+      b.classList.remove('recording');
+      b.innerHTML = '🎙️';
+      b.title = 'Voice Search (آواز سے سرچ کریں)';
+    });
+  }
+
+  function startListening(triggerBtn) {
+    if (isVoiceListening) {
+      stopListening();
+      showToast('Voice search cancelled.');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      activeSpeechRecognition = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 5;
+      recognition.lang = voiceSearchLang;
+
+      recognition.onstart = () => {
+        isVoiceListening = true;
+        micButtons.forEach(b => {
+          b.classList.add('recording');
+          b.innerHTML = '🔴';
+          b.title = 'Listening... (Boliye)';
+        });
+        const langLabel = voiceSearchLang === 'ur-PK' ? 'اردو (Urdu)' : 'English';
+        showToast(`🎙️ Sun raha hoon (${langLabel})... Surah ya Ayah ka naam bolein`);
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        if (event.results && event.results[0] && event.results[0][0]) {
+          transcript = event.results[0][0].transcript.trim();
+        }
+
+        // Check alternatives if available
+        if (event.results && event.results[0]) {
+          for (let i = 0; i < event.results[0].length; i++) {
+            const alt = event.results[0][i].transcript.trim();
+            if (/^(surah|surat|soorah|para|juz|سورة|سورۃ|سورہ|پارہ|جزء)/i.test(alt)) {
+              transcript = alt;
+              break;
+            }
+          }
+        }
+
+        stopListening();
+
+        if (transcript) {
+          showToast(`🎙️ "${transcript}"`);
+          
+          if ($('mobileSearchInput')) $('mobileSearchInput').value = transcript;
+          if ($('dedicatedSearchInput')) $('dedicatedSearchInput').value = transcript;
+          if ($('globalSearch')) $('globalSearch').value = transcript;
+
+          showView('search');
+          handleSearch(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        stopListening();
+        console.warn('Voice recognition error:', event.error);
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          showToast('⚠️ Mic permission blocked. Browser settings me microphone allow karein.');
+        } else if (event.error === 'no-speech') {
+          showToast('⚠️ Koi awaz nahi aayi (No speech heard). Dobara mic par click karke bolein.');
+        } else if (event.error === 'network') {
+          showToast('⚠️ Internet connection issue for speech recognition.');
+        } else {
+          showToast(`⚠️ Voice error (${event.error}). Please type your search.`);
+        }
+      };
+
+      recognition.onend = () => {
+        stopListening();
+      };
+
+      recognition.start();
+    } catch (err) {
+      stopListening();
+      console.error('Error starting speech recognition:', err);
+      showToast('⚠️ Microphone start nahi ho saka. Permissions check karein.');
+    }
+  }
+
+  micButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startListening(btn);
+    });
+  });
+}
+
+// -----------------------------------------------------------------------------
 // 11. GLOBAL INITIALIZATION & EVENT WIRING
 // -----------------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
@@ -3602,6 +3807,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTheme(state.theme);
   setQari(audioState.qari);
   initHeaderQariPopover();
+  initVoiceSearch();
   initReaderMoreSheet();
   setReadingMode(state.mode);
   setFontScale(state.scale);
@@ -3698,14 +3904,6 @@ document.addEventListener('DOMContentLoaded', () => {
           handleSearch(val);
         }
       }
-    }
-  });
-
-  // Mobile Search Mic button triggers Qari/Voice modal
-  $('mobileMicBtn')?.addEventListener('click', () => {
-    const popover = $('headerQariPopover');
-    if (popover) {
-      popover.classList.toggle('hidden');
     }
   });
 
