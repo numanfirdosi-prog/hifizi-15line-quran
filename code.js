@@ -3441,6 +3441,12 @@ document.addEventListener('DOMContentLoaded', () => {
       a.remove();
       showToast('Audio download initiated');
     });
+
+    $('btnCloseAudioBar')?.addEventListener('click', () => {
+      audio.pause();
+      if ($('audioPlay')) $('audioPlay').textContent = '▶';
+      $('audioBar')?.classList.add('hidden');
+    });
   }
 
   // Backup Export & Import

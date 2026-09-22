@@ -7,17 +7,17 @@
 	<title>القرآن الكريم | AL-MUSHAF 15-LINE</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="manifest" href="manifest.json?v=3.3.0">
-	<link rel="icon" type="image/png" href="assets/icon-192.png?v=3.3.0">
-	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3.3.0">
+	<link rel="manifest" href="manifest.json?v=3.3.1">
+	<link rel="icon" type="image/png" href="assets/icon-192.png?v=3.3.1">
+	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3.3.1">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-title" content="Nūr Al-Quran">
-	<link rel="stylesheet" href="style.css?v=3.3.0">
-	<link rel="stylesheet" href="faq.css?v=3.3.0">
-	<link rel="stylesheet" href="ramadan.css?v=3.3.0">
-	<link rel="stylesheet" href="mushaf-15line.css?v=3.3.0">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=3.3.0">
+	<link rel="stylesheet" href="style.css?v=3.3.1">
+	<link rel="stylesheet" href="faq.css?v=3.3.1">
+	<link rel="stylesheet" href="ramadan.css?v=3.3.1">
+	<link rel="stylesheet" href="mushaf-15line.css?v=3.3.1">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=3.3.1">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -1665,6 +1665,7 @@
 				<option value="page">Repeat page</option>
 			</select>
 			<button class="icon-button" id="audioDownload" title="Download audio" style="border:1px solid var(--border-line);background:var(--bg-card-subtle);border-radius:var(--radius-sm);width:28px;height:28px;cursor:pointer;font-size:12px;">↓</button>
+			<button class="icon-button" id="btnCloseAudioBar" title="Close player" style="border:none;background:transparent;cursor:pointer;font-size:15px;color:var(--text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
 			<audio id="quranAudio"></audio>
 		</div>
 	</div>
@@ -1758,14 +1759,14 @@
 		</div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.3.0"></script>
-	<script src="prayer-engine.js?v=3.3.0"></script>
-	<script src="code.js?v=3.3.0"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.3.1"></script>
+	<script src="prayer-engine.js?v=3.3.1"></script>
+	<script src="code.js?v=3.3.1"></script>
 	<script>
 		if ('caches' in window) {
 			caches.keys().then(function(keys) {
 				keys.forEach(function(k) {
-					if (k !== 'nur-al-quran-v3.3.0') {
+					if (k !== 'nur-al-quran-v3.3.1') {
 						caches.delete(k);
 					}
 				});
