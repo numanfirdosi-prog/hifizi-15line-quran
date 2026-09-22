@@ -270,9 +270,12 @@ function formatTime(secs) {
 function showToast(message) {
   const toast = $('shareToast');
   if (!toast) return;
-  toast.textContent = message;
+  toast.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;">${message}</span>`;
   toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 2500);
+  clearTimeout(window.__toastTimeout);
+  window.__toastTimeout = setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 3200);
 }
 
 function saveState() {
@@ -679,11 +682,24 @@ function setReadingMode(mode) {
   $('btnModeScroll')?.classList.toggle('active', mode === 'Scroll');
   $('btnModeTurn')?.classList.toggle('active', mode === 'Page turn');
 
+  // Sync Preferences modal radio cards & checkmarks
+  const slideCard = $('radioModeSlide');
+  const scrollCard = $('radioModeScroll');
+  if (slideCard && scrollCard) {
+    const isSlide = (mode === 'Page slide');
+    slideCard.classList.toggle('active', isSlide);
+    scrollCard.classList.toggle('active', !isSlide);
+    const slideCheck = slideCard.querySelector('.mode-check-mark');
+    const scrollCheck = scrollCard.querySelector('.mode-check-mark');
+    if (slideCheck) slideCheck.style.display = isSlide ? 'inline' : 'none';
+    if (scrollCheck) scrollCheck.style.display = !isSlide ? 'inline' : 'none';
+  }
+
   const overlay = $('readerOverlay');
   if (overlay) {
     overlay.setAttribute('data-mode', mode.toLowerCase().replace(' ', '-'));
   }
-  showToast(`Reading Mode: ${mode}`);
+  showToast(`Reading Mode: ${mode === 'Scroll' ? 'Continuous Scroll' : (mode === 'Page turn' ? 'Realistic Turn' : 'Page Slide')}`);
 }
 
 function setFontScale(scale) {
@@ -2322,45 +2338,167 @@ async function handleSearch(query) {
   const resultsEl = $('searchResults');
   if (!resultsEl) return;
 
-  if (!query || query.length < 3) {
+  const rawQuery = (query || '').trim();
+  if (!rawQuery) {
     resultsEl.classList.add('hidden');
+    resultsEl.innerHTML = '';
     return;
   }
 
   resultsEl.classList.remove('hidden');
-  resultsEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">Searching verified Quran text...</div>';
+  const cleanQ = rawQuery.toLowerCase().replace(/^(surah|surat|para|juz)\s+/i, '').trim();
+  const numQ = parseInt(cleanQ, 10);
 
-  try {
-    const response = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/quran-uthmani`);
+  // 1. Instant Match Surahs (114 Surahs offline)
+  const matchedSurahs = [];
+  surahs.forEach((s, idx) => {
+    const sNum = idx + 1;
+    const engName = s[0] || '';
+    const meaning = s[1] || '';
+    const arabic = s[2] || '';
+    const ayahs = s[3] || 0;
+    const rev = s[4] || '';
+    const startPage = s[5] || 1;
+
+    let isMatch = false;
+    if (sNum === numQ) isMatch = true;
+    if (engName.toLowerCase().includes(cleanQ) || engName.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanQ.replace(/[^a-z0-9]/g, ''))) isMatch = true;
+    if (meaning.toLowerCase().includes(cleanQ)) isMatch = true;
+    if (arabic.includes(cleanQ)) isMatch = true;
+
+    if (isMatch) {
+      matchedSurahs.push({ num: sNum, engName, meaning, arabic, ayahs, rev, startPage });
+    }
+  });
+
+  // 2. Instant Match Ajza' (30 Juz offline)
+  const matchedJuz = [];
+  if (typeof juzData !== 'undefined') {
+    juzData.forEach(j => {
+      let isMatch = false;
+      if (j.num === numQ) isMatch = true;
+      if (j.name && j.name.toLowerCase().includes(cleanQ)) isMatch = true;
+      if (j.arabic && j.arabic.includes(cleanQ)) isMatch = true;
+      if (j.surahs && j.surahs.toLowerCase().includes(cleanQ)) isMatch = true;
+      if (cleanQ === 'amma' && j.num === 30) isMatch = true;
+      if (cleanQ === 'tabarak' && j.num === 29) isMatch = true;
+
+      if (isMatch) {
+        matchedJuz.push(j);
+      }
+    });
+  }
+
+  function renderSearchResults(apiAyahs = []) {
     if (request !== searchRequest) return;
-    if (!response.ok) throw new Error('Search unavailable');
-    const result = await response.json();
-    const matches = result.data && result.data.matches || [];
 
-    if (!matches.length) {
-      resultsEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">No verses found.</div>';
+    if (!matchedSurahs.length && !matchedJuz.length && !apiAyahs.length) {
+      resultsEl.innerHTML = `
+        <div class="search-empty-state" style="padding:32px 16px;text-align:center;color:var(--text-muted);background:var(--bg-card-subtle);border-radius:14px;border:1px dashed var(--border-line);">
+          <div style="font-size:32px;margin-bottom:8px;">🔍</div>
+          <p style="font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:4px;">No matches found for "${escapeHtml(rawQuery)}"</p>
+          <small style="color:var(--text-secondary);font-size:12px;">Try searching by Surah name (e.g. Al-Kahf, Ya-Sin), number (e.g. 18), or Juz (e.g. Juz 30).</small>
+        </div>
+      `;
       return;
     }
 
-    resultsEl.innerHTML = matches.slice(0, 30).map(match => `
-      <button class="search-result" data-search-surah="${match.surah.number}" data-search-ayah="${match.numberInSurah}">
-        <span class="search-result-meta">${match.surah.englishName} (${match.surah.name}) · Ayah ${match.numberInSurah}</span>
-        <strong>${escapeHtml(match.text)}</strong>
-      </button>
-    `).join('');
+    let html = '';
 
-    resultsEl.querySelectorAll('[data-search-surah]').forEach(btn => {
-      btn.onclick = () => {
-        const sNum = Number(btn.dataset.searchSurah);
-        const surah = surahs[sNum - 1];
-        if (surah) {
-          openReaderPage(surah[5]);
-        }
-      };
-    });
-  } catch (err) {
-    if (request !== searchRequest) return;
-    resultsEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--accent-coral);">Search could not connect. Check network.</div>';
+    // Surah Matches Section
+    if (matchedSurahs.length) {
+      html += `<div class="search-section-title"><span>📖</span> Matching Surahs (${matchedSurahs.length})</div>`;
+      html += `<div class="search-cards-grid">`;
+      matchedSurahs.slice(0, 8).forEach(s => {
+        html += `
+          <div class="search-surah-card">
+            <div class="search-surah-left">
+              <div class="search-surah-num">${s.num}</div>
+              <div class="search-surah-info">
+                <strong style="font-size:14px;">${escapeHtml(s.engName)} <span class="arabic-sub" style="font-family:'Amiri',serif;color:var(--primary);margin-left:6px;font-size:16px;">${escapeHtml(s.arabic)}</span></strong>
+                <small style="display:block;color:var(--text-secondary);font-size:11px;margin-top:2px;">${escapeHtml(s.meaning)} · Starts Page ${s.startPage} · ${s.ayahs} Ayahs (${s.rev})</small>
+              </div>
+            </div>
+            <div class="search-actions">
+              <button class="btn-primary-green" onclick="openReaderPage(${s.startPage})">📖 Read Mushaf</button>
+              <button class="btn-outline-green" onclick="playSurahByNumber(${s.num})">▶ Play</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    // Juz Matches Section
+    if (matchedJuz.length) {
+      html += `<div class="search-section-title"><span>۞</span> Matching Ajza' / Paras (${matchedJuz.length})</div>`;
+      html += `<div class="search-cards-grid">`;
+      matchedJuz.forEach(j => {
+        html += `
+          <div class="search-juz-card">
+            <div class="search-juz-left">
+              <span class="search-juz-badge">Juz ${j.num}</span>
+              <div>
+                <strong style="font-size:14px;">${escapeHtml(j.name)} <span style="font-family:'Amiri',serif;color:var(--primary);margin-left:6px;font-size:16px;">${escapeHtml(j.arabic)}</span></strong>
+                <small style="display:block;color:var(--text-secondary);font-size:11px;margin-top:2px;">Starts at Page ${j.page} · ${escapeHtml(j.surahs)}</small>
+              </div>
+            </div>
+            <button class="btn-primary-green" onclick="openReaderPage(${j.page})">📖 Open Juz</button>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    // Ayah Matches Section
+    if (apiAyahs.length) {
+      html += `<div class="search-section-title"><span>✨</span> Verified Ayahs (${apiAyahs.length})</div>`;
+      html += `<div class="search-cards-grid">`;
+      apiAyahs.slice(0, 20).forEach(m => {
+        const sNum = m.surah ? m.surah.number : 1;
+        const sMeta = surahs[sNum - 1] || [];
+        const targetPage = sMeta[5] || 1;
+        html += `
+          <div class="search-ayah-card">
+            <div class="search-ayah-meta">
+              <strong>${escapeHtml(m.surah.englishName)} (${escapeHtml(m.surah.name)}) · Ayah ${m.numberInSurah}</strong>
+              <button class="btn-outline-green" style="padding:4px 10px;font-size:11px;" onclick="openReaderPage(${targetPage})">Read Page ${targetPage} ↗</button>
+            </div>
+            <p class="search-ayah-text" style="margin:8px 0 0;font-size:14px;line-height:1.6;color:var(--text-primary);">${escapeHtml(m.text)}</p>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    resultsEl.innerHTML = html;
+  }
+
+  // Render local matches immediately without waiting for API
+  renderSearchResults();
+
+  // If query is 3+ characters, fetch verified Ayahs from API
+  if (rawQuery.length >= 3) {
+    const isArabic = /[\u0600-\u06FF]/.test(rawQuery);
+    const edition = isArabic ? 'quran-uthmani' : 'en.sahih';
+    try {
+      const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(rawQuery)}/all/${edition}`);
+      if (request !== searchRequest) return;
+      if (res.ok) {
+        const data = await res.json();
+        const matches = (data && data.data && data.data.matches) || [];
+        renderSearchResults(matches);
+      }
+    } catch (e) {
+      // On network failure or offline, keep local matches intact
+      if (request === searchRequest && !matchedSurahs.length && !matchedJuz.length) {
+        resultsEl.innerHTML = `
+          <div class="search-empty-state" style="padding:32px 16px;text-align:center;color:var(--text-muted);background:var(--bg-card-subtle);border-radius:14px;border:1px dashed var(--border-line);">
+            <p style="font-size:13px;">Offline mode: Please search by Surah name (e.g. Al-Fatihah, Ya-Sin, Al-Kahf) or Juz number.</p>
+          </div>
+        `;
+      }
+    }
   }
 }
 
@@ -3058,10 +3196,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $('saveNote')?.addEventListener('click', () => {
     const val = $('noteText')?.value.trim();
-    if (val) state.notes[state.page] = val;
-    else delete state.notes[state.page];
-    saveState();
-    showToast('Reflection note saved');
+    if (val) {
+      state.notes[state.page] = val;
+      if (typeof dbSaveNote === 'function') dbSaveNote(state.page, val);
+      saveState();
+      showToast('✅ Note Saved! (آپ کا نوٹ محفوظ ہو گیا)');
+    } else {
+      delete state.notes[state.page];
+      saveState();
+      showToast('Note cleared');
+    }
   });
 
   // Ayah Action Bubble buttons
@@ -3327,7 +3471,12 @@ document.addEventListener('DOMContentLoaded', () => {
         parent.querySelectorAll('.script-radio-card').forEach(c => c.classList.remove('active'));
       }
       card.classList.add('active');
-      showToast('Preference updated');
+      const readingMode = card.getAttribute('data-reading-mode');
+      if (readingMode) {
+        setReadingMode(readingMode);
+      } else {
+        showToast('Preference updated');
+      }
     });
   });
 
@@ -3552,17 +3701,41 @@ document.addEventListener('DOMContentLoaded', () => {
       const diffX = touchEndX - touchStartX;
       const diffY = touchEndY - touchStartY;
 
-      // Swiping horizontally with at least 45px distance and horizontal dominant
+      // Swiping gestures for navigation
       if (typeof annotState !== 'undefined' && annotState.isActive) return; // Prevent page turn while drawing
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
-        // Natural page turn requested:
-        // Swipe right (diffX > 0, seedha side) -> Next Page (towards page 611)
-        // Swipe left (diffX < 0, ulta side) -> Previous Page (towards page 1)
+        // Horizontal swipe (natural Mushaf leafing)
         if (diffX > 0) {
           navigatePage(1);
         } else {
           navigatePage(-1);
         }
+      } else if (state.mode === 'Scroll' && Math.abs(diffY) > 55) {
+        // Vertical continuous scroll swipe
+        if (diffY < 0) {
+          navigatePage(1);
+        } else {
+          navigatePage(-1);
+        }
+      }
+    }, { passive: true });
+
+    // Wheel navigation in Continuous Scroll mode
+    let wheelNavDebounce = false;
+    readerOverlay.addEventListener('wheel', (e) => {
+      if (state.mode !== 'Scroll' || wheelNavDebounce) return;
+      const stage = $('readerStage');
+      if (!stage) return;
+      const atBottom = (stage.scrollHeight - stage.scrollTop - stage.clientHeight) <= 10;
+      const atTop = stage.scrollTop <= 5;
+      if (e.deltaY > 60 && atBottom) {
+        wheelNavDebounce = true;
+        navigatePage(1);
+        setTimeout(() => { wheelNavDebounce = false; }, 500);
+      } else if (e.deltaY < -60 && atTop) {
+        wheelNavDebounce = true;
+        navigatePage(-1);
+        setTimeout(() => { wheelNavDebounce = false; }, 500);
       }
     }, { passive: true });
   }

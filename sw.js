@@ -3,7 +3,7 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v3.1.1';
+const CACHE_NAME = 'nur-al-quran-v3.2.0';
 
 const STATIC_ASSETS = [
   '/',
