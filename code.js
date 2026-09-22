@@ -3408,20 +3408,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     $('audioProgress')?.addEventListener('input', (e) => {
+      const pct = Number(e.target.value);
       if (audio.duration) {
-        audio.currentTime = (Number(e.target.value) / 100) * audio.duration;
+        audio.currentTime = (pct / 100) * audio.duration;
       }
+      e.target.style.background = `linear-gradient(to right, #10b981 0%, #10b981 ${pct}%, rgba(255,255,255,0.18) ${pct}%, rgba(255,255,255,0.18) 100%)`;
     });
 
     audio.addEventListener('timeupdate', () => {
       if ($('audioProgress') && audio.duration) {
-        $('audioProgress').value = (audio.currentTime / audio.duration) * 100;
+        const pct = Math.min(100, Math.max(0, (audio.currentTime / audio.duration) * 100));
+        $('audioProgress').value = pct;
+        $('audioProgress').style.background = `linear-gradient(to right, #10b981 0%, #10b981 ${pct}%, rgba(255,255,255,0.18) ${pct}%, rgba(255,255,255,0.18) 100%)`;
       }
+      const curTime = formatTime(audio.currentTime);
+      const durTime = formatTime(audio.duration || 0);
       if ($('audioCurrentTime')) {
-        $('audioCurrentTime').textContent = formatTime(audio.currentTime);
+        $('audioCurrentTime').textContent = curTime;
       }
       if ($('audioDurationTime')) {
-        $('audioDurationTime').textContent = formatTime(audio.duration);
+        $('audioDurationTime').textContent = durTime;
+      }
+      const curAyah = audioState.ayahs[audioState.index];
+      if (curAyah && $('audioAyahLabel') && audio.duration) {
+        const ayahNum = curAyah.numberInSurah || curAyah.number;
+        $('audioAyahLabel').textContent = `Ayah ${ayahNum} • ${curTime} / ${durTime}`;
       }
       updatePlayingAyahProgress();
     });
