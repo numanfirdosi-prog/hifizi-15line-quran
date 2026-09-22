@@ -3,7 +3,7 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v3.2.0';
+const CACHE_NAME = 'nur-al-quran-v3.3.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -24,14 +24,18 @@ const STATIC_ASSETS = [
   './manifest.json',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/apple-touch-icon.png',
+  './assets/favicon.png',
+  './favicon.ico',
   './assets/pages/1.webp',
   './assets/pages/2.webp',
   './assets/pages/3.webp',
   './assets/pages/4.webp'
 ];
 
-// Install Event - Precache App Shell
+// Install Event - Precache App Shell and Skip Waiting Immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       console.log('[SW] Precaching Nūr Al-Quran core assets');
@@ -42,11 +46,11 @@ self.addEventListener('install', (event) => {
           console.warn('[SW] Failed to precache:', asset, err);
         }
       }
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean Up Outdated Caches
+// Activate Event - Clean Up ALL Legacy Caches and Claim Clients Immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -62,7 +66,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event - Dynamic Cache Strategy
+// Fetch Event - Dynamic Network-First Strategy for Code, Cache-First for Heavy Media
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
@@ -106,31 +110,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation requests (HTML document): Network-first with fallback to cached index
-  if (event.request.mode === 'navigate') {
+  // Network-First for HTML, Scripts, Styles, and Manifest (ensures instant updates on mobile!)
+  const isCodeOrDoc = event.request.mode === 'navigate' ||
+                      url.pathname.endsWith('.js') ||
+                      url.pathname.endsWith('.css') ||
+                      url.pathname.endsWith('.json') ||
+                      url.pathname.endsWith('.html');
+
+  if (isCodeOrDoc) {
     event.respondWith(
       fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const copy = response.clone();
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
-          return response;
+          return networkResponse;
         })
         .catch(async () => {
           const cached = await caches.match(event.request);
           if (cached) return cached;
-          const rootCached = (await caches.match('/')) || 
-                             (await caches.match('/index.html')) || 
-                             (await caches.match('./index.html'));
-          if (rootCached) return rootCached;
-          return new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          if (event.request.mode === 'navigate') {
+            const rootCached = (await caches.match('/')) || 
+                               (await caches.match('/index.html')) || 
+                               (await caches.match('./index.html'));
+            if (rootCached) return rootCached;
+          }
+          return new Response('Offline resource not found', { status: 503, headers: { 'Content-Type': 'text/plain' } });
         })
     );
     return;
   }
 
-  // Static Local Assets: Cache-first with network fallback
+  // Images & Static Local Assets: Cache-first with network fallback
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

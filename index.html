@@ -7,17 +7,17 @@
 	<title>القرآن الكريم | AL-MUSHAF 15-LINE</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="manifest" href="manifest.json">
-	<link rel="icon" type="image/png" href="assets/icon-192.png">
-	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+	<link rel="manifest" href="manifest.json?v=3.3.0">
+	<link rel="icon" type="image/png" href="assets/icon-192.png?v=3.3.0">
+	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3.3.0">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-title" content="Nūr Al-Quran">
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="faq.css">
-	<link rel="stylesheet" href="ramadan.css">
-	<link rel="stylesheet" href="mushaf-15line.css?v=3.1.1">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=3.1.1">
+	<link rel="stylesheet" href="style.css?v=3.3.0">
+	<link rel="stylesheet" href="faq.css?v=3.3.0">
+	<link rel="stylesheet" href="ramadan.css?v=3.3.0">
+	<link rel="stylesheet" href="mushaf-15line.css?v=3.3.0">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=3.3.0">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -1325,39 +1325,6 @@
 			</section>
 		</main>
 
-		<!-- Mobile Bottom Navigation Bar (Matching Reference Image - 5 Items) -->
-		<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation">
-			<button class="mobile-nav-tab active" data-view="home">
-				<span class="tab-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-				</span>
-				<span class="tab-label">Home</span>
-			</button>
-			<button class="mobile-nav-tab" data-view="surahs">
-				<span class="tab-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-				</span>
-				<span class="tab-label">Surahs</span>
-			</button>
-			<button class="mobile-nav-fab" id="mobileMushafFab" title="Open 15-Line Mushaf" aria-label="Open 15-Line Mushaf">
-				<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-					<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-				</svg>
-			</button>
-			<button class="mobile-nav-tab" data-view="audio">
-				<span class="tab-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-				</span>
-				<span class="tab-label">Audio</span>
-			</button>
-			<button class="mobile-nav-tab" id="mobileMoreTab">
-				<span class="tab-icon">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-				</span>
-				<span class="tab-label">More</span>
-			</button>
-		</nav>
 	</div>
 
 	<!-- ==========================================================================
@@ -1702,6 +1669,40 @@
 		</div>
 	</div>
 
+	<!-- Mobile Bottom Navigation Bar (Placed after audio bar to guarantee top z-index layering) -->
+	<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation">
+		<button class="mobile-nav-tab active" data-view="home">
+			<span class="tab-icon">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+			</span>
+			<span class="tab-label">Home</span>
+		</button>
+		<button class="mobile-nav-tab" data-view="surahs">
+			<span class="tab-icon">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+			</span>
+			<span class="tab-label">Surahs</span>
+		</button>
+		<button class="mobile-nav-fab" id="mobileMushafFab" title="Open 15-Line Mushaf" aria-label="Open 15-Line Mushaf">
+			<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+				<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+			</svg>
+		</button>
+		<button class="mobile-nav-tab" data-view="audio">
+			<span class="tab-icon">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+			</span>
+			<span class="tab-label">Audio</span>
+		</button>
+		<button class="mobile-nav-tab" id="mobileMoreTab">
+			<span class="tab-icon">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+			</span>
+			<span class="tab-label">More</span>
+		</button>
+	</nav>
+
 	<div class="share-toast hidden" id="shareToast">Notification</div>
 
 	<!-- Legacy elements kept for compatibility -->
@@ -1757,8 +1758,19 @@
 		</div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.1.1"></script>
-	<script src="prayer-engine.js?v=3.1.1"></script>
-	<script src="code.js?v=3.1.1"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.3.0"></script>
+	<script src="prayer-engine.js?v=3.3.0"></script>
+	<script src="code.js?v=3.3.0"></script>
+	<script>
+		if ('caches' in window) {
+			caches.keys().then(function(keys) {
+				keys.forEach(function(k) {
+					if (k !== 'nur-al-quran-v3.3.0') {
+						caches.delete(k);
+					}
+				});
+			});
+		}
+	</script>
 </body>
 </html>

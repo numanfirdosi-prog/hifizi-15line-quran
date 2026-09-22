@@ -2060,7 +2060,13 @@ body.theme-parchment .bottom-page-nav-bar {
 
 /* Standalone .is-mobile-app rules */
 .is-mobile-app .mobile-menu-btn { display: flex !important; }
-.is-mobile-app .mobile-bottom-nav { display: flex !important; }
+.is-mobile-app .mobile-bottom-nav {
+  display: flex !important;
+  z-index: 1200 !important;
+}
+.is-mobile-app .mobile-nav-fab {
+  z-index: 1220 !important;
+}
 .is-mobile-app .main-wrapper {
   width: 100% !important;
   max-width: 100vw !important;
