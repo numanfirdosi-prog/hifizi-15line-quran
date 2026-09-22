@@ -132,7 +132,7 @@ let ramadanMessageIndex = new Date().getDate() % ramadanMessages.length;
 
 function toArabicDigits(num) {
   const digits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-  return String(num).replace(/[0-9]/g, d => digits[d]);
+  return String(num ?? '').replace(/[0-9]/g, d => digits[d]);
 }
 
 function getManzil(surahNum) {
@@ -279,10 +279,14 @@ function showToast(message) {
 }
 
 function saveState() {
-  localStorage.setItem('nur-page', state.page);
-  localStorage.setItem('nur-bookmarks', JSON.stringify(state.bookmarks));
-  localStorage.setItem('nur-favourites', JSON.stringify(state.favourites));
-  localStorage.setItem('nur-notes', JSON.stringify(state.notes));
+  try {
+    localStorage.setItem('nur-page', state.page);
+    localStorage.setItem('nur-bookmarks', JSON.stringify(state.bookmarks));
+    localStorage.setItem('nur-favourites', JSON.stringify(state.favourites));
+    localStorage.setItem('nur-notes', JSON.stringify(state.notes));
+  } catch (e) {
+    console.warn('Could not save state to localStorage:', e);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -2811,7 +2815,7 @@ function updatePrayerTimesUI() {
   const alarms = eng.state.alarmSettings;
   document.querySelectorAll('.alarm-toggle-btn[data-prayer]').forEach(btn => {
     const p = btn.dataset.prayer;
-    const active = !!alarms[p];
+    const active = alarms && alarms[p] !== false;
     btn.classList.toggle('active', active);
     btn.textContent = active ? '🔔' : '🔕';
   });
@@ -3391,10 +3395,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Reading Modes
+  // Reading Modes (Reader Deck)
   $('btnModeSingle')?.addEventListener('click', () => setReadingMode('Page slide'));
   $('btnModeScroll')?.addEventListener('click', () => setReadingMode('Scroll'));
   $('btnModeTurn')?.addEventListener('click', () => setReadingMode('Page turn'));
+
+  // Reading Modes in Settings (Preferences Modal)
+  $('radioModeSlide')?.addEventListener('click', () => setReadingMode('Page slide'));
+  $('radioModeScroll')?.addEventListener('click', () => setReadingMode('Scroll'));
 
   // Notes & Study Annotation Suite Trigger (User Request)
   $('btnToggleTafsir')?.addEventListener('click', () => {

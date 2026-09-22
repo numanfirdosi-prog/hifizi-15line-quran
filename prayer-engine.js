@@ -317,25 +317,22 @@
   // Pre-unlock audio element & AudioContext on user's first touch/interaction (iOS/Android requirement)
   function unlockMobileAudio() {
     if (isAudioUnlocked) return;
-    const audio = initAzanAudio();
-    if (audio) {
-      const prevMuted = audio.muted;
-      audio.muted = true;
-      const p = audio.play();
+    isAudioUnlocked = true;
+
+    // Use lightweight silent wave audio to unlock browser audio policy without interfering with azan audio
+    try {
+      const unlockAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      unlockAudio.volume = 0.01;
+      const p = unlockAudio.play();
       if (p !== undefined) {
         p.then(() => {
-          audio.pause();
-          audio.currentTime = 0;
-          audio.muted = prevMuted;
-          isAudioUnlocked = true;
-
-          // If lockscreen alarm is active, start keepalive
+          unlockAudio.pause();
           if (isLockAlarmEnabled) {
             startLockAlarmKeepAlive();
           }
         }).catch(() => {});
       }
-    }
+    } catch (e) {}
     // Also unlock Web Audio context
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
