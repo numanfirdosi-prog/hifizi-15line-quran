@@ -7,17 +7,17 @@
 	<title>القرآن الكريم | AL-MUSHAF 15-LINE</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link rel="manifest" href="manifest.json?v=3.3.2">
-	<link rel="icon" type="image/png" href="assets/icon-192.png?v=3.3.2">
-	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3.3.2">
+	<link rel="manifest" href="manifest.json?v=3.3.3">
+	<link rel="icon" type="image/png" href="assets/icon-192.png?v=3.3.3">
+	<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=3.3.3">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-title" content="Nūr Al-Quran">
-	<link rel="stylesheet" href="style.css?v=3.3.2">
-	<link rel="stylesheet" href="faq.css?v=3.3.2">
-	<link rel="stylesheet" href="ramadan.css?v=3.3.2">
-	<link rel="stylesheet" href="mushaf-15line.css?v=3.3.2">
-	<link rel="stylesheet" href="mushaf-redesign.css?v=3.3.2">
+	<link rel="stylesheet" href="style.css?v=3.3.3">
+	<link rel="stylesheet" href="faq.css?v=3.3.3">
+	<link rel="stylesheet" href="ramadan.css?v=3.3.3">
+	<link rel="stylesheet" href="mushaf-15line.css?v=3.3.3">
+	<link rel="stylesheet" href="mushaf-redesign.css?v=3.3.3">
 	<script>
 		(function() {
 			var ua = navigator.userAgent || '';
@@ -743,6 +743,23 @@
 					<div style="display:flex;gap:8px;align-items:center;">
 						<button class="btn-outline-green" id="btnTestAzanSound" style="font-size:12px;padding:6px 12px;">🔊 Test Azan</button>
 						<button class="btn-outline-green" id="btnEnableNotifications" style="font-size:12px;padding:6px 12px;">🔔 Azan Notification</button>
+					</div>
+				</div>
+
+				<!-- Lock Screen Azan Alarm Mode Banner -->
+				<div class="lock-alarm-banner" id="lockAlarmBanner">
+					<div class="lock-alarm-info">
+						<span class="lock-alarm-icon">⏰</span>
+						<div>
+							<div class="lock-alarm-title">Lock Screen Azan Alarm (موبائل لاک ہونے پر اذان اور الارم)</div>
+							<div class="lock-alarm-desc">Mobile lock hone par bhi namaz ke waqt vibration aur Azan alarm baje ga</div>
+						</div>
+					</div>
+					<div class="lock-alarm-action">
+						<button class="btn-lock-alarm-toggle" id="btnToggleLockAlarm">
+							<span class="lock-alarm-status-dot"></span>
+							<span id="lockAlarmBtnText">Enable Lock Alarm</span>
+						</button>
 					</div>
 				</div>
 
@@ -1668,6 +1685,7 @@
 			<button class="icon-button" id="btnCloseAudioBar" title="Close player" style="border:none;background:transparent;cursor:pointer;font-size:15px;color:var(--text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;">✕</button>
 			<audio id="quranAudio"></audio>
 			<audio id="azanAudio" src="assets/audio/azan.mp3" preload="auto" playsinline webkit-playsinline></audio>
+			<audio id="silentAudio" loop playsinline webkit-playsinline src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA"></audio>
 		</div>
 	</div>
 
@@ -1760,14 +1778,14 @@
 		</div>
 	</div>
 
-	<script src="assets/data/page_ayahs_15lines.js?v=3.3.2"></script>
-	<script src="prayer-engine.js?v=3.3.2"></script>
-	<script src="code.js?v=3.3.2"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.3.3"></script>
+	<script src="prayer-engine.js?v=3.3.3"></script>
+	<script src="code.js?v=3.3.3"></script>
 	<script>
 		if ('caches' in window) {
 			caches.keys().then(function(keys) {
 				keys.forEach(function(k) {
-					if (k !== 'nur-al-quran-v3.3.2') {
+					if (k !== 'nur-al-quran-v3.3.3') {
 						caches.delete(k);
 					}
 				});

@@ -6335,3 +6335,92 @@ body.theme-parchment .search-ayah-card {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   LOCK SCREEN AZAN ALARM BANNER & TOGGLE
+   ========================================================================== */
+.lock-alarm-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.08), rgba(245, 158, 11, 0.08));
+  border: 1.5px solid rgba(46, 125, 50, 0.25);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+body.dark .lock-alarm-banner {
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.18), rgba(13, 71, 52, 0.25));
+  border-color: rgba(46, 125, 50, 0.35);
+}
+
+body.theme-parchment .lock-alarm-banner {
+  background: linear-gradient(135deg, rgba(139, 90, 43, 0.08), rgba(212, 163, 89, 0.12));
+  border-color: rgba(139, 90, 43, 0.25);
+}
+
+.lock-alarm-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1 1 260px;
+}
+
+.lock-alarm-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.lock-alarm-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.lock-alarm-desc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.btn-lock-alarm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border-line);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lock-alarm-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9e9e9e;
+  transition: background 0.2s;
+}
+
+.btn-lock-alarm-toggle.active {
+  background: #0d4734;
+  color: #ffffff;
+  border-color: #0d4734;
+  box-shadow: 0 4px 12px rgba(13, 71, 52, 0.3);
+}
+
+.btn-lock-alarm-toggle.active .lock-alarm-status-dot {
+  background: #4caf50;
+  box-shadow: 0 0 8px #4caf50;
+}
+

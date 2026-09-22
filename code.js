@@ -2721,7 +2721,12 @@ function renderPrayerView() {
   // 4. Calculate Timings
   updatePrayerTimesUI();
 
-  // 5. Start live countdown interval
+  // 5. Sync Lock Screen Alarm Button State
+  if (typeof updateLockAlarmUI === 'function' && eng.isLockAlarmActive) {
+    updateLockAlarmUI(eng.isLockAlarmActive());
+  }
+
+  // 6. Start live countdown interval
   if (prayerCountdownInterval) clearInterval(prayerCountdownInterval);
   prayerCountdownInterval = setInterval(updatePrayerTimesUI, 1000);
 }
@@ -3817,6 +3822,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         showToast('⚠️ Notifications blocked or dismissed by browser.');
+      }
+    }
+  });
+
+  // Lock Screen Alarm Mode Toggle
+  window.updateLockAlarmUI = function(isActive) {
+    const btn = $('btnToggleLockAlarm');
+    const txt = $('lockAlarmBtnText');
+    if (!btn) return;
+    btn.classList.toggle('active', !!isActive);
+    if (txt) {
+      txt.textContent = isActive ? 'Active ⏰' : 'Enable Lock Alarm';
+    }
+  };
+
+  // Sync initial state
+  if (window.NurPrayerEngine && window.NurPrayerEngine.isLockAlarmActive) {
+    window.updateLockAlarmUI(window.NurPrayerEngine.isLockAlarmActive());
+  }
+
+  $('btnToggleLockAlarm')?.addEventListener('click', async () => {
+    if (!window.NurPrayerEngine) return;
+    const currentlyActive = window.NurPrayerEngine.isLockAlarmActive();
+
+    if (currentlyActive) {
+      window.NurPrayerEngine.stopLockAlarmKeepAlive();
+      window.updateLockAlarmUI(false);
+      showToast('🔕 Lock Screen Alarm disabled.');
+    } else {
+      showToast('Requesting permission for Lock Screen Alarm...');
+      const granted = await window.NurPrayerEngine.requestNotificationPermission();
+      if (window.NurPrayerEngine.unlockMobileAudio) {
+        window.NurPrayerEngine.unlockMobileAudio();
+      }
+      window.NurPrayerEngine.startLockAlarmKeepAlive();
+      window.updateLockAlarmUI(true);
+      if (granted) {
+        showToast('⏰ Lock Screen Alarm ACTIVE! Mobile lock hone par bhi Azan baje gi.');
+      } else {
+        showToast('⏰ Lock Screen Alarm active (Audio enabled, notifications blocked by browser).');
       }
     }
   });

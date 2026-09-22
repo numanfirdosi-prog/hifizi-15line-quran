@@ -3,7 +3,7 @@
  * Provides offline caching for static assets, styles, scripts, and verified Quran pages.
  */
 
-const CACHE_NAME = 'nur-al-quran-v3.3.2';
+const CACHE_NAME = 'nur-al-quran-v3.3.3';
 
 const STATIC_ASSETS = [
   '/',
@@ -174,10 +174,15 @@ self.addEventListener('message', (event) => {
         body: body,
         icon: icon,
         badge: badge,
-        vibrate: [300, 150, 300, 150, 400],
+        vibrate: [500, 250, 500, 250, 500, 250, 500, 250, 1000],
         tag: event.data.tag || 'prayer-alarm',
         renotify: true,
         requireInteraction: true,
+        silent: false,
+        actions: [
+          { action: 'open', title: '🕌 Open App' },
+          { action: 'stop', title: '⏹ Stop Azan' }
+        ],
         data: event.data.data || { url: '/' }
       })
     );
@@ -186,10 +191,24 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const action = event.action;
+
+  if (action === 'stop') {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          client.postMessage({ type: 'STOP_AZAN' });
+        }
+      })
+    );
+    return;
+  }
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url && 'focus' in client) {
+          client.postMessage({ type: 'OPEN_AZAN' });
           return client.focus();
         }
       }

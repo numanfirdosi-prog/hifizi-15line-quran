@@ -243,10 +243,12 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 4. AZAN AUDIO & NOTIFICATION SYSTEM (Mobile Autoplay Resilient)
+  // 4. AZAN AUDIO & NOTIFICATION SYSTEM (Mobile Autoplay Resilient + Lock Screen)
   // ---------------------------------------------------------------------------
   let azanAudioElement = null;
+  let silentAudioElement = null;
   let isAudioUnlocked = false;
+  let isLockAlarmEnabled = storage.getItem('nur-lockscreen-alarm') === 'true';
 
   function initAzanAudio() {
     if (!azanAudioElement) {
@@ -257,8 +259,59 @@
       azanAudioElement.preload = 'auto';
       azanAudioElement.setAttribute('playsinline', 'true');
       azanAudioElement.setAttribute('webkit-playsinline', 'true');
+
+      azanAudioElement.onended = () => {
+        const banner = document.getElementById('azanActiveBanner');
+        if (banner) banner.classList.add('hidden');
+        if (isLockAlarmEnabled) {
+          startLockAlarmKeepAlive();
+        }
+      };
     }
     return azanAudioElement;
+  }
+
+  function initSilentKeepAlive() {
+    if (!silentAudioElement) {
+      silentAudioElement = document.getElementById('silentAudio');
+      if (!silentAudioElement) {
+        silentAudioElement = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      }
+      silentAudioElement.loop = true;
+      silentAudioElement.volume = 0.01;
+      silentAudioElement.setAttribute('playsinline', 'true');
+      silentAudioElement.setAttribute('webkit-playsinline', 'true');
+    }
+    return silentAudioElement;
+  }
+
+  function startLockAlarmKeepAlive() {
+    isLockAlarmEnabled = true;
+    storage.setItem('nur-lockscreen-alarm', 'true');
+    const audio = initSilentKeepAlive();
+    if (audio) {
+      audio.play().then(() => {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: '🕌 Nur Al-Quran • Prayer Alarm Active',
+            artist: 'Screen lock par bhi Azan bajegi',
+            album: 'Al-Mushaf 15-Line'
+          });
+          navigator.mediaSession.setActionHandler('stop', () => {
+            stopAzan();
+          });
+        }
+      }).catch(() => {});
+    }
+  }
+
+  function stopLockAlarmKeepAlive() {
+    isLockAlarmEnabled = false;
+    storage.setItem('nur-lockscreen-alarm', 'false');
+    if (silentAudioElement) {
+      silentAudioElement.pause();
+      silentAudioElement.currentTime = 0;
+    }
   }
 
   // Pre-unlock audio element & AudioContext on user's first touch/interaction (iOS/Android requirement)
@@ -275,6 +328,11 @@
           audio.currentTime = 0;
           audio.muted = prevMuted;
           isAudioUnlocked = true;
+
+          // If lockscreen alarm is active, start keepalive
+          if (isLockAlarmEnabled) {
+            startLockAlarmKeepAlive();
+          }
         }).catch(() => {});
       }
     }
@@ -296,9 +354,27 @@
     ['click', 'touchstart', 'touchend', 'pointerdown'].forEach(evt => {
       document.addEventListener(evt, unlockMobileAudio, { once: false, passive: true });
     });
+
+    // Listen to messages from Service Worker (e.g. notification buttons)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'STOP_AZAN') {
+          stopAzan();
+        } else if (event.data && event.data.type === 'OPEN_AZAN') {
+          if (typeof window.switchView === 'function') {
+            window.switchView('prayer');
+          }
+        }
+      });
+    }
   }
 
   function playAzan(prayerName) {
+    // Pause silent keep-alive audio so Azan can take full audio channel
+    if (silentAudioElement) {
+      silentAudioElement.pause();
+    }
+
     const audio = initAzanAudio();
 
     if (audio) {
@@ -307,7 +383,18 @@
       audio.volume = 1.0;
       const p = audio.play();
       if (p !== undefined) {
-        p.catch(e => {
+        p.then(() => {
+          if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: `حي علی الصلاۃ — اذان (${prayerName})`,
+              artist: 'Makkah Al-Mukarramah',
+              album: 'Nur Al-Quran Prayer Alarm'
+            });
+            navigator.mediaSession.setActionHandler('stop', () => {
+              stopAzan();
+            });
+          }
+        }).catch(e => {
           console.warn('MP3 playback failed or blocked by mobile policy, playing synthesized chime fallback:', e);
           playSynthesizedChime();
         });
@@ -328,6 +415,10 @@
     }
     const modal = document.getElementById('azanActiveBanner');
     if (modal) modal.classList.add('hidden');
+
+    if (isLockAlarmEnabled) {
+      startLockAlarmKeepAlive();
+    }
   }
 
   // Audio synthesis fallback chime if MP3 autoplay is restricted by browser policy
@@ -367,7 +458,7 @@
     const pKey = prayerName.toLowerCase().replace(/[^a-z]/g, '');
     const urduName = urduNames[pKey] || prayerName;
     const title = `حی علی الصلاۃ — وقتِ ${urduName}`;
-    const body = `Namaz ${prayerName} ka waqt ho gaya hai (${state.location.name}). Tap to open Nur Al-Quran.`;
+    const body = `⏰ Namaz ${prayerName} ka waqt ho gaya hai (${state.location.name}). Tap to open Nur Al-Quran.`;
 
     if (!('Notification' in window) || Notification.permission !== 'granted') {
       return;
@@ -382,11 +473,16 @@
             body: body,
             icon: 'assets/icon-192.png',
             badge: 'assets/icon-192.png',
-            vibrate: [200, 100, 200, 100, 200, 100, 400],
+            vibrate: [500, 250, 500, 250, 500, 250, 500, 250, 1000],
             tag: 'prayer-alarm-' + pKey,
             renotify: true,
             requireInteraction: true,
-            data: { url: '/' }
+            silent: false,
+            actions: [
+              { action: 'open', title: '🕌 Open App' },
+              { action: 'stop', title: '⏹ Stop Azan' }
+            ],
+            data: { url: '/', prayer: prayerName }
           });
         }
       } catch (e) {
@@ -486,6 +582,9 @@
     stopAzan,
     sendPrayerNotification,
     unlockMobileAudio,
+    startLockAlarmKeepAlive,
+    stopLockAlarmKeepAlive,
+    isLockAlarmActive: () => isLockAlarmEnabled,
     requestNotificationPermission,
     checkPrayerAlarmTick,
     setLocation: function(loc) {
