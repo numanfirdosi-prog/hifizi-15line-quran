@@ -95,3 +95,4 @@ class VoiceSearchService {
     return results;
   }
 }
+

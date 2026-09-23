@@ -167,3 +167,4 @@ class _QiblahScreenState extends State<QiblahScreen> {
     );
   }
 }
+

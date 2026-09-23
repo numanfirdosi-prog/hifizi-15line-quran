@@ -339,3 +339,4 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 }
+

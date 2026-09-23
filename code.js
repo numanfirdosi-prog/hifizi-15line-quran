@@ -4891,26 +4891,48 @@ function initDownloadAppEngine() {
     }
   });
 
-  // Handle Dropdown Options Click
+  // Trigger direct file download helper
+  function triggerDirectFileDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    if (filename) a.download = filename;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  // Handle Dropdown Options Click (Direct Download First!)
   $('btnDownloadMobile')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerInstallPromptOrModal('mobile');
+    if (popover) popover.classList.add('hidden');
+    if (wrap) wrap.classList.remove('open');
+    openDownloadModal('mobile');
+    showToast('🤖 Android APK download shuru ho raha hai...');
+    triggerDirectFileDownload('https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases/latest/download/Nur-Al-Quran.apk', 'Nur-Al-Quran.apk');
   });
 
   $('btnDownloadWindows')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerInstallPromptOrModal('windows');
+    if (popover) popover.classList.add('hidden');
+    if (wrap) wrap.classList.remove('open');
+    openDownloadModal('windows');
+    showToast('💻 Windows Desktop Package (.zip) download shuru ho raha hai...');
+    triggerDirectFileDownload('./downloads/Nur-Al-Quran-Windows.zip', 'Nur-Al-Quran-Windows.zip');
   });
 
   $('btnDownloadMac')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    triggerInstallPromptOrModal('mac');
+    if (popover) popover.classList.add('hidden');
+    if (wrap) wrap.classList.remove('open');
+    openDownloadModal('mac');
+    showToast('🍎 macOS Package (.zip) download shuru ho raha hai...');
+    triggerDirectFileDownload('./downloads/Nur-Al-Quran-macOS.zip', 'Nur-Al-Quran-macOS.zip');
   });
 
   // Sidebar Button
   $('sidebarDownloadBtn')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    // Detect OS
     const ua = navigator.userAgent || '';
     let target = 'windows';
     if (/Android|iPhone|iPad|Mobile/i.test(ua)) target = 'mobile';
@@ -4936,58 +4958,23 @@ function initDownloadAppEngine() {
     });
   });
 
-  async function triggerInstallPromptOrModal(platform) {
-    if (popover) popover.classList.add('hidden');
-    if (wrap) wrap.classList.remove('open');
-
-    if (deferredInstallPrompt) {
-      try {
-        deferredInstallPrompt.prompt();
-        const choice = await deferredInstallPrompt.userChoice;
-        if (choice.outcome === 'accepted') {
-          showToast('🎉 Nūr Al-Quran Offline App installation started!');
-          deferredInstallPrompt = null;
-          return;
-        }
-      } catch (err) {
-        console.warn('Install prompt error:', err);
-      }
-    }
-    // If prompt not available or user dismissed, open guide modal
-    openDownloadModal(platform);
-  }
-
-  // 1-Click Action Buttons inside Modal
-  ['btnActionInstallMobile', 'btnActionInstallWindows', 'btnActionInstallMac'].forEach(id => {
+  // Optional PWA "Add to Home Screen" buttons inside modal
+  ['btnActionInstallMobilePwa', 'btnActionInstallWindowsPwa', 'btnActionInstallMacPwa'].forEach(id => {
     $(id)?.addEventListener('click', async () => {
       if (deferredInstallPrompt) {
         try {
           deferredInstallPrompt.prompt();
           const choice = await deferredInstallPrompt.userChoice;
           if (choice.outcome === 'accepted') {
-            showToast('🎉 Nūr Al-Quran successfully installed!');
+            showToast('🎉 Nūr Al-Quran Home Screen par add ho gaya!');
             closeDownloadModal();
             deferredInstallPrompt = null;
             return;
           }
         } catch (e) {}
       }
-      showToast('ℹ️ Chrome address bar me Install icon (⊕) ya Menu (⋮) ➔ "Install App" dabayein.');
+      showToast('ℹ️ Chrome menu (⋮) me ja kar "Add to Home screen" ya "Install app" chunein.');
     });
-  });
-
-  // Direct ZIP download fallback
-  $('btnDownloadOfflineZip')?.addEventListener('click', () => {
-    showToast('📦 Creating offline standalone package...');
-    const offlineHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nūr Al-Quran Offline</title></head><body><h2>Nūr Al-Quran Offline Portal</h2><p>Please open index.html in Google Chrome or any modern browser.</p></body></html>`;
-    const blob = new Blob([offlineHtml], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'Nur-Al-Quran-Offline-Launch.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    showToast('✅ Offline Launcher downloaded! Aap ise bina internet chala sakte hain.');
   });
 }
 

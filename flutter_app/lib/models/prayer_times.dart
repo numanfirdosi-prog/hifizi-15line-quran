@@ -79,3 +79,4 @@ class NextPrayerInfo {
     required this.progress,
   });
 }
+

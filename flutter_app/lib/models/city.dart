@@ -37,3 +37,4 @@ class City {
     tz: (json['tz'] as num?)?.toDouble() ?? 5.5,
   );
 }
+

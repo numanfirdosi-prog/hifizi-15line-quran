@@ -59,3 +59,4 @@ class NurAlQuranApp extends StatelessWidget {
     );
   }
 }
+

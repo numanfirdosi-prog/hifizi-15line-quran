@@ -152,3 +152,4 @@ const List<String> hindiSurahsList = [
 final List<Surah> allSurahs = List.generate(114, (i) {
   return Surah.fromList(i, rawSurahNames[i], startPagesList[i], hindiSurahsList[i]);
 });
+

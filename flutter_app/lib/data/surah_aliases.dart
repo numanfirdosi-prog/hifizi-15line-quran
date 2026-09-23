@@ -377,3 +377,4 @@ String normalizeHindi(String str) {
       .replaceAll(RegExp(r'[\s\-_\.,\/]'), '')
       .toLowerCase();
 }
+

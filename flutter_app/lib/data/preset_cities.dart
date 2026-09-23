@@ -38,3 +38,4 @@ const List<City> presetCities = [
   City(id: 'newyork', name: 'New York', urdu: 'نیویارک', country: 'USA', lat: 40.7128, lng: -74.0060, tz: -5.0),
   City(id: 'toronto', name: 'Toronto', urdu: 'ٹورنٹو', country: 'Canada', lat: 43.6532, lng: -79.3832, tz: -5.0)
 ];
+

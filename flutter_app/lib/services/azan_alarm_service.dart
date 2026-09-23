@@ -150,3 +150,4 @@ class AzanAlarmService {
     await _audioPlayer.stop();
   }
 }
+
