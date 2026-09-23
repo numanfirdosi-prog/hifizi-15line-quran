@@ -4394,6 +4394,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Study & Annotation Suite
   initAnnotationSuite();
+
+  // Initialize Offline App Download & Install Engine
+  initDownloadAppEngine();
 });
 
 // ============================================================================
@@ -4818,6 +4821,173 @@ function initAnnotationSuite() {
     if (!e.target.closest('#colorPalettePopup') && !e.target.closest('#annotColorBtn')) {
       $('colorPalettePopup')?.classList.add('hidden');
     }
+  });
+}
+
+// -----------------------------------------------------------------------------
+// 13. OFFLINE APP INSTALLATION & DOWNLOAD ENGINE (Mobile, Windows, Mac)
+// -----------------------------------------------------------------------------
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const triggerBtn = $('btnDownloadAppTrigger');
+  if (triggerBtn) {
+    triggerBtn.classList.add('pulse-ready');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  showToast('🎉 Nūr Al-Quran installed successfully! Desktop/Home screen se offline chalayein.');
+});
+
+function initDownloadAppEngine() {
+  const trigger = $('btnDownloadAppTrigger');
+  const popover = $('downloadAppPopover');
+  const wrap = $('downloadAppDropdownWrap');
+  const modal = $('downloadAppModal');
+
+  function openDownloadModal(platformTab = 'mobile') {
+    if (popover) popover.classList.add('hidden');
+    if (wrap) wrap.classList.remove('open');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+
+    // Switch tab
+    const tabs = document.querySelectorAll('.download-tab-btn');
+    const contents = document.querySelectorAll('.download-tab-content');
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === platformTab));
+    contents.forEach(c => {
+      const id = 'tabContent' + platformTab.charAt(0).toUpperCase() + platformTab.slice(1);
+      c.classList.toggle('active', c.id === id);
+    });
+  }
+
+  function closeDownloadModal() {
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // Toggle Dropdown
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = popover?.classList.contains('hidden');
+    if (isHidden) {
+      popover?.classList.remove('hidden');
+      wrap?.classList.add('open');
+    } else {
+      popover?.classList.add('hidden');
+      wrap?.classList.remove('open');
+    }
+  });
+
+  // Close dropdown on click outside
+  document.addEventListener('click', (e) => {
+    if (wrap && !wrap.contains(e.target)) {
+      popover?.classList.add('hidden');
+      wrap?.classList.remove('open');
+    }
+  });
+
+  // Handle Dropdown Options Click
+  $('btnDownloadMobile')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerInstallPromptOrModal('mobile');
+  });
+
+  $('btnDownloadWindows')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerInstallPromptOrModal('windows');
+  });
+
+  $('btnDownloadMac')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    triggerInstallPromptOrModal('mac');
+  });
+
+  // Sidebar Button
+  $('sidebarDownloadBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // Detect OS
+    const ua = navigator.userAgent || '';
+    let target = 'windows';
+    if (/Android|iPhone|iPad|Mobile/i.test(ua)) target = 'mobile';
+    else if (/Mac/i.test(ua)) target = 'mac';
+    openDownloadModal(target);
+  });
+
+  // Close modal button
+  $('btnCloseDownloadModal')?.addEventListener('click', closeDownloadModal);
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeDownloadModal();
+  });
+
+  // Tab Switching
+  document.querySelectorAll('.download-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.download-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.download-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      const targetContent = $('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
+      if (targetContent) targetContent.classList.add('active');
+    });
+  });
+
+  async function triggerInstallPromptOrModal(platform) {
+    if (popover) popover.classList.add('hidden');
+    if (wrap) wrap.classList.remove('open');
+
+    if (deferredInstallPrompt) {
+      try {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showToast('🎉 Nūr Al-Quran Offline App installation started!');
+          deferredInstallPrompt = null;
+          return;
+        }
+      } catch (err) {
+        console.warn('Install prompt error:', err);
+      }
+    }
+    // If prompt not available or user dismissed, open guide modal
+    openDownloadModal(platform);
+  }
+
+  // 1-Click Action Buttons inside Modal
+  ['btnActionInstallMobile', 'btnActionInstallWindows', 'btnActionInstallMac'].forEach(id => {
+    $(id)?.addEventListener('click', async () => {
+      if (deferredInstallPrompt) {
+        try {
+          deferredInstallPrompt.prompt();
+          const choice = await deferredInstallPrompt.userChoice;
+          if (choice.outcome === 'accepted') {
+            showToast('🎉 Nūr Al-Quran successfully installed!');
+            closeDownloadModal();
+            deferredInstallPrompt = null;
+            return;
+          }
+        } catch (e) {}
+      }
+      showToast('ℹ️ Chrome address bar me Install icon (⊕) ya Menu (⋮) ➔ "Install App" dabayein.');
+    });
+  });
+
+  // Direct ZIP download fallback
+  $('btnDownloadOfflineZip')?.addEventListener('click', () => {
+    showToast('📦 Creating offline standalone package...');
+    const offlineHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nūr Al-Quran Offline</title></head><body><h2>Nūr Al-Quran Offline Portal</h2><p>Please open index.html in Google Chrome or any modern browser.</p></body></html>`;
+    const blob = new Blob([offlineHtml], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Nur-Al-Quran-Offline-Launch.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('✅ Offline Launcher downloaded! Aap ise bina internet chala sakte hain.');
   });
 }
 

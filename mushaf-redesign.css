@@ -6549,3 +6549,268 @@ body.theme-parchment .lock-alarm-banner {
   box-shadow: 0 0 8px #4caf50;
 }
 
+/* -------------------------------------------------------------------------- */
+/* DOWNLOAD APP DROPDOWN & INSTALL MODAL (Mobile, Windows, Mac)               */
+/* -------------------------------------------------------------------------- */
+.download-app-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.btn-download-app-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, rgba(46, 125, 50, 0.16), rgba(212, 175, 55, 0.14));
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.1);
+  white-space: nowrap;
+}
+
+.btn-download-app-menu:hover {
+  background: var(--primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.28);
+}
+
+.btn-download-app-menu .download-chevron {
+  font-size: 10px;
+  opacity: 0.8;
+  transition: transform 0.2s ease;
+}
+
+.download-app-dropdown-wrap.open .download-chevron {
+  transform: rotate(180deg);
+}
+
+.download-app-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 310px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-md, 14px);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.3);
+  z-index: 1250;
+  overflow: hidden;
+  animation: qariPopoverSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.download-app-popover.hidden {
+  display: none !important;
+}
+
+.download-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-line);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  background: var(--bg-card-subtle);
+}
+
+.download-popover-badge {
+  background: rgba(46, 125, 50, 0.15);
+  color: var(--primary);
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.download-options-list {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  gap: 4px;
+}
+
+.download-option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.download-option-item:hover {
+  background: var(--bg-card-subtle);
+  border-color: var(--border-line);
+  transform: translateX(2px);
+}
+
+.download-option-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.download-option-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.download-option-info strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.download-option-info small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.download-option-arrow {
+  font-size: 13px;
+  color: var(--primary);
+  opacity: 0.7;
+}
+
+/* Modal styles */
+.download-app-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.download-app-modal.hidden {
+  display: none !important;
+}
+
+.download-modal-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-line);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: qariPopoverSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.download-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-line);
+  background: var(--bg-card-subtle);
+}
+
+.download-tabs-row {
+  display: flex;
+  border-bottom: 1px solid var(--border-line);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.download-tab-btn {
+  flex: 1;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.download-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--bg-surface);
+}
+
+.download-tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.download-tab-content.active {
+  display: block;
+}
+
+.download-perk-card {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-line);
+  border-radius: 14px;
+  padding: 16px;
+  position: relative;
+}
+
+.perk-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(46, 125, 50, 0.12);
+  padding: 3px 8px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.download-perk-card h4 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.download-perk-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.download-instruction-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-line);
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.download-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-line);
+  background: var(--bg-card-subtle);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+
