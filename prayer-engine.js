@@ -248,7 +248,37 @@
   let azanAudioElement = null;
   let silentAudioElement = null;
   let isAudioUnlocked = false;
-  let isLockAlarmEnabled = storage.getItem('nur-lockscreen-alarm') === 'true';
+  let isLockAlarmEnabled = storage.getItem('nur-lockscreen-alarm') !== 'false'; // Default TRUE for out-of-the-box lockscreen alarms
+
+  let workerTimer = null;
+  function startWorkerTimer() {
+    if (workerTimer) return;
+    try {
+      const blob = new Blob([
+        "let t=null;self.onmessage=function(e){if(e.data==='start'){if(!t)t=setInterval(function(){self.postMessage('tick');},12000);}else if(e.data==='stop'){if(t){clearInterval(t);t=null;}}};"
+      ], { type: 'application/javascript' });
+      const workerUrl = URL.createObjectURL(blob);
+      workerTimer = new Worker(workerUrl);
+      workerTimer.onmessage = function(e) {
+        if (e.data === 'tick') {
+          checkPrayerAlarmTick();
+        }
+      };
+      workerTimer.postMessage('start');
+    } catch (e) {
+      console.warn('Worker timer not available:', e);
+    }
+  }
+
+  function stopWorkerTimer() {
+    if (workerTimer) {
+      try {
+        workerTimer.postMessage('stop');
+        workerTimer.terminate();
+      } catch (e) {}
+      workerTimer = null;
+    }
+  }
 
   function initAzanAudio() {
     if (!azanAudioElement) {
@@ -275,10 +305,10 @@
     if (!silentAudioElement) {
       silentAudioElement = document.getElementById('silentAudio');
       if (!silentAudioElement) {
-        silentAudioElement = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        silentAudioElement = new Audio('assets/audio/silence.wav');
       }
       silentAudioElement.loop = true;
-      silentAudioElement.volume = 0.01;
+      silentAudioElement.volume = 0.001; // real PCM stream to keep Android/iOS audio session awake
       silentAudioElement.setAttribute('playsinline', 'true');
       silentAudioElement.setAttribute('webkit-playsinline', 'true');
     }
@@ -295,14 +325,17 @@
           navigator.mediaSession.metadata = new MediaMetadata({
             title: '🕌 Nur Al-Quran • Prayer Alarm Active',
             artist: 'Screen lock par bhi Azan bajegi',
-            album: 'Al-Mushaf 15-Line'
+            album: 'Namaz Alarm'
           });
           navigator.mediaSession.setActionHandler('stop', () => {
             stopAzan();
           });
         }
-      }).catch(() => {});
+      }).catch((e) => {
+        console.warn('Keep-alive silent audio notice:', e);
+      });
     }
+    startWorkerTimer();
   }
 
   function stopLockAlarmKeepAlive() {
@@ -312,6 +345,7 @@
       silentAudioElement.pause();
       silentAudioElement.currentTime = 0;
     }
+    stopWorkerTimer();
   }
 
   // Pre-unlock audio element & AudioContext on user's first touch/interaction (iOS/Android requirement)
@@ -319,10 +353,10 @@
     if (isAudioUnlocked) return;
     isAudioUnlocked = true;
 
-    // Use lightweight silent wave audio to unlock browser audio policy without interfering with azan audio
+    // Use silence.wav to unlock browser audio policy without interfering with azan audio
     try {
-      const unlockAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-      unlockAudio.volume = 0.01;
+      const unlockAudio = new Audio('assets/audio/silence.wav');
+      unlockAudio.volume = 0.001;
       const p = unlockAudio.play();
       if (p !== undefined) {
         p.then(() => {
@@ -399,6 +433,13 @@
     } else {
       playSynthesizedChime();
     }
+
+    // High priority mobile vibration (vibrates like an alarm)
+    try {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate([600, 300, 600, 300, 1000, 400, 1000]);
+      }
+    } catch (e) {}
 
     showAzanModal(prayerName || 'Namaz');
     sendPrayerNotification(prayerName || 'Namaz');
@@ -609,6 +650,10 @@
   // Start minute tick for alarms in browser + visibility change handlers
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     setInterval(checkPrayerAlarmTick, 15000);
+
+    if (isLockAlarmEnabled) {
+      startWorkerTimer();
+    }
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
