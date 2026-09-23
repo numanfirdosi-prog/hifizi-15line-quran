@@ -4902,14 +4902,32 @@ function initDownloadAppEngine() {
     document.body.removeChild(a);
   }
 
-  // Handle Dropdown Options Click (Direct Download First!)
+  // Mobile App Native Installation Trigger
+  async function triggerMobileAppInstall() {
+    if (deferredInstallPrompt) {
+      try {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          showToast('🎉 Nūr Al-Quran Mobile App install ho rahi hai!');
+          closeDownloadModal();
+          deferredInstallPrompt = null;
+          return;
+        }
+      } catch (e) {
+        console.warn('Install prompt error:', e);
+      }
+    }
+    showToast('📱 Chrome menu (⋮) me ja kar "Install app" ya "Add to Home screen" par tap karein!');
+  }
+
+  // Handle Dropdown Options Click
   $('btnDownloadMobile')?.addEventListener('click', (e) => {
     e.stopPropagation();
     if (popover) popover.classList.add('hidden');
     if (wrap) wrap.classList.remove('open');
     openDownloadModal('mobile');
-    showToast('🤖 Android APK download shuru ho raha hai...');
-    triggerDirectFileDownload('https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases/latest/download/Nur-Al-Quran.apk', 'Nur-Al-Quran.apk');
+    triggerMobileAppInstall();
   });
 
   $('btnDownloadWindows')?.addEventListener('click', (e) => {
@@ -4958,23 +4976,12 @@ function initDownloadAppEngine() {
     });
   });
 
-  // Optional PWA "Add to Home Screen" buttons inside modal
-  ['btnActionInstallMobilePwa', 'btnActionInstallWindowsPwa', 'btnActionInstallMacPwa'].forEach(id => {
-    $(id)?.addEventListener('click', async () => {
-      if (deferredInstallPrompt) {
-        try {
-          deferredInstallPrompt.prompt();
-          const choice = await deferredInstallPrompt.userChoice;
-          if (choice.outcome === 'accepted') {
-            showToast('🎉 Nūr Al-Quran Home Screen par add ho gaya!');
-            closeDownloadModal();
-            deferredInstallPrompt = null;
-            return;
-          }
-        } catch (e) {}
-      }
-      showToast('ℹ️ Chrome menu (⋮) me ja kar "Add to Home screen" ya "Install app" chunein.');
-    });
+  // Direct Install Action Button inside Mobile Tab
+  $('btnActionInstallMobileDirect')?.addEventListener('click', triggerMobileAppInstall);
+
+  // Optional PWA Install Action Buttons for Windows and Mac Tabs
+  ['btnActionInstallWindowsPwa', 'btnActionInstallMacPwa'].forEach(id => {
+    $(id)?.addEventListener('click', triggerMobileAppInstall);
   });
 }
 

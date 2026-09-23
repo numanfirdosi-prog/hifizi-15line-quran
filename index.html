@@ -1842,31 +1842,26 @@
 			<!-- Tab 1: Mobile -->
 			<div class="download-tab-content active" id="tabContentMobile">
 				<div class="download-perk-card">
-					<div class="perk-badge">🤖 Android Native App</div>
-					<h4>Download Offline Android App (.APK)</h4>
-					<p>Direct download Android APK installation file. Play Store ki tarah direct install hoga aur bina internet ke lockscreen Azan alarm aur 15-line Mushaf chalega.</p>
+					<div class="perk-badge">📱 100% Offline Mobile App</div>
+					<h4>Install Nūr Al-Quran on Android / iOS</h4>
+					<p>Aapke mobile me <strong>"نور القرآن"</strong> app install ho jayegi app icon ke sath. Ye 100% offline chalegi — 15-line Hifzi Mushaf, Namaz ke waqt Azan alarm, Qiblah compass aur Hindi voice search ke sath!</p>
 					
-					<a href="https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases/latest/download/Nur-Al-Quran.apk" class="btn-primary-green btn-install-action" id="btnDownloadAndroidApk" style="width:100%;justify-content:center;padding:13px;font-size:15px;font-weight:700;margin-top:14px;text-decoration:none;display:flex;align-items:center;gap:8px;" download="Nur-Al-Quran.apk">
-						🤖 Download Android APK (.apk)
-					</a>
-
-					<div style="display:flex;gap:10px;margin-top:10px;">
-						<a href="https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases" target="_blank" rel="noopener" class="btn-outline-green" style="flex:1;justify-content:center;font-size:12px;padding:8px 10px;text-decoration:none;display:flex;align-items:center;gap:6px;">
-							🚀 GitHub Releases
-						</a>
-						<button class="btn-outline-green" id="btnActionInstallMobilePwa" style="flex:1;justify-content:center;font-size:12px;padding:8px 10px;">
-							📱 Add to Home Screen (PWA)
-						</button>
-					</div>
+					<button class="btn-primary-green btn-install-action" id="btnActionInstallMobileDirect" style="width:100%;justify-content:center;padding:14px;font-size:15px;font-weight:700;margin-top:14px;display:flex;align-items:center;gap:8px;">
+						📱 Install Nūr Al-Quran Mobile App Now
+					</button>
 
 					<div class="download-instruction-box">
-						<strong>Android par APK install karne ka asaan tareeqa:</strong>
+						<strong>Android phone par install karne ka aasaan tareeqa:</strong>
 						<ol style="margin:6px 0 0 18px;padding:0;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-							<li>Upar diye gaye <strong>"Download Android APK"</strong> button par click karein.</li>
-							<li>Download hone ke baad notification bar ya Downloads folder me file par tap karein.</li>
-							<li><strong>"Install"</strong> par click karein (agar "Unknown sources" permission maange to Allow karein).</li>
-							<li>App phone me install ho kar 100% offline chalegi!</li>
+							<li>Upar diye gaye <strong>"Install Nūr Al-Quran Mobile App Now"</strong> button par click karein.</li>
+							<li>Screen par <strong>"Install"</strong> ya <strong>"Add to Home screen"</strong> ka prompt aayega, us par <strong>Install</strong> dabayein.</li>
+							<li>App aapke phone ke App Drawer aur Home Screen par install ho jayegi.</li>
+							<li>Mobile ka internet band karke bhi kholenge to poora 15-line Quran aur Azan alarms chalenge!</li>
 						</ol>
+					</div>
+
+					<div style="margin-top:12px;padding:10px 14px;background:rgba(212,175,55,0.1);border-radius:8px;border:1px solid rgba(212,175,55,0.3);font-size:11.5px;color:var(--text-secondary);line-height:1.5;">
+						💡 <strong>Note for Developers:</strong> Agar aapko alag se standalone compile-shuda <code>.apk</code> binary package build karni hai, to project ke <code>flutter_app/</code> folder me mukammal Flutter source code maujood hai jise <code>flutter build apk --release</code> command se compile kiya ja sakta hai.
 					</div>
 				</div>
 			</div>
