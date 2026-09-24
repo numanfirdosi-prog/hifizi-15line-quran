@@ -42,11 +42,9 @@ class NurAlQuranApp extends StatelessWidget {
           primary: Color(0xFFD4AF37), // Gold
           secondary: Color(0xFF1B4D3E), // Deep Emerald
           surface: Color(0xFF0F3A2C),
-          background: Color(0xFF071F17),
           onPrimary: Colors.black,
           onSecondary: Colors.white,
           onSurface: Colors.white,
-          onBackground: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF0F3A2C),

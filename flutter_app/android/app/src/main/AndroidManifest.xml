@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.nuralquran.app">
+    package="com.nuralquran.nur_al_quran">
 
-    <!-- Network for initial offline cache download & streaming -->
+    <!-- Network for offline cache download & streaming -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -87,9 +87,14 @@
             android:name="com.ryanheise.audioservice.MediaButtonReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.MEDIA_BUTTON" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </receiver>
     </application>
-</manifest>
 
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+</manifest>

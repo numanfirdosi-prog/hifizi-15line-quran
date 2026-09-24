@@ -1,16 +1,15 @@
 name: nur_al_quran
 description: "Nur-ul-Quran (نور القرآن) - 15 Line Offline Hifzi Mushaf, Prayer Times with Azan, Qiblah Compass & Multi-Language Voice Search"
-publish_to: "none"
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
+  cupertino_icons: ^1.0.8
 
   # State & Persistence
   provider: ^6.1.2
@@ -22,12 +21,12 @@ dependencies:
   audio_service: ^0.18.15
   wakelock_plus: ^1.2.8
 
-  # Azan Alarms & Notifications (Background & Lockscreen)
+  # Notifications & Alarms
   flutter_local_notifications: ^17.2.3
   android_alarm_manager_plus: ^3.0.4
 
   # Sensors & Location
-  flutter_compass: ^0.7.3
+  flutter_compass: ^0.8.1
   geolocator: ^13.0.1
   permission_handler: ^11.3.1
 
@@ -42,7 +41,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
+
+dependency_overrides:
+  path_provider_foundation: 2.3.2
 
 flutter:
   uses-material-design: true
@@ -50,4 +52,4 @@ flutter:
   assets:
     - assets/audio/
     - assets/icons/
-
+    - assets/data/

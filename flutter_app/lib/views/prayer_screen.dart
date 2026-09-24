@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/preset_cities.dart';
-import '../models/city.dart';
 import '../models/prayer_times.dart';
 import '../services/prayer_calculation_service.dart';
 import '../services/preferences_service.dart';

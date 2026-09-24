@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
@@ -16,7 +17,11 @@ void azanAlarmCallback(int id) async {
   final player = AudioPlayer();
   try {
     // Play Azan audio alert
-    await player.setAsset('assets/audio/silence.wav');
+    try {
+      await player.setAsset('assets/audio/azan.mp3');
+    } catch (_) {
+      await player.setAsset('assets/audio/silence.wav');
+    }
     await player.play();
   } catch (e) {
     debugPrint('[AzanAlarm] Error playing audio in background: $e');

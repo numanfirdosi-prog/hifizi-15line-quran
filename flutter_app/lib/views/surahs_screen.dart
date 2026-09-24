@@ -4,7 +4,6 @@ import '../data/quran_data.dart';
 import '../models/surah.dart';
 import '../services/voice_search_service.dart';
 import '../services/audio_recitation_service.dart';
-import '../services/preferences_service.dart';
 
 class SurahsScreen extends StatefulWidget {
   final Function(int page) onOpenPage;
