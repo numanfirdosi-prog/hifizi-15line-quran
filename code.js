@@ -4394,9 +4394,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize Study & Annotation Suite
   initAnnotationSuite();
-
-  // Initialize Offline App Download & Install Engine
-  initDownloadAppEngine();
 });
 
 // ============================================================================
@@ -4825,165 +4822,18 @@ function initAnnotationSuite() {
 }
 
 // -----------------------------------------------------------------------------
-// 13. OFFLINE APP INSTALLATION & DOWNLOAD ENGINE (Mobile, Windows, Mac)
+// 13. PWA INSTALL LISTENER
 // -----------------------------------------------------------------------------
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
   deferredInstallPrompt = e;
-  const triggerBtn = $('btnDownloadAppTrigger');
-  if (triggerBtn) {
-    triggerBtn.classList.add('pulse-ready');
-  }
 });
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  showToast('🎉 Nūr Al-Quran installed successfully! Desktop/Home screen se offline chalayein.');
+  showToast('🎉 Nūr Al-Quran installed successfully!');
 });
-
-function initDownloadAppEngine() {
-  const trigger = $('btnDownloadAppTrigger');
-  const popover = $('downloadAppPopover');
-  const wrap = $('downloadAppDropdownWrap');
-  const modal = $('downloadAppModal');
-
-  function openDownloadModal(platformTab = 'mobile') {
-    if (popover) popover.classList.add('hidden');
-    if (wrap) wrap.classList.remove('open');
-    if (!modal) return;
-
-    modal.classList.remove('hidden');
-
-    // Switch tab
-    const tabs = document.querySelectorAll('.download-tab-btn');
-    const contents = document.querySelectorAll('.download-tab-content');
-    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === platformTab));
-    contents.forEach(c => {
-      const id = 'tabContent' + platformTab.charAt(0).toUpperCase() + platformTab.slice(1);
-      c.classList.toggle('active', c.id === id);
-    });
-  }
-
-  function closeDownloadModal() {
-    if (modal) modal.classList.add('hidden');
-  }
-
-  // Toggle Dropdown
-  trigger?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const isHidden = popover?.classList.contains('hidden');
-    if (isHidden) {
-      popover?.classList.remove('hidden');
-      wrap?.classList.add('open');
-    } else {
-      popover?.classList.add('hidden');
-      wrap?.classList.remove('open');
-    }
-  });
-
-  // Close dropdown on click outside
-  document.addEventListener('click', (e) => {
-    if (wrap && !wrap.contains(e.target)) {
-      popover?.classList.add('hidden');
-      wrap?.classList.remove('open');
-    }
-  });
-
-  // Trigger direct file download helper
-  function triggerDirectFileDownload(url, filename) {
-    const a = document.createElement('a');
-    a.href = url;
-    if (filename) a.download = filename;
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  // Mobile App Native Installation Trigger
-  async function triggerMobileAppInstall() {
-    if (deferredInstallPrompt) {
-      try {
-        deferredInstallPrompt.prompt();
-        const choice = await deferredInstallPrompt.userChoice;
-        if (choice.outcome === 'accepted') {
-          showToast('🎉 Nūr Al-Quran Mobile App install ho rahi hai!');
-          closeDownloadModal();
-          deferredInstallPrompt = null;
-          return;
-        }
-      } catch (e) {
-        console.warn('Install prompt error:', e);
-      }
-    }
-    showToast('📱 Chrome menu (⋮) me ja kar "Install app" ya "Add to Home screen" par tap karein!');
-  }
-
-  // Handle Dropdown Options Click
-  $('btnDownloadMobile')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover) popover.classList.add('hidden');
-    if (wrap) wrap.classList.remove('open');
-    openDownloadModal('mobile');
-    triggerMobileAppInstall();
-  });
-
-  $('btnDownloadWindows')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover) popover.classList.add('hidden');
-    if (wrap) wrap.classList.remove('open');
-    openDownloadModal('windows');
-    showToast('💻 Windows Desktop Package (.zip) download shuru ho raha hai...');
-    triggerDirectFileDownload('./downloads/Nur-Al-Quran-Windows.zip', 'Nur-Al-Quran-Windows.zip');
-  });
-
-  $('btnDownloadMac')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (popover) popover.classList.add('hidden');
-    if (wrap) wrap.classList.remove('open');
-    openDownloadModal('mac');
-    showToast('🍎 macOS Package (.zip) download shuru ho raha hai...');
-    triggerDirectFileDownload('./downloads/Nur-Al-Quran-macOS.zip', 'Nur-Al-Quran-macOS.zip');
-  });
-
-  // Sidebar Button
-  $('sidebarDownloadBtn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const ua = navigator.userAgent || '';
-    let target = 'windows';
-    if (/Android|iPhone|iPad|Mobile/i.test(ua)) target = 'mobile';
-    else if (/Mac/i.test(ua)) target = 'mac';
-    openDownloadModal(target);
-  });
-
-  // Close modal button
-  $('btnCloseDownloadModal')?.addEventListener('click', closeDownloadModal);
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) closeDownloadModal();
-  });
-
-  // Tab Switching
-  document.querySelectorAll('.download-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      document.querySelectorAll('.download-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.download-tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      const targetContent = $('tabContent' + tab.charAt(0).toUpperCase() + tab.slice(1));
-      if (targetContent) targetContent.classList.add('active');
-    });
-  });
-
-  // Direct Install Action Button inside Mobile Tab
-  $('btnActionInstallMobileDirect')?.addEventListener('click', triggerMobileAppInstall);
-
-  // Optional PWA Install Action Buttons for Windows and Mac Tabs
-  ['btnActionInstallWindowsPwa', 'btnActionInstallMacPwa'].forEach(id => {
-    $(id)?.addEventListener('click', triggerMobileAppInstall);
-  });
-}
 
 // Expose globals for inline HTML event handlers & dynamic router
 window.openReader = openReader;

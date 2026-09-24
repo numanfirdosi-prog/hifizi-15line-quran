@@ -54,7 +54,6 @@
 					<button class="nav-item" data-view="ramadan"><span class="nav-icon">☾</span>Ramzan & Duas</button>
 					<button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span>Preferences</button>
 					<button class="nav-item" data-view="backup"><span class="nav-icon">☁</span>Backup & Restore</button>
-					<button class="nav-item" id="sidebarDownloadBtn" style="color:var(--primary);font-weight:700;"><span class="nav-icon">⬇️</span>Download App (Offline)</button>
 					<button class="nav-item" data-view="faq"><span class="nav-icon">❓</span>Questions & FAQ</button>
 					<button class="nav-item" data-view="about"><span class="nav-icon">ℹ</span>About & Licenses</button>
 					<button class="nav-item" data-view="privacy"><span class="nav-icon">🛡</span>Privacy Policy</button>
@@ -121,45 +120,6 @@
 					<div class="mobile-theme-capsule" id="mobileThemeCapsule" title="Toggle Theme">
 						<span class="capsule-moon">🌙</span>
 						<span class="capsule-sun-dot">☀️</span>
-					</div>
-					<div class="download-app-dropdown-wrap" id="downloadAppDropdownWrap">
-						<button class="btn-download-app-menu" id="btnDownloadAppTrigger" title="Download Offline App (Mobile, Windows, Mac)" aria-label="Download App Menu">
-							<span class="download-icon">⬇️</span>
-							<span class="download-label">Download App</span>
-							<span class="download-chevron">▾</span>
-						</button>
-						<div class="download-app-popover hidden" id="downloadAppPopover">
-							<div class="download-popover-header">
-								<span>INSTALL OFFLINE APP</span>
-								<span class="download-popover-badge">100% Offline</span>
-							</div>
-							<div class="download-options-list">
-								<button class="download-option-item" id="btnDownloadMobile" data-target="mobile">
-									<div class="download-option-icon">📱</div>
-									<div class="download-option-info">
-										<div class="opt-title">Download for Mobile</div>
-										<div class="opt-sub">Android APK & iOS · 100% Offline</div>
-									</div>
-									<span class="download-option-arrow">➔</span>
-								</button>
-								<button class="download-option-item" id="btnDownloadWindows" data-target="windows">
-									<div class="download-option-icon">💻</div>
-									<div class="download-option-info">
-										<div class="opt-title">Download for Windows</div>
-										<div class="opt-sub">Windows 10 / 11 Desktop · Offline .exe</div>
-									</div>
-									<span class="download-option-arrow">➔</span>
-								</button>
-								<button class="download-option-item" id="btnDownloadMac" data-target="mac">
-									<div class="download-option-icon">🍎</div>
-									<div class="download-option-info">
-										<div class="opt-title">Download for Mac</div>
-										<div class="opt-sub">Apple macOS Desktop · Offline App</div>
-									</div>
-									<span class="download-option-arrow">➔</span>
-								</button>
-							</div>
-						</div>
 					</div>
 					<div class="user-profile-avatar" title="User Profile">
 						👤
@@ -1818,128 +1778,14 @@
 			</div>
 			<div class="prayer-city-list" id="prayerCityList"></div>
 		</div>
-	<!-- Offline App Download & Install Modal -->
-	<div class="download-app-modal hidden" id="downloadAppModal">
-		<div class="download-modal-box">
-			<div class="download-modal-header">
-				<div style="display:flex;align-items:center;gap:10px;">
-					<span style="font-size:24px;">📥</span>
-					<div>
-						<h3 style="margin:0;font-size:17px;font-weight:800;color:var(--text-primary);">Install Nūr Al-Quran Offline App</h3>
-						<small style="color:var(--text-secondary);font-size:12px;">Mobile, Windows & Mac par 100% offline chalane ke liye install karein</small>
-					</div>
-				</div>
-				<button class="icon-button" id="btnCloseDownloadModal" style="border:none;background:none;font-size:18px;cursor:pointer;color:var(--text-muted);" aria-label="Close Modal">✕</button>
-			</div>
-
-			<!-- Platform Tabs -->
-			<div class="download-tabs-row" id="downloadTabsRow">
-				<button class="download-tab-btn active" data-tab="mobile">📱 Mobile (Android / iOS)</button>
-				<button class="download-tab-btn" data-tab="windows">💻 Windows PC</button>
-				<button class="download-tab-btn" data-tab="mac">🍎 Apple Mac</button>
-			</div>
-
-			<!-- Tab 1: Mobile -->
-			<div class="download-tab-content active" id="tabContentMobile">
-				<div class="download-perk-card">
-					<div class="perk-badge">📱 100% Offline Mobile App</div>
-					<h4>Install Nūr Al-Quran on Android / iOS</h4>
-					<p>Aapke mobile me <strong>"نور القرآن"</strong> app install ho jayegi app icon ke sath. Ye 100% offline chalegi — 15-line Hifzi Mushaf, Namaz ke waqt Azan alarm, Qiblah compass aur Hindi voice search ke sath!</p>
-					
-					<button class="btn-primary-green btn-install-action" id="btnActionInstallMobileDirect" style="width:100%;justify-content:center;padding:14px;font-size:15px;font-weight:700;margin-top:14px;display:flex;align-items:center;gap:8px;">
-						📱 Install Nūr Al-Quran Mobile App Now
-					</button>
-
-					<div class="download-instruction-box">
-						<strong>Android phone par install karne ka aasaan tareeqa:</strong>
-						<ol style="margin:6px 0 0 18px;padding:0;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-							<li>Upar diye gaye <strong>"Install Nūr Al-Quran Mobile App Now"</strong> button par click karein.</li>
-							<li>Screen par <strong>"Install"</strong> ya <strong>"Add to Home screen"</strong> ka prompt aayega, us par <strong>Install</strong> dabayein.</li>
-							<li>App aapke phone ke App Drawer aur Home Screen par install ho jayegi.</li>
-							<li>Mobile ka internet band karke bhi kholenge to poora 15-line Quran aur Azan alarms chalenge!</li>
-						</ol>
-					</div>
-
-					<div style="margin-top:12px;padding:10px 14px;background:rgba(212,175,55,0.1);border-radius:8px;border:1px solid rgba(212,175,55,0.3);font-size:11.5px;color:var(--text-secondary);line-height:1.5;">
-						💡 <strong>Note for Developers:</strong> Agar aapko alag se standalone compile-shuda <code>.apk</code> binary package build karni hai, to project ke <code>flutter_app/</code> folder me mukammal Flutter source code maujood hai jise <code>flutter build apk --release</code> command se compile kiya ja sakta hai.
-					</div>
-				</div>
-			</div>
-
-			<!-- Tab 2: Windows -->
-			<div class="download-tab-content" id="tabContentWindows">
-				<div class="download-perk-card">
-					<div class="perk-badge">💻 Native Windows Desktop</div>
-					<h4>Download Windows 10 & 11 Offline Suite (.ZIP)</h4>
-					<p>Standalone Windows desktop software package. Ek click me bina browser ke standalone window me 100% offline chalega.</p>
-					
-					<a href="./downloads/Nur-Al-Quran-Windows.zip" class="btn-primary-green btn-install-action" id="btnDownloadWindowsZip" style="width:100%;justify-content:center;padding:13px;font-size:15px;font-weight:700;margin-top:14px;text-decoration:none;display:flex;align-items:center;gap:8px;" download="Nur-Al-Quran-Windows.zip">
-						💻 Download for Windows PC (.zip)
-					</a>
-
-					<div style="margin-top:10px;">
-						<button class="btn-outline-green" id="btnActionInstallWindowsPwa" style="width:100%;justify-content:center;font-size:12px;padding:8px 10px;">
-							🌐 Or Install via Chrome Desktop App
-						</button>
-					</div>
-
-					<div class="download-instruction-box">
-						<strong>Windows par chalane ka tareeqa:</strong>
-						<ol style="margin:6px 0 0 18px;padding:0;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-							<li>Zip file download karke <strong>Extract All (Right click ➔ Extract)</strong> karein.</li>
-							<li>Folder me <strong>"Launch-Nur-Al-Quran.bat"</strong> par double-click karein.</li>
-							<li>App foran standalone desktop software ban kar khul jayegi bina internet ke.</li>
-						</ol>
-					</div>
-				</div>
-			</div>
-
-			<!-- Tab 3: Mac -->
-			<div class="download-tab-content" id="tabContentMac">
-				<div class="download-perk-card">
-					<div class="perk-badge">🍎 Apple macOS Desktop</div>
-					<h4>Download macOS Offline Package (.ZIP)</h4>
-					<p>Apple Mac users ke liye offline package. Launchpad aur Dock me standalone app ki tarah chalane ke liye tayyar.</p>
-					
-					<a href="./downloads/Nur-Al-Quran-macOS.zip" class="btn-primary-green btn-install-action" id="btnDownloadMacZip" style="width:100%;justify-content:center;padding:13px;font-size:15px;font-weight:700;margin-top:14px;text-decoration:none;display:flex;align-items:center;gap:8px;" download="Nur-Al-Quran-macOS.zip">
-						🍎 Download for Apple Mac (.zip)
-					</a>
-
-					<div style="margin-top:10px;">
-						<button class="btn-outline-green" id="btnActionInstallMacPwa" style="width:100%;justify-content:center;font-size:12px;padding:8px 10px;">
-							🌐 Or Install via Chrome Mac App
-						</button>
-					</div>
-
-					<div class="download-instruction-box">
-						<strong>Mac par chalane ka tareeqa:</strong>
-						<ol style="margin:6px 0 0 18px;padding:0;font-size:12px;color:var(--text-secondary);line-height:1.6;">
-							<li>Zip file unzip karein.</li>
-							<li><strong>"Launch-Nur-Al-Quran.command"</strong> par double-click karein.</li>
-							<li>Poora Quran reader offline bina internet chalega.</li>
-						</ol>
-					</div>
-				</div>
-			</div>
-
-			<!-- Footer with Direct Package Downloader -->
-			<div class="download-modal-footer">
-				<span style="font-size:12px;color:var(--text-secondary);">Direct offline backup package chahiye?</span>
-				<a href="./downloads/Nur-Al-Quran-Windows.zip" class="btn-outline-green" id="btnDownloadOfflineZip" style="font-size:12px;padding:6px 12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;" download="Nur-Al-Quran-Offline-Suite.zip">
-					📦 Download Complete Offline Package (.zip)
-				</a>
-			</div>
-		</div>
-	</div>
-
-	<script src="assets/data/page_ayahs_15lines.js?v=3.4.0"></script>
-	<script src="prayer-engine.js?v=3.4.0"></script>
-	<script src="code.js?v=3.4.0"></script>
+	<script src="assets/data/page_ayahs_15lines.js?v=3.4.1"></script>
+	<script src="prayer-engine.js?v=3.4.1"></script>
+	<script src="code.js?v=3.4.1"></script>
 	<script>
 		if ('caches' in window) {
 			caches.keys().then(function(keys) {
 				keys.forEach(function(k) {
-					if (k !== 'nur-al-quran-v3.4.0') {
+					if (k !== 'nur-al-quran-v3.4.1') {
 						caches.delete(k);
 					}
 				});
