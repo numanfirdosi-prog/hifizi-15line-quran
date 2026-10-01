@@ -3562,9 +3562,14 @@ function calculateCompassHeading(e) {
   const sB = Math.sin(b), cB = Math.cos(b);
   const sG = Math.sin(g), cG = Math.cos(g);
 
-  // Vector pointing along phone's forward axis projected onto Earth's horizontal plane
-  const vE = -sA * cG - cA * sB * sG;
-  const vN = -cA * cG + sA * sB * sG;
+  // Vector pointing along phone's forward axis projected onto Earth's horizontal plane.
+  // Rotation matrix R = Rz(alpha)·Rx(beta)·Ry(gamma) applied to the device's
+  // back-facing axis; compass heading = atan2(East, North).
+  // NOTE: beta and gamma must NOT be swapped here — swapping them flips the
+  // heading by 180° whenever the phone is tilted/upright (the Qibla needle
+  // then points to the opposite side).
+  const vE = -cA * sG - sA * sB * cG;
+  const vN = cA * sB * cG - sA * sG;
 
   if (Math.abs(vE) < 0.0001 && Math.abs(vN) < 0.0001) {
     return (360 - alpha + 360) % 360;
