@@ -346,9 +346,20 @@ async function isAudioUrlCached(url) {
 
 function isSurahAudioDownloaded(surahNum, qariId) {
   try {
+    if (localStorage.getItem(`nur_dl_full_qari_${qariId}`) === 'true') return true;
     const key = `nur_dl_surahs_${qariId}`;
     const list = JSON.parse(localStorage.getItem(key) || '[]');
     return list.includes(Number(surahNum));
+  } catch (e) {
+    return false;
+  }
+}
+
+function isQariFullyDownloaded(qariId) {
+  try {
+    if (localStorage.getItem(`nur_dl_full_qari_${qariId}`) === 'true') return true;
+    const dlSurahs = JSON.parse(localStorage.getItem(`nur_dl_surahs_${qariId}`) || '[]');
+    return dlSurahs.length >= 114;
   } catch (e) {
     return false;
   }
@@ -371,7 +382,8 @@ function markSurahAudioDownloaded(surahNum, qariId, downloaded = true) {
 function showNoDownloadAlert(surahNum, ayahNum) {
   const surahObj = surahs[surahNum - 1];
   const surahName = surahObj ? surahObj[0] : `Surah ${surahNum}`;
-  const alertSms = `⚠️ Ye audio offline download nahi hai! Online sunne ke liye internet connect karein, ya 'Download Center' se Surah ${surahName} download karein.`;
+  const qariObj = qarisData.find(q => q.id === audioState.qari) || qarisData[0];
+  const alertSms = `⚠️ ${qariObj.name} ki audio offline download nahi hai! Online sunne ke liye internet connect karein, ya side me bane download logo (📥) se Surah ${surahName} download karein.`;
 
   // 1. Prominent warning toast (No download SMS)
   showToast(alertSms, 'warning', 6500);
@@ -468,7 +480,28 @@ function setQari(qariCode) {
     el.classList.toggle('active', el.dataset.qariId === qari.id);
   });
 
-  showToast(`Reciter set to ${qari.name}`);
+  const isDownloaded = isQariFullyDownloaded(qari.id);
+  const isOnline = navigator.onLine;
+
+  if (!isOnline && !isDownloaded) {
+    // User requirement: Jis Qari ka download na ho offline, us ko select karne par download audio ka SMS aaye!
+    const alertSms = `⚠️ ${qari.name} ki audio offline download nahi hai! Offline sunne ke liye side me bane download logo (📥) par click karke download karein, ya internet connect karein.`;
+    showToast(alertSms, 'warning', 6500);
+
+    const dlBtn = document.querySelector(`.btn-qari-dl-icon[data-qari-download="${qari.id}"]`);
+    if (dlBtn) {
+      dlBtn.classList.add('highlight-warn');
+      setTimeout(() => dlBtn.classList.remove('highlight-warn'), 3500);
+    }
+
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate([120, 80, 120]); } catch (e) {}
+    }
+  } else if (!isOnline && isDownloaded) {
+    showToast(`✅ ${qari.name} selected (Poora Quran Offline Ready)`, 'info', 3500);
+  } else {
+    showToast(`Reciter set to ${qari.name}`);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1587,8 +1620,9 @@ async function playAyah(number, withBismillah = true) {
     const isDirectCached = await isAudioUrlCached(directMp3Url);
     const isApiCached = await isAudioUrlCached(apiUrl);
     const isSurahMarked = isSurahAudioDownloaded(targetSurahNum, audioState.qari);
+    const isQariMarked = isQariFullyDownloaded(audioState.qari);
 
-    if (!isDirectCached && !isApiCached && !isSurahMarked) {
+    if (!isDirectCached && !isApiCached && !isSurahMarked && !isQariMarked) {
       showNoDownloadAlert(targetSurahNum, number);
       return;
     }
@@ -1656,7 +1690,7 @@ async function playAyah(number, withBismillah = true) {
 
     updateMediaSession(`Ayah ${ayahInSurah} · ${surahEngName}`, qariName, `Surah ${surahEngName} (${surahArName})`);
   } catch (error) {
-    if (!navigator.onLine || !isSurahAudioDownloaded(targetSurahNum, audioState.qari)) {
+    if (!navigator.onLine && !isSurahAudioDownloaded(targetSurahNum, audioState.qari) && !isQariFullyDownloaded(audioState.qari)) {
       showNoDownloadAlert(targetSurahNum, number);
     } else {
       if ($('audioAyahLabel')) $('audioAyahLabel').textContent = 'Audio unavailable. Try again.';
@@ -1728,16 +1762,19 @@ function initHeaderQariPopover() {
   const list = $('headerQariList');
   if (!trigger || !popover || !list) return;
 
-  list.innerHTML = qarisData.map(q => `
-    <div class="qari-popover-item ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
-      <div class="qari-popover-avatar">🎙</div>
-      <div class="qari-popover-info">
-        <div class="qari-popover-name">${q.name}</div>
-        <div class="qari-popover-sub"><span>${q.country}</span> • <b>${q.style}</b></div>
+  list.innerHTML = qarisData.map(q => {
+    const isDl = isQariFullyDownloaded(q.id);
+    return `
+      <div class="qari-popover-item ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
+        <div class="qari-popover-avatar">🎙</div>
+        <div class="qari-popover-info">
+          <div class="qari-popover-name">${q.name}</div>
+          <div class="qari-popover-sub"><span>${q.country}</span> • <b>${q.style}</b> ${isDl ? '• <b style="color:#2e7d32;">Offline Ready</b>' : ''}</div>
+        </div>
+        <div class="qari-popover-check">${isDl ? '✅' : '✓'}</div>
       </div>
-      <div class="qari-popover-check">✓</div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   list.querySelectorAll('.qari-popover-item').forEach(item => {
     item.onclick = (e) => {
@@ -1866,28 +1903,92 @@ function renderAudioStudio() {
   bindAudioStudioControls();
 }
 
+const activeQariDownloads = {};
+
 function renderQariCards() {
   const grid = $('qariCardsGrid');
   if (!grid) return;
 
-  grid.innerHTML = qarisData.map(q => `
-    <div class="qari-card-v2 ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
-      <div class="qari-card-avatar">🎙</div>
-      <div class="qari-card-body">
-        <div class="qari-card-name">${q.name}</div>
-        <div class="qari-card-meta">
-          <span class="qari-style-tag">${q.style}</span>
-          <span>${q.country}</span>
+  grid.innerHTML = qarisData.map(q => {
+    const isDownloaded = isQariFullyDownloaded(q.id);
+    const isDownloading = !!activeQariDownloads[q.id];
+
+    return `
+      <div class="qari-card-v2 ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
+        <div class="qari-card-avatar">🎙</div>
+        <div class="qari-card-body">
+          <div class="qari-card-name">${q.name}</div>
+          <div class="qari-card-meta">
+            <span class="qari-style-tag">${q.style}</span>
+            <span>${q.country}</span>
+          </div>
+        </div>
+        <div class="qari-card-dl-action">
+          <button class="btn-qari-dl-icon ${isDownloaded ? 'downloaded' : ''} ${isDownloading ? 'downloading' : ''}" 
+                  data-qari-download="${q.id}" 
+                  title="${isDownloaded ? 'Audio Downloaded (100% Offline Ready)' : 'Download Full Quran Audio for ' + q.name + ' (Offline)'}"
+                  aria-label="Download audio for ${q.name}">
+            ${isDownloading ? '<span class="qari-dl-spin">⏳</span>' : (isDownloaded ? '<span>✅</span>' : '<span>📥</span>')}
+          </button>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   grid.querySelectorAll('.qari-card-v2').forEach(card => {
     card.onclick = () => {
       setQari(card.dataset.qariId);
     };
   });
+
+  grid.querySelectorAll('.btn-qari-dl-icon').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const qId = btn.dataset.qariDownload;
+      downloadQariFullQuran(qId);
+    };
+  });
+}
+
+async function downloadQariFullQuran(qariId) {
+  const qari = qarisData.find(q => q.id === qariId) || qarisData[0];
+  const qariName = qari.name;
+
+  if (activeQariDownloads[qariId]) {
+    showToast(`⏳ ${qariName} ki audio pehle se download ho rahi hai...`, 'info');
+    return;
+  }
+
+  const isAlready = isQariFullyDownloaded(qariId);
+  if (isAlready) {
+    showToast(`✅ ${qariName} ki audio pehle se offline download hai!`, 'info', 3500);
+    return;
+  }
+
+  activeQariDownloads[qariId] = true;
+  renderQariCards();
+
+  showToast(`⚡ ${qariName} ki full Quran audio download shuru ho rahi hai...`, 'info', 4000);
+
+  try {
+    for (let s = 1; s <= 114; s++) {
+      await downloadSurahAudio(s, qariId);
+      const btn = document.querySelector(`.btn-qari-dl-icon[data-qari-download="${qariId}"]`);
+      if (btn && s % 3 === 0) {
+        const pct = Math.round((s / 114) * 100);
+        btn.innerHTML = `<span style="font-size:10px;font-weight:700;">${pct}%</span>`;
+      }
+    }
+
+    localStorage.setItem(`nur_dl_full_qari_${qariId}`, 'true');
+    showToast(`✅ ${qariName} ki poori Quran audio offline download ho gayi! Ab bina internet chalegi.`, 'info', 5000);
+  } catch (err) {
+    console.error('Download Qari audio error:', err);
+    showToast(`⚠️ ${qariName} audio download me masla aaya. Internet check karein.`, 'warning');
+  } finally {
+    delete activeQariDownloads[qariId];
+    renderQariCards();
+  }
 }
 
 function updateMasterDeck(surahNum) {
@@ -1935,10 +2036,10 @@ async function playSurahByNumber(surahNum) {
   const isOnline = navigator.onLine;
   const directMp3Url = getDirectAyahAudioUrl(startAyah, audioState.qari);
   if (!isOnline) {
-    const isCached = (await isAudioUrlCached(directMp3Url)) || isSurahAudioDownloaded(surahNum, audioState.qari);
+    const isCached = (await isAudioUrlCached(directMp3Url)) || isSurahAudioDownloaded(surahNum, audioState.qari) || isQariFullyDownloaded(audioState.qari);
     if (!isCached) {
       if ($('deckStatusText')) {
-        $('deckStatusText').textContent = `⚠️ Surah ${s[0]} offline download nahi hai. Download Center se download karein.`;
+        $('deckStatusText').textContent = `⚠️ Surah ${s[0]} offline download nahi hai. Side me bane download logo se download karein.`;
       }
       showNoDownloadAlert(surahNum, startAyah);
       return;

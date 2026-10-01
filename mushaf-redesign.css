@@ -1233,6 +1233,46 @@ body.dark .btn-outline-green:hover {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  transition: all 0.2s ease;
+}
+.surah-card-v2-footer .read-btn:hover {
+  background: var(--primary-dark);
+}
+
+.surah-card-v2-footer .play-pill-btn,
+.play-pill-btn {
+  flex: 1;
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.surah-card-v2-footer .play-pill-btn:hover,
+.play-pill-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+[data-theme="dark"] .surah-card-v2-footer .play-pill-btn,
+[data-theme="dark"] .play-pill-btn {
+  background: rgba(76, 175, 80, 0.15);
+  color: #a5d6a7;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+[data-theme="dark"] .surah-card-v2-footer .play-pill-btn:hover,
+[data-theme="dark"] .play-pill-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
 }
 
 .surah-card-v2-footer .icon-action-btn {
@@ -3568,12 +3608,84 @@ body.theme-parchment select option {
   font-style: italic;
 }
 
+/* Qari Card Download Logo Button (12 Qaris Offline Access) */
+.qari-card-dl-action {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.btn-qari-dl-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border-line);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+  padding: 0;
+}
+
+.btn-qari-dl-icon:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25);
+}
+
+.btn-qari-dl-icon.downloaded {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+  color: #2e7d32;
+}
+
+[data-theme="dark"] .btn-qari-dl-icon.downloaded {
+  background: rgba(46, 125, 50, 0.25);
+  border-color: #4caf50;
+  color: #81c784;
+}
+
+.btn-qari-dl-icon.downloading {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.btn-qari-dl-icon.highlight-warn {
+  animation: dlPulseWarn 0.6s infinite alternate;
+}
+
+@keyframes dlPulseWarn {
+  from { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.85); }
+  to { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+
+.qari-dl-spin {
+  display: inline-block;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* 114 Surahs Recitation Browser & Grid */
 .audio-surahs-directory {
   background: var(--bg-surface);
   border: 1px solid var(--border-line);
   border-radius: var(--radius-lg);
   padding: 24px 28px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .audio-directory-header {
@@ -3582,6 +3694,8 @@ body.theme-parchment select option {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .audio-search-box {
@@ -3592,7 +3706,10 @@ body.theme-parchment select option {
   border: 1px solid var(--border-line);
   border-radius: var(--radius-sm);
   padding: 8px 14px;
-  min-width: 320px;
+  width: 100%;
+  max-width: 360px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .audio-search-box input {
@@ -3603,6 +3720,7 @@ body.theme-parchment select option {
   color: var(--text-primary);
   outline: 0;
   width: 100%;
+  min-width: 0;
 }
 
 .audio-surahs-grid {
@@ -3610,6 +3728,8 @@ body.theme-parchment select option {
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Responsive adjustments */
@@ -3619,6 +3739,9 @@ body.theme-parchment select option {
 }
 
 @media (max-width: 768px) {
+  .audio-surahs-directory { padding: 18px 12px; }
+  .audio-directory-header { flex-direction: column; align-items: stretch; gap: 12px; }
+  .audio-search-box { max-width: 100%; width: 100%; min-width: 0; }
   .qari-cards-grid { grid-template-columns: repeat(2, 1fr); }
   .audio-surahs-grid { grid-template-columns: 1fr; }
   .audio-master-deck { flex-direction: column; align-items: flex-start; }
