@@ -22,7 +22,7 @@ dependencies:
 
   # Notifications & Alarms
   flutter_local_notifications: ^17.2.3
-  android_alarm_manager_plus: ^3.0.4
+  android_alarm_manager_plus: ^5.1.2
 
   # Sensors & Location
   flutter_compass: ^0.8.1
