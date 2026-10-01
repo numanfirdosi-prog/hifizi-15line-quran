@@ -28,6 +28,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Default package list includes the long-removed 'tools' package,
+          # which makes sdkmanager exit 1. Only install platform-tools here;
+          # the remaining packages are installed in the next step.
+          packages: platform-tools
 
       - name: Install Android packages
         run: |
