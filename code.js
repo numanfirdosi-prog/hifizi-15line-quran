@@ -1572,6 +1572,39 @@ async function getBismillahAudio(qari) {
   return fallback;
 }
 
+let activeBlobUrl = null;
+
+async function resolveAudioSourceUrl(url) {
+  if (!url) return null;
+  // If CacheStorage has this URL cached, read its bytes and create a local in-memory Blob URL
+  // This guarantees 100% offline playback on all mobile browsers without Range header or network errors!
+  if ('caches' in window) {
+    try {
+      const match = await caches.match(url);
+      if (match) {
+        const contentType = match.headers.get('content-type') || '';
+        if (contentType.includes('json')) {
+          const json = await match.clone().json();
+          if (json?.data?.audio) {
+            return await resolveAudioSourceUrl(json.data.audio);
+          }
+        }
+        const blob = await match.blob();
+        if (blob && blob.size > 0) {
+          if (activeBlobUrl) {
+            try { URL.revokeObjectURL(activeBlobUrl); } catch (e) {}
+          }
+          activeBlobUrl = URL.createObjectURL(blob);
+          return activeBlobUrl;
+        }
+      }
+    } catch (e) {
+      console.warn('[Offline Audio] Blob resolution error:', e);
+    }
+  }
+  return url;
+}
+
 async function playBismillah(surahNumber, thenAyahNumber) {
   audioState.isBismillah = true;
   audioState.bismillahSurah = surahNumber;
@@ -1593,9 +1626,9 @@ async function playBismillah(surahNumber, thenAyahNumber) {
   updateMediaSession(`Bismillah · Surah ${surahName}`, qariName, `Holy Quran · 15-Line Mushaf`);
 
   try {
-    const bismillahUrl = await getBismillahAudio(audioState.qari);
+    const rawBismillahUrl = await getBismillahAudio(audioState.qari);
     const audio = $('quranAudio');
-    audio.src = bismillahUrl;
+    audio.src = await resolveAudioSourceUrl(rawBismillahUrl) || rawBismillahUrl;
     audio.playbackRate = Number($('audioSpeed')?.value || 1);
     await audio.play();
     if ($('audioPlay')) $('audioPlay').textContent = 'Ⅱ';
@@ -1649,10 +1682,16 @@ async function playAyah(number, withBismillah = true) {
     let surahArName = (targetAyah && targetAyah.surah && targetAyah.surah.name) || (surahs[targetSurahNum - 1] && surahs[targetSurahNum - 1][2]) || '';
     let ayahInSurah = targetAyah ? targetAyah.numberInSurah : (number - getGlobalAyahRangeForSurah(targetSurahNum).start + 1);
 
-    // Try API fetch for metadata & official audio stream
+    // Try cache first for metadata & official audio stream (instant & works 100% offline)
     try {
-      const response = await fetch(apiUrl);
-      if (response.ok) {
+      let response = null;
+      if ('caches' in window) {
+        response = await caches.match(apiUrl);
+      }
+      if (!response && navigator.onLine) {
+        response = await fetch(apiUrl);
+      }
+      if (response && response.ok) {
         const result = await response.json();
         if (result && result.data && result.data.audio) {
           audioSrc = result.data.audio;
@@ -1666,14 +1705,17 @@ async function playAyah(number, withBismillah = true) {
         }
       }
     } catch (apiErr) {
-      // Offline fallback: Use direct CDN mp3 URL (which is cached when downloaded)
+      // Offline fallback: Use direct CDN mp3 URL
       audioSrc = directMp3Url;
     }
 
     if (!audioSrc) audioSrc = directMp3Url;
 
+    // Resolve audio source to local Blob URL if cached in CacheStorage
+    const finalAudioSrc = (await resolveAudioSourceUrl(audioSrc)) || (await resolveAudioSourceUrl(directMp3Url)) || audioSrc;
+
     const audio = $('quranAudio');
-    audio.src = audioSrc;
+    audio.src = finalAudioSrc;
     audio.playbackRate = Number($('audioSpeed')?.value || 1);
     await audio.play();
 
@@ -1690,6 +1732,7 @@ async function playAyah(number, withBismillah = true) {
 
     updateMediaSession(`Ayah ${ayahInSurah} · ${surahEngName}`, qariName, `Surah ${surahEngName} (${surahArName})`);
   } catch (error) {
+    console.error('Audio playback error:', error);
     if (!navigator.onLine && !isSurahAudioDownloaded(targetSurahNum, audioState.qari) && !isQariFullyDownloaded(audioState.qari)) {
       showNoDownloadAlert(targetSurahNum, number);
     } else {
@@ -1905,13 +1948,42 @@ function renderAudioStudio() {
 
 const activeQariDownloads = {};
 
+function getPlayStoreRingHtml(pct) {
+  const safePct = Math.min(100, Math.max(0, Math.round(pct)));
+  return `
+    <div class="playstore-dl-wrap">
+      <svg class="playstore-ring-svg" viewBox="0 0 36 36">
+        <path class="playstore-ring-track"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+        <path class="playstore-ring-bar"
+          stroke-dasharray="${safePct}, 100"
+          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+        />
+      </svg>
+      <span class="playstore-dl-pct">${safePct}%</span>
+    </div>
+  `;
+}
+
+function updateQariDownloadButtonUI(qariId, pct, surahNum) {
+  const btn = document.querySelector(`.btn-qari-dl-icon[data-qari-download="${qariId}"]`);
+  if (!btn) return;
+  btn.classList.add('downloading');
+  btn.classList.remove('downloaded');
+  btn.title = `Downloading: ${pct}% (${surahNum}/114 Surahs)`;
+  btn.innerHTML = getPlayStoreRingHtml(pct);
+}
+
 function renderQariCards() {
   const grid = $('qariCardsGrid');
   if (!grid) return;
 
   grid.innerHTML = qarisData.map(q => {
     const isDownloaded = isQariFullyDownloaded(q.id);
-    const isDownloading = !!activeQariDownloads[q.id];
+    const downloadInfo = activeQariDownloads[q.id];
+    const isDownloading = !!downloadInfo;
+    const pct = isDownloading ? (downloadInfo.pct || 0) : 0;
 
     return `
       <div class="qari-card-v2 ${q.id === audioState.qari ? 'active' : ''}" data-qari-id="${q.id}">
@@ -1926,9 +1998,9 @@ function renderQariCards() {
         <div class="qari-card-dl-action">
           <button class="btn-qari-dl-icon ${isDownloaded ? 'downloaded' : ''} ${isDownloading ? 'downloading' : ''}" 
                   data-qari-download="${q.id}" 
-                  title="${isDownloaded ? 'Audio Downloaded (100% Offline Ready)' : 'Download Full Quran Audio for ' + q.name + ' (Offline)'}"
+                  title="${isDownloading ? `Downloading: ${pct}% (${downloadInfo?.surah || 0}/114 Surahs)` : (isDownloaded ? 'Audio Downloaded (100% Offline Ready)' : 'Download Full Quran Audio for ' + q.name + ' (Offline)')}"
                   aria-label="Download audio for ${q.name}">
-            ${isDownloading ? '<span class="qari-dl-spin">⏳</span>' : (isDownloaded ? '<span>✅</span>' : '<span>📥</span>')}
+            ${isDownloading ? getPlayStoreRingHtml(pct) : (isDownloaded ? '<span>✅</span>' : '<span>📥</span>')}
           </button>
         </div>
       </div>
@@ -1955,7 +2027,7 @@ async function downloadQariFullQuran(qariId) {
   const qariName = qari.name;
 
   if (activeQariDownloads[qariId]) {
-    showToast(`⏳ ${qariName} ki audio pehle se download ho rahi hai...`, 'info');
+    showToast(`⏳ ${qariName} ki audio pehle se download ho rahi hai (${activeQariDownloads[qariId].pct || 0}%)...`, 'info');
     return;
   }
 
@@ -1965,23 +2037,22 @@ async function downloadQariFullQuran(qariId) {
     return;
   }
 
-  activeQariDownloads[qariId] = true;
+  activeQariDownloads[qariId] = { surah: 0, total: 114, pct: 0 };
   renderQariCards();
 
   showToast(`⚡ ${qariName} ki full Quran audio download shuru ho rahi hai...`, 'info', 4000);
 
   try {
     for (let s = 1; s <= 114; s++) {
-      await downloadSurahAudio(s, qariId);
-      const btn = document.querySelector(`.btn-qari-dl-icon[data-qari-download="${qariId}"]`);
-      if (btn && s % 3 === 0) {
-        const pct = Math.round((s / 114) * 100);
-        btn.innerHTML = `<span style="font-size:10px;font-weight:700;">${pct}%</span>`;
-      }
+      // downloadSurahAudio with silent=true to prevent toast flooding
+      await downloadSurahAudio(s, qariId, null, true);
+      const pct = Math.round((s / 114) * 100);
+      activeQariDownloads[qariId] = { surah: s, total: 114, pct };
+      updateQariDownloadButtonUI(qariId, pct, s);
     }
 
     localStorage.setItem(`nur_dl_full_qari_${qariId}`, 'true');
-    showToast(`✅ ${qariName} ki poori Quran audio offline download ho gayi! Ab bina internet chalegi.`, 'info', 5000);
+    showToast(`✅ ${qariName} ki poori Quran audio (114 Surahs) offline download ho gayi! Ab bina internet chalegi.`, 'info', 6000);
   } catch (err) {
     console.error('Download Qari audio error:', err);
     showToast(`⚠️ ${qariName} audio download me masla aaya. Internet check karein.`, 'warning');
@@ -2032,6 +2103,18 @@ async function playSurahByNumber(surahNum) {
     $('deckStatusText').textContent = `Preparing Surah ${s[0]} (${qari.name})...`;
   }
 
+  // Pre-populate synthetic ayahs for this Surah so Next Ayah and continuous recitation work 100% offline
+  const range = getGlobalAyahRangeForSurah(surahNum);
+  audioState.ayahs = [];
+  for (let a = range.start; a <= range.end; a++) {
+    audioState.ayahs.push({
+      number: a,
+      numberInSurah: a - range.start + 1,
+      surah: { number: surahNum, englishName: s[0], name: s[2] }
+    });
+  }
+  audioState.index = 0;
+
   // Offline verification for Surah playback
   const isOnline = navigator.onLine;
   const directMp3Url = getDirectAyahAudioUrl(startAyah, audioState.qari);
@@ -2046,9 +2129,17 @@ async function playSurahByNumber(surahNum) {
     }
   }
 
+  // If online or cached, enrich audioState.ayahs with API metadata
   try {
-    const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/${audioState.qari}`);
-    if (res.ok) {
+    const surahApiUrl = `https://api.alquran.cloud/v1/surah/${surahNum}/${audioState.qari}`;
+    let res = null;
+    if ('caches' in window) {
+      res = await caches.match(surahApiUrl);
+    }
+    if (!res && navigator.onLine) {
+      res = await fetch(surahApiUrl);
+    }
+    if (res && res.ok) {
       const data = await res.json();
       if (data && data.data && data.data.ayahs && data.data.ayahs.length) {
         audioState.ayahs = data.data.ayahs;
@@ -2056,7 +2147,7 @@ async function playSurahByNumber(surahNum) {
       }
     }
   } catch (e) {
-    // Falls back to single-ayah fetch in playAyah
+    // Falls back smoothly to synthetic ayahs above
   }
 
   playAyah(startAyah, true);
@@ -3428,29 +3519,58 @@ function updatePrayerTimesUI() {
 // -----------------------------------------------------------------------------
 let qiblahAbsoluteActive = false;
 let currentDeviceHeading = 0;
+let smoothedCompassHeading = null;
 
-function calculateTiltCompensatedHeading(alpha, beta, gamma) {
-  if (alpha === null || alpha === undefined) return 0;
-  // If device is almost flat, (360 - alpha) gives direct yaw
-  if (Math.abs(beta || 0) < 6 && Math.abs(gamma || 0) < 6) {
-    return (360 - alpha) % 360;
+function smoothCompassAngle(newAngle) {
+  if (smoothedCompassHeading === null) {
+    smoothedCompassHeading = newAngle;
+    return newAngle;
   }
+  let diff = newAngle - smoothedCompassHeading;
+  while (diff < -180) diff += 360;
+  while (diff > 180) diff -= 360;
+  // Stable low-pass smoothing (0.28) for smooth physical needle motion
+  smoothedCompassHeading = (smoothedCompassHeading + diff * 0.28 + 360) % 360;
+  return smoothedCompassHeading;
+}
+
+function calculateCompassHeading(e) {
+  // 1. iOS Safari provides true/magnetic heading directly via webkitCompassHeading
+  if (typeof e.webkitCompassHeading !== 'undefined' && e.webkitCompassHeading !== null) {
+    return (e.webkitCompassHeading + 360) % 360;
+  }
+
+  // 2. Android / standard orientation:
+  const alpha = e.alpha;
+  const beta = e.beta;
+  const gamma = e.gamma;
+  if (alpha === null || alpha === undefined) return null;
+
+  // If phone is flat or held at normal reading angle (< 45 degrees tilt):
+  // W3C alpha increases counter-clockwise. Compass heading clockwise from North is:
+  if (Math.abs(beta || 0) < 45 && Math.abs(gamma || 0) < 45) {
+    return (360 - alpha + 360) % 360;
+  }
+
+  // Planar projection when held upright or tilted:
   const degToRad = Math.PI / 180;
-  const _x = (beta || 0) * degToRad;
-  const _y = (gamma || 0) * degToRad;
-  const _z = (alpha || 0) * degToRad;
+  const a = alpha * degToRad;
+  const b = (beta || 0) * degToRad;
+  const g = (gamma || 0) * degToRad;
 
-  const cX = Math.cos(_x);
-  const cY = Math.cos(_y);
-  const cZ = Math.cos(_z);
-  const sX = Math.sin(_x);
-  const sY = Math.sin(_y);
-  const sZ = Math.sin(_z);
+  const sA = Math.sin(a), cA = Math.cos(a);
+  const sB = Math.sin(b), cB = Math.cos(b);
+  const sG = Math.sin(g), cG = Math.cos(g);
 
-  // W3C standard 3D rotation matrix calculation
-  const rA = -cZ * sY - sZ * sX * cY;
-  const rB = -sZ * sY + cZ * sX * cY;
-  let heading = Math.atan2(rA, rB) * (180 / Math.PI);
+  // Vector pointing along phone's forward axis projected onto Earth's horizontal plane
+  const vE = -sA * cG - cA * sB * sG;
+  const vN = -cA * cG + sA * sB * sG;
+
+  if (Math.abs(vE) < 0.0001 && Math.abs(vN) < 0.0001) {
+    return (360 - alpha + 360) % 360;
+  }
+
+  let heading = Math.atan2(vE, vN) * (180 / Math.PI);
   return (heading + 360) % 360;
 }
 
@@ -3464,7 +3584,7 @@ function updateCompassUI(heading) {
   const headingVal = $('compassLiveHeading');
 
   if (headingVal) {
-    headingVal.textContent = `Phone Heading: ${Math.round(heading)}° (North: 0°)`;
+    headingVal.textContent = `Phone Heading: ${Math.round(heading)}° (North: 0° | Qiblah: ${Math.round(currentQiblahBearing)}°)`;
   }
 
   if (dial) {
@@ -3475,7 +3595,7 @@ function updateCompassUI(heading) {
   }
 
   const diff = Math.abs((currentQiblahBearing - heading + 360) % 360);
-  const isAligned = diff <= 4.0 || diff >= 356.0;
+  const isAligned = diff <= 4.5 || diff >= 355.5;
 
   if (statusBanner) {
     statusBanner.classList.toggle('aligned', isAligned);
@@ -3495,16 +3615,9 @@ function updateCompassUI(heading) {
 }
 
 function handleCompassOrientation(e, isAbsolute) {
-  let heading = 0;
-  if (typeof e.webkitCompassHeading !== 'undefined') {
-    // iOS Safari provides direct magnetic compass heading
-    heading = e.webkitCompassHeading;
-  } else if (e.alpha !== null && e.alpha !== undefined) {
-    // Android Chrome / Standard W3C
-    heading = calculateTiltCompensatedHeading(e.alpha, e.beta, e.gamma);
-  } else {
-    return;
-  }
+  const rawHeading = calculateCompassHeading(e);
+  if (rawHeading === null || isNaN(rawHeading)) return;
+  const heading = smoothCompassAngle(rawHeading);
   updateCompassUI(heading);
 }
 
@@ -3514,11 +3627,13 @@ function startQiblahCompass() {
 
   // 1. Android Chrome Absolute Orientation (Crucial for Earth's Magnetic North)
   window.addEventListener('deviceorientationabsolute', (e) => {
-    qiblahAbsoluteActive = true;
-    handleCompassOrientation(e, true);
+    if (e.alpha !== null && e.alpha !== undefined) {
+      qiblahAbsoluteActive = true;
+      handleCompassOrientation(e, true);
+    }
   }, true);
 
-  // 2. Standard Orientation (iOS webkitCompassHeading or fallback)
+  // 2. Standard Orientation (iOS webkitCompassHeading or Android fallback)
   window.addEventListener('deviceorientation', (e) => {
     if (qiblahAbsoluteActive && typeof e.webkitCompassHeading === 'undefined') {
       return; // Ignore non-absolute events once absolute is active
@@ -3528,6 +3643,7 @@ function startQiblahCompass() {
 }
 
 function calibrateQiblahCompass() {
+  smoothedCompassHeading = null;
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     DeviceOrientationEvent.requestPermission()
       .then(response => {
@@ -3539,12 +3655,12 @@ function calibrateQiblahCompass() {
         }
       })
       .catch(err => {
-        showToast('Sensor initialized. Move phone in figure-8 motion.');
+        showToast('Sensor active. Move phone in figure-8 (∞) to calibrate.');
         startQiblahCompass();
       });
   } else {
     startQiblahCompass();
-    showToast('Compass active! Move phone in figure-8 (∞) to calibrate.');
+    showToast('Compass active! Move phone in figure-8 (∞) to calibrate sensors.');
   }
 }
 
@@ -5411,7 +5527,7 @@ function updateSurahDownloadRowUI(surahNum, qariId) {
   }
 }
 
-async function downloadSurahAudio(surahNum, qariId, onProgress = null) {
+async function downloadSurahAudio(surahNum, qariId, onProgress = null, silent = false) {
   const downloadKey = `${surahNum}_${qariId}`;
   if (activeAudioDownloads[downloadKey]) return;
   activeAudioDownloads[downloadKey] = true;
@@ -5429,11 +5545,22 @@ async function downloadSurahAudio(surahNum, qariId, onProgress = null) {
   const sObj = surahs[surahNum - 1];
   const sName = sObj ? sObj[0] : `Surah ${surahNum}`;
 
-  showToast(`📥 Downloading Surah ${sName} (${total} Ayahs)...`, 'info', 3000);
+  if (!silent) {
+    showToast(`📥 Downloading Surah ${sName} (${total} Ayahs)...`, 'info', 3000);
+  }
 
   try {
     const cache = await caches.open('nur-al-quran-v3.4.2');
     let downloaded = 0;
+
+    // Precache Surah metadata API response for full offline recitation
+    try {
+      const surahApiUrl = `https://api.alquran.cloud/v1/surah/${surahNum}/${qariId}`;
+      if (!(await cache.match(surahApiUrl))) {
+        const respS = await fetch(surahApiUrl);
+        if (respS.ok) await cache.put(surahApiUrl, respS);
+      }
+    } catch (e) {}
 
     for (let ayah = range.start; ayah <= range.end; ayah++) {
       const directMp3 = getDirectAyahAudioUrl(ayah, qariId);
@@ -5476,10 +5603,14 @@ async function downloadSurahAudio(surahNum, qariId, onProgress = null) {
     } catch (e) {}
 
     markSurahAudioDownloaded(surahNum, qariId, true);
-    showToast(`✅ Surah ${sName} Offline Download Ho Gayi!`, 'info', 4000);
+    if (!silent) {
+      showToast(`✅ Surah ${sName} Offline Download Ho Gayi!`, 'info', 4000);
+    }
   } catch (e) {
     console.error(`Error downloading Surah ${surahNum}:`, e);
-    showToast(`⚠️ Surah ${sName} download failed. Please check internet.`, 'warning');
+    if (!silent) {
+      showToast(`⚠️ Surah ${sName} download failed. Please check internet.`, 'warning');
+    }
   } finally {
     delete activeAudioDownloads[downloadKey];
     updateSurahDownloadRowUI(surahNum, qariId);

@@ -3371,19 +3371,28 @@ body.theme-parchment select option {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .qari-card-v2 {
   background: var(--bg-card-subtle);
   border: 1px solid var(--border-line);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .qari-card-v2:hover {
@@ -3399,15 +3408,15 @@ body.theme-parchment select option {
 }
 
 .qari-card-avatar {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: var(--bg-surface);
   border: 1.5px solid var(--border-line);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 17px;
   flex-shrink: 0;
   color: var(--primary);
 }
@@ -3421,6 +3430,7 @@ body.theme-parchment select option {
 .qari-card-body {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .qari-card-name {
@@ -3431,6 +3441,7 @@ body.theme-parchment select option {
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 3px;
+  max-width: 100%;
 }
 
 .qari-card-meta {
@@ -3439,6 +3450,10 @@ body.theme-parchment select option {
   gap: 6px;
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .qari-style-tag {
@@ -3617,13 +3632,13 @@ body.theme-parchment select option {
 }
 
 .btn-qari-dl-icon {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--border-line);
+  border: 1.5px solid var(--border-line);
   background: var(--bg-surface);
   color: var(--text-secondary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -3631,12 +3646,14 @@ body.theme-parchment select option {
   transition: all 0.2s ease;
   position: relative;
   padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .btn-qari-dl-icon:hover {
   border-color: var(--primary);
   color: var(--primary);
-  transform: scale(1.1);
+  transform: scale(1.08);
   box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25);
 }
 
@@ -3653,9 +3670,9 @@ body.theme-parchment select option {
 }
 
 .btn-qari-dl-icon.downloading {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.15);
-  color: #d97706;
+  border-color: #2e7d32;
+  background: rgba(46, 125, 50, 0.08);
+  color: #2e7d32;
 }
 
 .btn-qari-dl-icon.highlight-warn {
@@ -3667,9 +3684,61 @@ body.theme-parchment select option {
   to { transform: scale(1.18); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
 }
 
-.qari-dl-spin {
-  display: inline-block;
-  animation: spin 1s infinite linear;
+/* Play Store Style Circular Download Progress */
+.playstore-dl-wrap {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playstore-ring-svg {
+  width: 32px;
+  height: 32px;
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.playstore-ring-track {
+  fill: none;
+  stroke: rgba(46, 125, 50, 0.16);
+  stroke-width: 3.2;
+}
+
+[data-theme="dark"] .playstore-ring-track {
+  stroke: rgba(255, 255, 255, 0.18);
+}
+
+.playstore-ring-bar {
+  fill: none;
+  stroke: var(--primary, #2e7d32);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.25s linear;
+}
+
+[data-theme="dark"] .playstore-ring-bar {
+  stroke: #4caf50;
+}
+
+.playstore-dl-pct {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8.5px;
+  font-weight: 800;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--primary, #2e7d32);
+  line-height: 1;
+  text-align: center;
+  user-select: none;
+}
+
+[data-theme="dark"] .playstore-dl-pct {
+  color: #81c784;
 }
 
 @keyframes spin {
@@ -3739,10 +3808,11 @@ body.theme-parchment select option {
 }
 
 @media (max-width: 768px) {
+  .audio-section-box { padding: 18px 12px; }
   .audio-surahs-directory { padding: 18px 12px; }
   .audio-directory-header { flex-direction: column; align-items: stretch; gap: 12px; }
   .audio-search-box { max-width: 100%; width: 100%; min-width: 0; }
-  .qari-cards-grid { grid-template-columns: repeat(2, 1fr); }
+  .qari-cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .audio-surahs-grid { grid-template-columns: 1fr; }
   .audio-master-deck { flex-direction: column; align-items: flex-start; }
   .deck-right-controls { width: 100%; align-items: stretch; }
@@ -3750,10 +3820,19 @@ body.theme-parchment select option {
 }
 
 @media (max-width: 650px) {
-  .qari-cards-grid { grid-template-columns: 1fr !important; }
+  .audio-section-box { padding: 14px 10px; margin-bottom: 20px; }
+  .qari-cards-grid { grid-template-columns: 1fr !important; gap: 8px; }
+  .qari-card-v2 { padding: 10px 12px; gap: 10px; }
+}
+
+.is-mobile-app .audio-section-box {
+  padding: 14px 10px;
 }
 
 .is-mobile-app .qari-cards-grid {
+  grid-template-columns: 1fr !important;
+  gap: 8px;
+}
   grid-template-columns: 1fr !important;
 }
 

@@ -71,19 +71,47 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Audio files: Cache if requested, otherwise fetch
+  // Audio files: Cache-first with HTTP 206 Partial Content support for Range requests
   if (url.pathname.endsWith('.mp3')) {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(event.request).then((networkResponse) => {
+      (async () => {
+        const cachedResponse = await caches.match(event.request.url);
+        if (cachedResponse) {
+          const rangeHeader = event.request.headers.get('range');
+          if (rangeHeader) {
+            const arrayBuffer = await cachedResponse.arrayBuffer();
+            const bytes = rangeHeader.replace(/bytes=/, '').split('-');
+            const total = arrayBuffer.byteLength;
+            const start = parseInt(bytes[0], 10) || 0;
+            const end = bytes[1] ? parseInt(bytes[1], 10) : total - 1;
+            const chunk = arrayBuffer.slice(start, end + 1);
+
+            return new Response(chunk, {
+              status: 206,
+              statusText: 'Partial Content',
+              headers: {
+                'Content-Type': 'audio/mpeg',
+                'Content-Range': `bytes ${start}-${end}/${total}`,
+                'Content-Length': String(chunk.byteLength),
+                'Accept-Ranges': 'bytes'
+              }
+            });
+          }
+          return cachedResponse;
+        }
+
+        try {
+          const networkResponse = await fetch(event.request);
           if (networkResponse && networkResponse.status === 200) {
             const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(event.request.url, copy);
           }
           return networkResponse;
-        }).catch(() => new Response('Audio offline', { status: 503 }));
-      })
+        } catch (err) {
+          return new Response('Audio offline', { status: 503 });
+        }
+      })()
     );
     return;
   }
