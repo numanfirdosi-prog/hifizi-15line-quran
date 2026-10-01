@@ -43,7 +43,8 @@ class PreferencesService extends ChangeNotifier {
     final cityJson = _prefs.getString('nur_selected_city');
     if (cityJson != null) {
       try {
-        _selectedCity = City.fromJson(jsonDecode(cityJson) as Map<String, dynamic>);
+        _selectedCity =
+            City.fromJson(jsonDecode(cityJson) as Map<String, dynamic>);
       } catch (_) {
         _selectedCity = presetCities[0];
       }
@@ -58,7 +59,8 @@ class PreferencesService extends ChangeNotifier {
     if (alarmsJson != null) {
       try {
         final decoded = jsonDecode(alarmsJson) as Map<String, dynamic>;
-        _prayerAlarms = decoded.map((key, value) => MapEntry(key, value as bool));
+        _prayerAlarms =
+            decoded.map((key, value) => MapEntry(key, value as bool));
       } catch (_) {}
     }
 
@@ -107,7 +109,8 @@ class PreferencesService extends ChangeNotifier {
     } else {
       _bookmarks.add(page);
     }
-    await _prefs.setStringList('nur_bookmarks', _bookmarks.map((e) => e.toString()).toList());
+    await _prefs.setStringList(
+        'nur_bookmarks', _bookmarks.map((e) => e.toString()).toList());
     notifyListeners();
   }
 
@@ -117,4 +120,3 @@ class PreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 }
-

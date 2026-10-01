@@ -66,7 +66,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
       onResult: (spokenText, matchedSurahs) {
         setState(() {
           _searchController.text = spokenText;
-          _displayedSurahs = matchedSurahs.isNotEmpty ? matchedSurahs : allSurahs;
+          _displayedSurahs =
+              matchedSurahs.isNotEmpty ? matchedSurahs : allSurahs;
           _voiceFeedback = 'Heard: "$spokenText"';
           _isListening = false;
         });
@@ -84,7 +85,10 @@ class _SurahsScreenState extends State<SurahsScreen> {
         backgroundColor: const Color(0xFF0F3A2C),
         title: const Text(
           'فہرست سورتیں (114 Surahs)',
-          style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+              color: Color(0xFFD4AF37),
+              fontWeight: FontWeight.bold,
+              fontSize: 18),
         ),
       ),
       body: Column(
@@ -105,11 +109,14 @@ class _SurahsScreenState extends State<SurahsScreen> {
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           hintText: 'Search Surah (Hindi / English / 1-114)...',
-                          hintStyle: const TextStyle(color: Colors.white54, fontSize: 13),
-                          prefixIcon: const Icon(Icons.search, color: Color(0xFFD4AF37)),
+                          hintStyle: const TextStyle(
+                              color: Colors.white54, fontSize: 13),
+                          prefixIcon: const Icon(Icons.search,
+                              color: Color(0xFFD4AF37)),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.clear, color: Colors.white54),
+                                  icon: const Icon(Icons.clear,
+                                      color: Colors.white54),
                                   onPressed: () {
                                     _searchController.clear();
                                     _onSearchChanged('');
@@ -118,7 +125,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                               : null,
                           filled: true,
                           fillColor: const Color(0xFF144234),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide.none,
@@ -133,11 +141,15 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _isListening ? Colors.redAccent : const Color(0xFFD4AF37),
+                          color: _isListening
+                              ? Colors.redAccent
+                              : const Color(0xFFD4AF37),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: _isListening ? Colors.redAccent.withOpacity(0.5) : const Color(0xFFD4AF37).withOpacity(0.3),
+                              color: _isListening
+                                  ? Colors.redAccent.withOpacity(0.5)
+                                  : const Color(0xFFD4AF37).withOpacity(0.3),
                               blurRadius: 8,
                             ),
                           ],
@@ -157,7 +169,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     child: Text(
                       _voiceFeedback,
                       style: TextStyle(
-                        color: _isListening ? Colors.amberAccent : Colors.white70,
+                        color:
+                            _isListening ? Colors.amberAccent : Colors.white70,
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -186,14 +199,19 @@ class _SurahsScreenState extends State<SurahsScreen> {
                   )
                 : ListView.separated(
                     itemCount: _displayedSurahs.length,
-                    separatorBuilder: (ctx, i) => const Divider(color: Colors.white12, height: 1),
+                    separatorBuilder: (ctx, i) =>
+                        const Divider(color: Colors.white12, height: 1),
                     itemBuilder: (context, index) {
                       final surah = _displayedSurahs[index];
-                      final isCurrentlyPlaying = audio.isPlaying && audio.currentSurah == surah.number;
+                      final isCurrentlyPlaying =
+                          audio.isPlaying && audio.currentSurah == surah.number;
 
                       return Container(
-                        color: isCurrentlyPlaying ? const Color(0xFF144234) : Colors.transparent,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        color: isCurrentlyPlaying
+                            ? const Color(0xFF144234)
+                            : Colors.transparent,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
                             // Surah Number Badge
@@ -202,7 +220,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                               height: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+                                border: Border.all(
+                                    color: const Color(0xFFD4AF37), width: 1.5),
                                 color: const Color(0xFF0F3A2C),
                               ),
                               child: Center(
@@ -235,10 +254,12 @@ class _SurahsScreenState extends State<SurahsScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: Colors.white10,
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
                                         ),
                                         child: Text(
                                           surah.nameHi,
@@ -253,7 +274,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     '${surah.meaning} • ${surah.totalAyahs} Ayahs • Page ${surah.startPage}',
-                                    style: const TextStyle(color: Colors.white60, fontSize: 11),
+                                    style: const TextStyle(
+                                        color: Colors.white60, fontSize: 11),
                                   ),
                                 ],
                               ),
@@ -272,15 +294,19 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
                             // Read Button (opens Mushaf)
                             IconButton(
-                              icon: const Icon(Icons.menu_book, color: Color(0xFFD4AF37), size: 22),
+                              icon: const Icon(Icons.menu_book,
+                                  color: Color(0xFFD4AF37), size: 22),
                               tooltip: 'Read in 15-line Mushaf',
-                              onPressed: () => widget.onOpenPage(surah.startPage),
+                              onPressed: () =>
+                                  widget.onOpenPage(surah.startPage),
                             ),
 
                             // Audio Recite Button
                             IconButton(
                               icon: Icon(
-                                isCurrentlyPlaying ? Icons.pause_circle_filled : Icons.play_circle_outline,
+                                isCurrentlyPlaying
+                                    ? Icons.pause_circle_filled
+                                    : Icons.play_circle_outline,
                                 color: const Color(0xFFD4AF37),
                                 size: 24,
                               ),
@@ -304,4 +330,3 @@ class _SurahsScreenState extends State<SurahsScreen> {
     );
   }
 }
-

@@ -78,11 +78,20 @@ void main() {
         asrMode: 'Hanafi',
       );
 
-      expect(times.fajr.toDateTime(date).isBefore(times.sunrise.toDateTime(date)), isTrue);
-      expect(times.sunrise.toDateTime(date).isBefore(times.dhuhr.toDateTime(date)), isTrue);
-      expect(times.dhuhr.toDateTime(date).isBefore(times.asr.toDateTime(date)), isTrue);
-      expect(times.asr.toDateTime(date).isBefore(times.maghrib.toDateTime(date)), isTrue);
-      expect(times.maghrib.toDateTime(date).isBefore(times.isha.toDateTime(date)), isTrue);
+      expect(
+          times.fajr.toDateTime(date).isBefore(times.sunrise.toDateTime(date)),
+          isTrue);
+      expect(
+          times.sunrise.toDateTime(date).isBefore(times.dhuhr.toDateTime(date)),
+          isTrue);
+      expect(times.dhuhr.toDateTime(date).isBefore(times.asr.toDateTime(date)),
+          isTrue);
+      expect(
+          times.asr.toDateTime(date).isBefore(times.maghrib.toDateTime(date)),
+          isTrue);
+      expect(
+          times.maghrib.toDateTime(date).isBefore(times.isha.toDateTime(date)),
+          isTrue);
     });
   });
 

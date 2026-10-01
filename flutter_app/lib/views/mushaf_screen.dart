@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../data/quran_data.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
@@ -15,13 +16,15 @@ class MushafScreen extends StatefulWidget {
 class _MushafScreenState extends State<MushafScreen> {
   late PageController _pageController;
   late int _currentPage;
-  final TransformationController _transformController = TransformationController();
+  final TransformationController _transformController =
+      TransformationController();
 
   @override
   void initState() {
     super.initState();
     final prefs = Provider.of<PreferencesService>(context, listen: false);
-    _currentPage = widget.initialPage > 0 ? widget.initialPage : prefs.lastReadPage;
+    _currentPage =
+        widget.initialPage > 0 ? widget.initialPage : prefs.lastReadPage;
     // Pages in Mushaf are 1 to 611
     _pageController = PageController(initialPage: _currentPage - 1);
   }
@@ -38,16 +41,19 @@ class _MushafScreenState extends State<MushafScreen> {
     setState(() {
       _currentPage = pageNum;
     });
-    Provider.of<PreferencesService>(context, listen: false).setLastReadPage(pageNum);
+    Provider.of<PreferencesService>(context, listen: false)
+        .setLastReadPage(pageNum);
   }
 
   void _showJumpToPageDialog() {
     final textController = TextEditingController(text: _currentPage.toString());
+    // N5: dispose the controller when the dialog closes.
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF0F3A2C),
-        title: const Text('ورقہ / صفحہ منتخب کریں', style: TextStyle(color: Colors.white, fontFamily: 'serif')),
+        title: const Text('ورقہ / صفحہ منتخب کریں',
+            style: TextStyle(color: Colors.white, fontFamily: 'serif')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -64,7 +70,8 @@ class _MushafScreenState extends State<MushafScreen> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFF1B4D3E),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 hintText: 'Enter page 1-611',
                 hintStyle: const TextStyle(color: Colors.white54),
               ),
@@ -74,7 +81,8 @@ class _MushafScreenState extends State<MushafScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -92,7 +100,7 @@ class _MushafScreenState extends State<MushafScreen> {
           ),
         ],
       ),
-    );
+    ).then((_) => textController.dispose());
   }
 
   String _getPageImageUrl(int page) {
@@ -160,7 +168,8 @@ class _MushafScreenState extends State<MushafScreen> {
                 maxScale: 3.5,
                 child: Center(
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFAF7EE),
                       borderRadius: BorderRadius.circular(8),
@@ -173,28 +182,31 @@ class _MushafScreenState extends State<MushafScreen> {
                       ],
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: Image.network(
-                      _getPageImageUrl(pageNum),
+                    child: CachedNetworkImage(
+                      imageUrl: _getPageImageUrl(pageNum),
                       fit: BoxFit.contain,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
+                      // M7: pages are cached on disk — the Mushaf keeps working offline.
+                      progressIndicatorBuilder: (context, url, progress) {
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0F3A2C)),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF0F3A2C)),
                               ),
                               const SizedBox(height: 12),
                               Text(
                                 'Loading Page $pageNum...',
-                                style: const TextStyle(color: Color(0xFF0F3A2C), fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    color: Color(0xFF0F3A2C),
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
                         );
                       },
-                      errorBuilder: (context, error, stackTrace) {
+                      errorWidget: (context, url, error) {
                         return Container(
                           padding: const EdgeInsets.all(24),
                           color: const Color(0xFFFAF7EE),
@@ -202,11 +214,15 @@ class _MushafScreenState extends State<MushafScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.menu_book, size: 64, color: Color(0xFF0F3A2C)),
+                                const Icon(Icons.menu_book,
+                                    size: 64, color: Color(0xFF0F3A2C)),
                                 const SizedBox(height: 16),
                                 Text(
                                   'صفحہ $pageNum',
-                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F3A2C)),
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F3A2C)),
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
@@ -242,7 +258,8 @@ class _MushafScreenState extends State<MushafScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, size: 16, color: Colors.white70),
+                    icon: const Icon(Icons.arrow_back_ios,
+                        size: 16, color: Colors.white70),
                     onPressed: () {
                       if (_currentPage > 1) {
                         _pageController.previousPage(
@@ -258,7 +275,8 @@ class _MushafScreenState extends State<MushafScreen> {
                         activeTrackColor: const Color(0xFFD4AF37),
                         inactiveTrackColor: Colors.white24,
                         thumbColor: const Color(0xFFD4AF37),
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 6),
                       ),
                       child: Slider(
                         value: _currentPage.toDouble(),
@@ -271,7 +289,8 @@ class _MushafScreenState extends State<MushafScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
+                    icon: const Icon(Icons.arrow_forward_ios,
+                        size: 16, color: Colors.white70),
                     onPressed: () {
                       if (_currentPage < totalPagesInMushaf) {
                         _pageController.nextPage(
@@ -293,11 +312,13 @@ class _MushafScreenState extends State<MushafScreen> {
               right: 12,
               bottom: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A291E),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD4AF37), width: 1.2),
+                  border:
+                      Border.all(color: const Color(0xFFD4AF37), width: 1.2),
                   boxShadow: const [
                     BoxShadow(color: Colors.black54, blurRadius: 10),
                   ],
@@ -313,21 +334,27 @@ class _MushafScreenState extends State<MushafScreen> {
                         children: [
                           Text(
                             'Surah ${audio.currentSurah}: ${allSurahs[audio.currentSurah - 1].nameEn}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                           ),
                           Text(
                             audio.selectedQari.name,
-                            style: const TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
+                            style: const TextStyle(
+                                color: Color(0xFFD4AF37), fontSize: 11),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.pause_circle_filled, color: Color(0xFFD4AF37), size: 32),
+                      icon: const Icon(Icons.pause_circle_filled,
+                          color: Color(0xFFD4AF37), size: 32),
                       onPressed: () => audio.pause(),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                      icon: const Icon(Icons.close,
+                          color: Colors.white54, size: 20),
                       onPressed: () => audio.stop(),
                     ),
                   ],
@@ -339,4 +366,3 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 }
-

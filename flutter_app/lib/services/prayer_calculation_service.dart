@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:timezone/timezone.dart' as tz;
 import '../models/city.dart';
 import '../models/prayer_times.dart';
 
@@ -7,10 +8,15 @@ class QiblahResult {
   final int distanceKm;
   final String cardinal;
 
+  /// True when the user is effectively at the Kaaba (Makkah) — the needle
+  /// has no meaningful direction there.
+  final bool isAtKaaba;
+
   const QiblahResult({
     required this.bearing,
     required this.distanceKm,
     required this.cardinal,
+    this.isAtKaaba = false,
   });
 }
 
@@ -31,6 +37,62 @@ class PrayerCalculationService {
   static double fixAngle(double a) => a - 360.0 * (a / 360.0).floor();
   static double fixHour(double h) => h - 24.0 * (h / 24.0).floor();
 
+  /// Effective UTC offset (in hours) for [location] on [date], honouring
+  /// daylight-saving rules via the IANA timezone database when available.
+  /// Falls back to the fixed [City.tz] offset (e.g. for GPS cities).
+  static double effectiveTzOffset(City location, DateTime date) {
+    final iana = location.ianaTz;
+    if (iana != null && iana.isNotEmpty) {
+      try {
+        final loc = tz.getLocation(iana);
+        // Noon avoids edge cases on DST transition days.
+        final dt = tz.TZDateTime(loc, date.year, date.month, date.day, 12);
+        return dt.timeZoneOffset.inMinutes / 60.0;
+      } catch (_) {
+        // fall through to fixed offset
+      }
+    }
+    return location.tz;
+  }
+
+  /// "Today" in the city's own timezone — avoids picking the wrong schedule
+  /// near midnight when the device timezone differs from the city timezone.
+  static DateTime cityToday(City location) {
+    final iana = location.ianaTz;
+    if (iana != null && iana.isNotEmpty) {
+      try {
+        final loc = tz.getLocation(iana);
+        final now = tz.TZDateTime.now(loc);
+        return DateTime(now.year, now.month, now.day);
+      } catch (_) {
+        // fall through to device date
+      }
+    }
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  /// Converts a city-local wall-clock [entry] on [date] to an absolute
+  /// device-local DateTime, honouring DST via the IANA database.
+  /// (Prayer times are wall-clock in the *city*; naively treating them as
+  /// device-local breaks scheduling/countdowns when the two differ.)
+  static DateTime cityWallTimeToAbsolute(
+      City location, PrayerTimeEntry entry, DateTime date) {
+    final iana = location.ianaTz;
+    if (iana != null && iana.isNotEmpty) {
+      try {
+        final loc = tz.getLocation(iana);
+        final cityDt = tz.TZDateTime(loc, date.year, date.month, date.day,
+            entry.hours24, entry.mins, entry.secs);
+        return DateTime.fromMillisecondsSinceEpoch(
+            cityDt.millisecondsSinceEpoch);
+      } catch (_) {
+        // fall through to device-local interpretation
+      }
+    }
+    return entry.toDateTime(date);
+  }
+
   static double julianDate(int year, int month, int day) {
     var y = year;
     var m = month;
@@ -40,7 +102,11 @@ class PrayerCalculationService {
     }
     final a = (y / 100).floor();
     final b = 2 - a + (a / 4).floor();
-    return (365.25 * (y + 4716)).floor() + (30.6001 * (m + 1)).floor() + day + b - 1524.5;
+    return (365.25 * (y + 4716)).floor() +
+        (30.6001 * (m + 1)).floor() +
+        day +
+        b -
+        1524.5;
   }
 
   static Map<String, double> sunPosition(double jd) {
@@ -67,7 +133,8 @@ class PrayerCalculationService {
   }) {
     final lat = location.lat;
     final lng = location.lng;
-    final tz = location.tz;
+    // DST-aware UTC offset for this date (fixes 1-hour error in UK/US summers).
+    final tz = effectiveTzOffset(location, date);
 
     final jd = julianDate(date.year, date.month, date.day);
     final sun = sunPosition(jd);
@@ -154,7 +221,8 @@ class PrayerCalculationService {
     final deltaLambda = (kaabaLng - userLng) * d2r;
 
     final y = math.sin(deltaLambda);
-    final x = math.cos(phi1) * math.tan(phi2) - math.sin(phi1) * math.cos(deltaLambda);
+    final x = math.cos(phi1) * math.tan(phi2) -
+        math.sin(phi1) * math.cos(deltaLambda);
 
     var qiblahAngle = math.atan2(y, x) * r2d;
     qiblahAngle = (qiblahAngle + 360.0) % 360.0;
@@ -164,57 +232,127 @@ class PrayerCalculationService {
     final dLat = (kaabaLat - userLat) * d2r;
     final dLng = (kaabaLng - userLng) * d2r;
     final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.cos(phi1) * math.cos(phi2) * math.sin(dLng / 2) * math.sin(dLng / 2);
+        math.cos(phi1) *
+            math.cos(phi2) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
     final c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a));
     final distanceKm = (r * c).round();
 
-    const cardinals = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const cardinals = [
+      'N',
+      'NNE',
+      'NE',
+      'ENE',
+      'E',
+      'ESE',
+      'SE',
+      'SSE',
+      'S',
+      'SSW',
+      'SW',
+      'WSW',
+      'W',
+      'WNW',
+      'NW',
+      'NNW'
+    ];
     final cardIdx = (qiblahAngle / 22.5).round() % 16;
 
     return QiblahResult(
       bearing: ((qiblahAngle * 10).round()) / 10.0,
       distanceKm: distanceKm,
       cardinal: cardinals[cardIdx],
+      // Within ~10 km of the Kaaba the bearing is meaningless — face any way.
+      isAtKaaba: distanceKm < 10,
     );
   }
 
-  static NextPrayerInfo getNextPrayer(PrayerSchedule schedule, DateTime now) {
+  static NextPrayerInfo getNextPrayer(
+      PrayerSchedule schedule, DateTime now, City location) {
     final times = [
-      {'nameEn': 'Fajr', 'nameUrdu': 'فجر', 'nameHi': 'फ़ज्र', 'entry': schedule.fajr},
-      {'nameEn': 'Sunrise', 'nameUrdu': 'طلوع آفتاب', 'nameHi': 'सूर्योदय', 'entry': schedule.sunrise},
-      {'nameEn': 'Dhuhr', 'nameUrdu': 'ظہر', 'nameHi': 'ज़ुहर', 'entry': schedule.dhuhr},
-      {'nameEn': 'Asr', 'nameUrdu': 'عصر', 'nameHi': 'असर', 'entry': schedule.asr},
-      {'nameEn': 'Maghrib', 'nameUrdu': 'مغرب', 'nameHi': 'मग़रिब', 'entry': schedule.maghrib},
-      {'nameEn': 'Isha', 'nameUrdu': 'عشاء', 'nameHi': 'इशा', 'entry': schedule.isha},
+      {
+        'nameEn': 'Fajr',
+        'nameUrdu': 'فجر',
+        'nameHi': 'फ़ज्र',
+        'entry': schedule.fajr
+      },
+      {
+        'nameEn': 'Sunrise',
+        'nameUrdu': 'طلوع آفتاب',
+        'nameHi': 'सूर्योदय',
+        'entry': schedule.sunrise
+      },
+      {
+        'nameEn': 'Dhuhr',
+        'nameUrdu': 'ظہر',
+        'nameHi': 'ज़ुहर',
+        'entry': schedule.dhuhr
+      },
+      {
+        'nameEn': 'Asr',
+        'nameUrdu': 'عصر',
+        'nameHi': 'असर',
+        'entry': schedule.asr
+      },
+      {
+        'nameEn': 'Maghrib',
+        'nameUrdu': 'مغرب',
+        'nameHi': 'मग़रिब',
+        'entry': schedule.maghrib
+      },
+      {
+        'nameEn': 'Isha',
+        'nameUrdu': 'عشاء',
+        'nameHi': 'इशा',
+        'entry': schedule.isha
+      },
     ];
 
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final tomorrow = today.add(const Duration(days: 1));
+
+    DateTime? prevDt;
     for (final t in times) {
       final entry = t['entry'] as PrayerTimeEntry;
-      final dt = entry.toDateTime(now);
+      final dt = cityWallTimeToAbsolute(location, entry, today);
       if (dt.isAfter(now)) {
         final diff = dt.difference(now);
+        final prev =
+            prevDt ?? cityWallTimeToAbsolute(location, entry, yesterday);
+        final total = dt.difference(prev);
+        final progress = total.inSeconds > 0
+            ? (now.difference(prev).inSeconds / total.inSeconds).clamp(0.0, 1.0)
+            : 0.0;
         return NextPrayerInfo(
           nameEn: t['nameEn'] as String,
           nameUrdu: t['nameUrdu'] as String,
           nameHi: t['nameHi'] as String,
           time: entry,
           remaining: diff,
-          progress: 0.5,
+          progress: progress,
         );
       }
+      prevDt = dt;
     }
 
-    // Next is tomorrow's Fajr
-    final tomorrowFajr = schedule.fajr.toDateTime(now.add(const Duration(days: 1)));
+    // Next is tomorrow's Fajr — progress measured from today's Isha.
+    final ishaDt = cityWallTimeToAbsolute(location, schedule.isha, today);
+    final tomorrowFajr =
+        cityWallTimeToAbsolute(location, schedule.fajr, tomorrow);
     final diff = tomorrowFajr.difference(now);
+    final total = tomorrowFajr.difference(ishaDt);
+    final progress = total.inSeconds > 0
+        ? (now.difference(ishaDt).inSeconds / total.inSeconds).clamp(0.0, 1.0)
+        : 0.0;
     return NextPrayerInfo(
       nameEn: 'Fajr (Tomorrow)',
       nameUrdu: 'فجر (کل)',
       nameHi: 'फ़ज्र (कल)',
       time: schedule.fajr,
       remaining: diff,
-      progress: 0.5,
+      progress: progress,
     );
   }
 }
-

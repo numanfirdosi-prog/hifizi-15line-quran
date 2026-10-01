@@ -26,7 +26,8 @@ class VoiceSearchService {
 
   Future<void> startListening({
     required Function(String spokenText, List<Surah> matchedSurahs) onResult,
-    String localeId = 'hi_IN', // Default to Hindi, also supports 'ur_PK', 'en_US'
+    String localeId =
+        'hi_IN', // Default to Hindi, also supports 'ur_PK', 'en_US'
   }) async {
     if (!_isAvailable) {
       final ok = await init();
@@ -56,7 +57,8 @@ class VoiceSearchService {
     if (raw.isEmpty) return [];
 
     final clean = cleanSurahPrefix(raw);
-    final cleanNorm = clean.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+    final cleanNorm =
+        clean.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
     final cleanHindiNorm = normalizeHindi(clean);
 
     // 1. Direct Alias Match (supports 549+ aliases like 'सूरह यासीन', 'yaseen', 'kursi', etc.)
@@ -80,7 +82,8 @@ class VoiceSearchService {
 
     for (final s in allSurahs) {
       final sHindiNorm = normalizeHindi(s.nameHi);
-      final sEnNorm = s.nameEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final sEnNorm =
+          s.nameEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
       if (s.nameEn.toLowerCase().contains(lowerQ) ||
           sEnNorm.contains(cleanNorm) ||
@@ -95,4 +98,3 @@ class VoiceSearchService {
     return results;
   }
 }
-

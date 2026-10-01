@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
 import 'services/preferences_service.dart';
 import 'services/audio_recitation_service.dart';
 import 'services/azan_alarm_service.dart';
@@ -7,6 +8,10 @@ import 'views/home_navigation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // IANA timezone database — required for daylight-saving-correct prayer
+  // times (M5) and scheduled notifications.
+  tzdata.initializeTimeZones();
 
   // Initialize Core Services
   final preferencesService = PreferencesService();
@@ -18,8 +23,10 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<PreferencesService>.value(value: preferencesService),
-        ChangeNotifierProvider<AudioRecitationService>(create: (_) => AudioRecitationService()),
+        ChangeNotifierProvider<PreferencesService>.value(
+            value: preferencesService),
+        ChangeNotifierProvider<AudioRecitationService>(
+            create: (_) => AudioRecitationService()),
       ],
       child: const NurAlQuranApp(),
     ),
@@ -57,4 +64,3 @@ class NurAlQuranApp extends StatelessWidget {
     );
   }
 }
-

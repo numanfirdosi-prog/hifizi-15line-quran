@@ -21,7 +21,8 @@ class Surah {
 
   bool get isMeccan => revelation.toLowerCase() == 'meccan';
 
-  factory Surah.fromList(int index, List<dynamic> raw, int startPage, String hindi) {
+  factory Surah.fromList(
+      int index, List<dynamic> raw, int startPage, String hindi) {
     return Surah(
       number: index + 1,
       nameEn: raw[0] as String,
@@ -34,4 +35,3 @@ class Surah {
     );
   }
 }
-

@@ -16,11 +16,31 @@ class Qari {
 }
 
 const List<Qari> availableQaris = [
-  Qari(id: 'ar.alafasy', name: 'Mishary Rashid Alafasy', arabic: 'مشاري راشد العفاسي', style: 'Murattal'),
-  Qari(id: 'ar.abdulbasitmurattal', name: 'Abdul Basit Abdus Samad', arabic: 'عبد الباسط عبد الصمد', style: 'Murattal'),
-  Qari(id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary', arabic: 'محمود خليل الحصري', style: 'Murattal'),
-  Qari(id: 'ar.minshawi', name: 'Mohamed Siddiq El-Minshawi', arabic: 'محمد صديق المنشاوي', style: 'Murattal'),
-  Qari(id: 'ar.abdurrahmaansudais', name: 'Abdur-Rahman As-Sudais', arabic: 'عبد الرحمن السديس', style: 'Murattal'),
+  Qari(
+      id: 'ar.alafasy',
+      name: 'Mishary Rashid Alafasy',
+      arabic: 'مشاري راشد العفاسي',
+      style: 'Murattal'),
+  Qari(
+      id: 'ar.abdulbasitmurattal',
+      name: 'Abdul Basit Abdus Samad',
+      arabic: 'عبد الباسط عبد الصمد',
+      style: 'Murattal'),
+  Qari(
+      id: 'ar.husary',
+      name: 'Mahmoud Khalil Al-Husary',
+      arabic: 'محمود خليل الحصري',
+      style: 'Murattal'),
+  Qari(
+      id: 'ar.minshawi',
+      name: 'Mohamed Siddiq El-Minshawi',
+      arabic: 'محمد صديق المنشاوي',
+      style: 'Murattal'),
+  Qari(
+      id: 'ar.abdurrahmaansudais',
+      name: 'Abdur-Rahman As-Sudais',
+      arabic: 'عبد الرحمن السديس',
+      style: 'Murattal'),
 ];
 
 class AudioRecitationService extends ChangeNotifier {
@@ -38,7 +58,8 @@ class AudioRecitationService extends ChangeNotifier {
 
   AudioRecitationService() {
     _player.playerStateStream.listen((state) {
-      _isPlaying = state.playing && state.processingState != ProcessingState.completed;
+      _isPlaying =
+          state.playing && state.processingState != ProcessingState.completed;
       notifyListeners();
     });
   }
@@ -57,7 +78,11 @@ class AudioRecitationService extends ChangeNotifier {
     final audioUrl = 'https://server8.mp3quran.net/afs/$sPad.mp3';
 
     try {
-      await _player.setUrl(audioUrl);
+      // M7: cache the audio file on disk while streaming, so a played Surah
+      // keeps working offline afterwards.
+      await _player.setAudioSource(
+        LockCachingAudioSource(Uri.parse(audioUrl)),
+      );
       await _player.play();
       notifyListeners();
     } catch (e) {
@@ -86,4 +111,3 @@ class AudioRecitationService extends ChangeNotifier {
     super.dispose();
   }
 }
-

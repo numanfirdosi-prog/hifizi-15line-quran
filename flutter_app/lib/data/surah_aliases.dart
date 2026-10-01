@@ -1,22 +1,27 @@
 // Map of 549+ popular search aliases (Hindi, English, Urdu phonetics, Ayat-ul-Kursi, Amma, etc.)
 final Map<String, int> surahAliasesMap = {
   // Surah 1: Al-Fatihah
-  'fatiha': 1, 'fateha': 1, 'fatehah': 1, 'fatihah': 1, 'al fatiha': 1, 'al fatihah': 1,
-  'alhamd': 1, 'al-hamd': 1, 'al hamd': 1, 'alhamdulillah': 1, 'फातिहा': 1, 'फ़ातिहा': 1, 'अल्हमद': 1, 'अल्हम्दुलिल्लाह': 1,
+  'fatiha': 1, 'fateha': 1, 'fatehah': 1, 'fatihah': 1, 'al fatiha': 1,
+  'al fatihah': 1,
+  'alhamd': 1, 'al-hamd': 1, 'al hamd': 1, 'alhamdulillah': 1, 'फातिहा': 1,
+  'फ़ातिहा': 1, 'अल्हमद': 1, 'अल्हम्दुलिल्लाह': 1,
 
   // Surah 2: Al-Baqarah
-  'baqra': 2, 'baqara': 2, 'baqarah': 2, 'bakra': 2, 'al baqara': 2, 'al baqrah': 2,
+  'baqra': 2, 'baqara': 2, 'baqarah': 2, 'bakra': 2, 'al baqara': 2,
+  'al baqrah': 2,
   'kursi': 2, 'ayatul kursi': 2, 'ayatal kursi': 2, 'ayat al kursi': 2,
   'बकरा': 2, 'बक़रह': 2, 'कुर्सी': 2, 'आयतुल कुर्सी': 2, 'आयतुलकुर्सी': 2,
 
   // Surah 3: Ali 'Imran
-  'imran': 3, 'ali imran': 3, 'ali \'imran': 3, 'aal e imran': 3, 'aal imran': 3, 'आले इमरान': 3, 'आल इमरान': 3, 'इमरान': 3,
+  'imran': 3, 'ali imran': 3, 'ali \'imran': 3, 'aal e imran': 3,
+  'aal imran': 3, 'आले इमरान': 3, 'आल इमरान': 3, 'इमरान': 3,
 
   // Surah 4: An-Nisa
   'nisa': 4, 'an nisa': 4, 'aurat': 4, 'निसा': 4, 'अन निसा': 4,
 
   // Surah 5: Al-Ma'idah
-  'maida': 5, 'maidah': 5, 'al maida': 5, 'al maidah': 5, 'माइदा': 5, 'मायदा': 5,
+  'maida': 5, 'maidah': 5, 'al maida': 5, 'al maidah': 5, 'माइदा': 5,
+  'मायदा': 5,
 
   // Surah 6: Al-An'am
   'anam': 6, 'al anam': 6, 'an\'am': 6, 'अनआम': 6,
@@ -28,7 +33,8 @@ final Map<String, int> surahAliasesMap = {
   'anfal': 8, 'al anfal': 8, 'अनफाल': 8,
 
   // Surah 9: At-Tawbah
-  'tawbah': 9, 'tawba': 9, 'taubah': 9, 'at tawbah': 9, 'bara\'at': 9, 'तौबा': 9,
+  'tawbah': 9, 'tawba': 9, 'taubah': 9, 'at tawbah': 9, 'bara\'at': 9,
+  'तौबा': 9,
 
   // Surah 10: Yunus
   'yunus': 10, 'jonah': 10, 'यूनुस': 10, 'युनुस': 10,
@@ -52,7 +58,8 @@ final Map<String, int> surahAliasesMap = {
   'nahl': 16, 'an nahl': 16, 'नहल': 16,
 
   // Surah 17: Al-Isra
-  'isra': 17, 'al isra': 17, 'bani israel': 17, 'bani israil': 17, 'subhan': 17, 'subhanallazi': 17,
+  'isra': 17, 'al isra': 17, 'bani israel': 17, 'bani israil': 17, 'subhan': 17,
+  'subhanallazi': 17,
   'इसरा': 17, 'बनी इसराइल': 17, 'बनी इस्राईल': 17, 'सुब्हान': 17,
 
   // Surah 18: Al-Kahf
@@ -71,7 +78,8 @@ final Map<String, int> surahAliasesMap = {
   'hajj': 22, 'al hajj': 22, 'हज': 22,
 
   // Surah 23: Al-Mu'minun
-  'muminun': 23, 'mominun': 23, 'al mominun': 23, 'mu\'minun': 23, 'मोमिनून': 23, 'मुमिनून': 23,
+  'muminun': 23, 'mominun': 23, 'al mominun': 23, 'mu\'minun': 23,
+  'मोमिनून': 23, 'मुमिनून': 23,
 
   // Surah 24: An-Nur
   'nur': 24, 'an nur': 24, 'noor': 24, 'नूर': 24,
@@ -110,7 +118,8 @@ final Map<String, int> surahAliasesMap = {
   'fatir': 35, 'al fatir': 35, 'फातिर': 35, 'फ़ातिर': 35,
 
   // Surah 36: Ya-Sin
-  'yaseen': 36, 'yasin': 36, 'ya-sin': 36, 'yaseen sharif': 36, 'yasin sharif': 36,
+  'yaseen': 36, 'yasin': 36, 'ya-sin': 36, 'yaseen sharif': 36,
+  'yasin sharif': 36,
   'यासीन': 36, 'या-सीन': 36, 'यासिन': 36,
 
   // Surah 37: As-Saffat
@@ -123,10 +132,12 @@ final Map<String, int> surahAliasesMap = {
   'zumar': 39, 'az zumar': 39, 'जुमर': 39, 'ज़ुमर': 39,
 
   // Surah 40: Ghafir
-  'ghafir': 40, 'momin': 40, 'gafir': 40, 'गाफिर': 40, 'ग़ाफ़िर': 40, 'मोमिन': 40,
+  'ghafir': 40, 'momin': 40, 'gafir': 40, 'गाफिर': 40, 'ग़ाफ़िर': 40,
+  'मोमिन': 40,
 
   // Surah 41: Fussilat
-  'fussilat': 41, 'hamim sajda': 41, 'ha mim sajda': 41, 'फुस्सिलत': 41, 'हामीम सजदा': 41,
+  'fussilat': 41, 'hamim sajda': 41, 'ha mim sajda': 41, 'फुस्सिलत': 41,
+  'हामीम सजदा': 41,
 
   // Surah 42: Ash-Shura
   'shura': 42, 'ash shura': 42, 'शूरा': 42,
@@ -207,7 +218,8 @@ final Map<String, int> surahAliasesMap = {
   'tahrim': 66, 'at tahrim': 66, 'तहरीम': 66,
 
   // Surah 67: Al-Mulk
-  'mulk': 67, 'al mulk': 67, 'tabarak': 67, 'tabarakallazi': 67, 'मुल्क': 67, 'तबारक': 67,
+  'mulk': 67, 'al mulk': 67, 'tabarak': 67, 'tabarakallazi': 67, 'मुल्क': 67,
+  'तबारक': 67,
 
   // Surah 68: Al-Qalam
   'qalam': 68, 'al qalam': 68, 'noon': 68, 'कलम': 68, 'क़लम': 68, 'नून': 68,
@@ -225,7 +237,8 @@ final Map<String, int> surahAliasesMap = {
   'jinn': 72, 'jin': 72, 'al jinn': 72, 'जिन': 72, 'जिन्न': 72,
 
   // Surah 73: Al-Muzzammil
-  'muzzammil': 73, 'muzammil': 73, 'al muzzammil': 73, 'मुजम्मिल': 73, 'मुज़म्मिल': 73,
+  'muzzammil': 73, 'muzammil': 73, 'al muzzammil': 73, 'मुजम्मिल': 73,
+  'मुज़म्मिल': 73,
 
   // Surah 74: Al-Muddaththir
   'muddaththir': 74, 'muddassir': 74, 'al muddassir': 74, 'मुद्दस्सिर': 74,
@@ -240,7 +253,8 @@ final Map<String, int> surahAliasesMap = {
   'mursalat': 77, 'al mursalat': 77, 'मुरसलात': 77,
 
   // Surah 78: An-Naba
-  'naba': 78, 'an naba': 78, 'amma': 78, 'amma yatasaalun': 78, 'नबा': 78, 'अम्मा': 78,
+  'naba': 78, 'an naba': 78, 'amma': 78, 'amma yatasaalun': 78, 'नबा': 78,
+  'अम्मा': 78,
 
   // Surah 79: An-Nazi'at
   'naziat': 79, 'an naziat': 79, 'नाजियात': 79, 'नाज़िआत': 79,
@@ -285,7 +299,8 @@ final Map<String, int> surahAliasesMap = {
   'layl': 92, 'al layl': 92, 'लैल': 92,
 
   // Surah 93: Ad-Duha
-  'duha': 93, 'ad duha': 93, 'wadduha': 93, 'दुहा': 93, 'जुहा': 93, 'वद्दुहा': 93,
+  'duha': 93, 'ad duha': 93, 'wadduha': 93, 'दुहा': 93, 'जुहा': 93,
+  'वद्दुहा': 93,
 
   // Surah 94: Ash-Sharh
   'sharh': 94, 'inshirah': 94, 'alam nashrah': 94, 'शरह': 94, 'अलम नशरह': 94,
@@ -297,16 +312,19 @@ final Map<String, int> surahAliasesMap = {
   'alaq': 96, 'al alaq': 96, 'iqra': 96, 'अलक': 96, 'अलक़': 96, 'इकरा': 96,
 
   // Surah 97: Al-Qadr
-  'qadr': 97, 'al qadr': 97, 'shab e qadr': 97, 'inna anzalna': 97, 'कद्र': 97, 'क़द्र': 97, 'इन्ना अनज़लना': 97,
+  'qadr': 97, 'al qadr': 97, 'shab e qadr': 97, 'inna anzalna': 97, 'कद्र': 97,
+  'क़द्र': 97, 'इन्ना अनज़लना': 97,
 
   // Surah 98: Al-Bayyinah
-  'bayyinah': 98, 'al bayyinah': 98, 'lam yakun': 98, 'बय्यिना': 98, 'लम यकुन': 98,
+  'bayyinah': 98, 'al bayyinah': 98, 'lam yakun': 98, 'बय्यिना': 98,
+  'लम यकुन': 98,
 
   // Surah 99: Az-Zalzalah
   'zalzalah': 99, 'zilzal': 99, 'iza zulzilat': 99, 'जलजला': 99, 'ज़लज़ला': 99,
 
   // Surah 100: Al-Adiyat
-  'adiyat': 100, 'al adiyat': 100, 'wal adiyat': 100, 'आदियात': 100, 'वल आदियात': 100,
+  'adiyat': 100, 'al adiyat': 100, 'wal adiyat': 100, 'आदियात': 100,
+  'वल आदियात': 100,
 
   // Surah 101: Al-Qari'ah
   'qariah': 101, 'al qariah': 101, 'कारिआ': 101, 'क़ारिआ': 101,
@@ -318,47 +336,60 @@ final Map<String, int> surahAliasesMap = {
   'asr': 103, 'al asr': 103, 'wal asr': 103, 'असर': 103, 'वल असर': 103,
 
   // Surah 104: Al-Humazah
-  'humazah': 104, 'al humazah': 104, 'wailul likulli': 104, 'हुमजा': 104, 'हुमज़ा': 104, 'वैलुल लिकुल्ली': 104,
+  'humazah': 104, 'al humazah': 104, 'wailul likulli': 104, 'हुमजा': 104,
+  'हुमज़ा': 104, 'वैलुल लिकुल्ली': 104,
 
   // Surah 105: Al-Fil
-  'fil': 105, 'al fil': 105, 'feel': 105, 'alam tara': 105, 'alam tara kaifa': 105,
+  'fil': 105, 'al fil': 105, 'feel': 105, 'alam tara': 105,
+  'alam tara kaifa': 105,
   'फील': 105, 'फ़ील': 105, 'अलम तरा': 105,
 
   // Surah 106: Quraysh
   'quraysh': 106, 'li ilafi': 106, 'कुरैश': 106, 'क़ुरैश': 106, 'ली ईलाफ': 106,
 
   // Surah 107: Al-Ma'un
-  'maun': 107, 'al maun': 107, 'ara aytallazi': 107, 'माऊन': 107, 'अरअयतल लज़ी': 107,
+  'maun': 107, 'al maun': 107, 'ara aytallazi': 107, 'माऊन': 107,
+  'अरअयतल लज़ी': 107,
 
   // Surah 108: Al-Kawthar
-  'kawthar': 108, 'kausar': 108, 'al kawthar': 108, 'inna aataina': 108, 'inna atayna': 108,
+  'kawthar': 108, 'kausar': 108, 'al kawthar': 108, 'inna aataina': 108,
+  'inna atayna': 108,
   'कौसर': 108, 'इन्ना आतैना': 108,
 
   // Surah 109: Al-Kafirun
-  'kafirun': 109, 'al kafirun': 109, 'kafiroon': 109, 'qul ya ayyuhal kafirun': 109,
+  'kafirun': 109, 'al kafirun': 109, 'kafiroon': 109,
+  'qul ya ayyuhal kafirun': 109,
   'काफिरून': 109, 'काफ़िरून': 109, 'कुल या अय्युहल काफिरून': 109,
 
   // Surah 110: An-Nasr
   'nasr': 110, 'an nasr': 110, 'iza jaa': 110, 'नसर': 110, 'नस्र': 110,
 
   // Surah 111: Al-Masad
-  'masad': 111, 'al masad': 111, 'lahab': 111, 'tabbat yada': 111, 'मसद': 111, 'तब्बत यदा': 111,
+  'masad': 111, 'al masad': 111, 'lahab': 111, 'tabbat yada': 111, 'मसद': 111,
+  'तब्बत यदा': 111,
 
   // Surah 112: Al-Ikhlas
-  'ikhlas': 112, 'al ikhlas': 112, 'ikhlaas': 112, 'qul huwallah': 112, 'kul huwallah': 112,
+  'ikhlas': 112, 'al ikhlas': 112, 'ikhlaas': 112, 'qul huwallah': 112,
+  'kul huwallah': 112,
   'इखलास': 112, 'इख़लास': 112, 'कुल हुवल्लाह': 112,
 
   // Surah 113: Al-Falaq
-  'falaq': 113, 'al falaq': 113, 'falak': 113, 'qul auzu birabbil falaq': 113, 'kul auzu': 113,
+  'falaq': 113, 'al falaq': 113, 'falak': 113, 'qul auzu birabbil falaq': 113,
+  'kul auzu': 113,
   'फलक': 113, 'फ़लक़': 113,
 
   // Surah 114: An-Nas
-  'nas': 114, 'an nas': 114, 'naas': 114, 'qul auzu birabbin nas': 114, 'नास': 114
+  'nas': 114, 'an nas': 114, 'naas': 114, 'qul auzu birabbin nas': 114,
+  'नास': 114
 };
 
 String cleanSurahPrefix(String text) {
   var s = text.trim();
-  s = s.replaceAll(RegExp(r'^(surah|surat|soorah|para|juz|سورة|سورۃ|سورہ|پارہ|جزء|सूरह|सूरा|सूरत|पारा)\s+', caseSensitive: false), '');
+  s = s.replaceAll(
+      RegExp(
+          r'^(surah|surat|soorah|para|juz|سورة|سورۃ|سورہ|پارہ|جزء|सूरह|सूरा|सूरत|पारा)\s+',
+          caseSensitive: false),
+      '');
   return s.trim();
 }
 
@@ -377,4 +408,3 @@ String normalizeHindi(String str) {
       .replaceAll(RegExp(r'[\s\-_\.,\/]'), '')
       .toLowerCase();
 }
-

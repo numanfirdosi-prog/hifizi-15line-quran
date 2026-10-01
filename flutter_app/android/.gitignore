@@ -1,0 +1,13 @@
+# Gradle wrapper scripts and jar are intentionally committed so that fresh
+# clones (including CI runners) can build without a pre-installed Gradle.
+/.gradle
+/captures/
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/*.keystore
+**/*.jks

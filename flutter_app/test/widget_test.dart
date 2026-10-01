@@ -11,7 +11,8 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider<PreferencesService>.value(value: prefs),
-          ChangeNotifierProvider<AudioRecitationService>(create: (_) => AudioRecitationService()),
+          ChangeNotifierProvider<AudioRecitationService>(
+              create: (_) => AudioRecitationService()),
         ],
         child: const NurAlQuranApp(),
       ),

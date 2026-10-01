@@ -3520,6 +3520,25 @@ function updatePrayerTimesUI() {
 let qiblahAbsoluteActive = false;
 let currentDeviceHeading = 0;
 let smoothedCompassHeading = null;
+// Manual compass offset (degrees). Added so users can null out a consistent
+// sensor bias on their own phone: point the phone at the known Qiblah
+// direction, then adjust the offset slider until the golden needle points
+// straight up. Persisted per-device.
+let qiblahCompassOffset = parseFloat(localStorage.getItem('nur_qiblah_compass_offset') || '0') || 0;
+
+function setQiblahCompassOffset(deg) {
+  qiblahCompassOffset = Math.max(-180, Math.min(180, Math.round(deg)));
+  try { localStorage.setItem('nur_qiblah_compass_offset', String(qiblahCompassOffset)); } catch (e) {}
+  const lbl = document.getElementById('qiblahOffsetVal');
+  if (lbl) lbl.textContent = (qiblahCompassOffset > 0 ? '+' : '') + qiblahCompassOffset + '°';
+  const slider = document.getElementById('qiblahOffsetSlider');
+  if (slider && parseFloat(slider.value) !== qiblahCompassOffset) slider.value = String(qiblahCompassOffset);
+}
+
+function resetQiblahCompassOffset() {
+  setQiblahCompassOffset(0);
+  try { showToast('🧭 Compass offset reset to 0°'); } catch (e) {}
+}
 
 function smoothCompassAngle(newAngle) {
   if (smoothedCompassHeading === null) {
@@ -3622,7 +3641,8 @@ function updateCompassUI(heading) {
 function handleCompassOrientation(e, isAbsolute) {
   const rawHeading = calculateCompassHeading(e);
   if (rawHeading === null || isNaN(rawHeading)) return;
-  const heading = smoothCompassAngle(rawHeading);
+  // Apply the user's manual calibration offset AFTER smoothing the raw sensor.
+  const heading = (smoothCompassAngle(rawHeading) + qiblahCompassOffset + 720) % 360;
   updateCompassUI(heading);
 }
 
@@ -4776,6 +4796,15 @@ document.addEventListener('DOMContentLoaded', () => {
     calibrateQiblahCompass();
   });
 
+  // Manual compass offset slider (sensor bias correction)
+  setQiblahCompassOffset(qiblahCompassOffset); // sync label/slider with saved value
+  $('qiblahOffsetSlider')?.addEventListener('input', (e) => {
+    setQiblahCompassOffset(parseFloat(e.target.value) || 0);
+  });
+  $('btnQiblahOffsetReset')?.addEventListener('click', () => {
+    resetQiblahCompassOffset();
+  });
+
   // Prayer Alarm Bell Toggle Buttons
   document.querySelectorAll('.alarm-toggle-btn[data-prayer]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -5339,7 +5368,7 @@ async function checkPagesCacheStatus() {
 
   badge.textContent = 'Checking cache...';
   try {
-    const cache = await caches.open('nur-al-quran-v3.4.2');
+    const cache = await caches.open('nur-al-quran-v3.4.5');
     let cachedCount = 0;
     const isAllMarked = localStorage.getItem('nur_quran_pages_cached') === 'true';
     if (isAllMarked) {
@@ -5391,7 +5420,7 @@ async function downloadAllQuranPages() {
 
   let downloadedCount = 0;
   const total = TOTAL_PAGES;
-  const cache = await caches.open('nur-al-quran-v3.4.2');
+  const cache = await caches.open('nur-al-quran-v3.4.5');
 
   const toDownload = [];
   for (let p = 1; p <= total; p++) {
@@ -5555,7 +5584,7 @@ async function downloadSurahAudio(surahNum, qariId, onProgress = null, silent = 
   }
 
   try {
-    const cache = await caches.open('nur-al-quran-v3.4.2');
+    const cache = await caches.open('nur-al-quran-v3.4.5');
     let downloaded = 0;
 
     // Precache Surah metadata API response for full offline recitation

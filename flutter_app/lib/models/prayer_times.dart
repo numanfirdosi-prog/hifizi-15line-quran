@@ -18,7 +18,8 @@ class PrayerTimeEntry {
   });
 
   DateTime toDateTime(DateTime forDate) {
-    return DateTime(forDate.year, forDate.month, forDate.day, hours24, mins, secs);
+    return DateTime(
+        forDate.year, forDate.month, forDate.day, hours24, mins, secs);
   }
 }
 
@@ -51,13 +52,20 @@ class PrayerSchedule {
 
   PrayerTimeEntry? getByName(String name) {
     switch (name.toLowerCase()) {
-      case 'fajr': return fajr;
-      case 'sunrise': return sunrise;
-      case 'dhuhr': return dhuhr;
-      case 'asr': return asr;
-      case 'maghrib': return maghrib;
-      case 'isha': return isha;
-      default: return null;
+      case 'fajr':
+        return fajr;
+      case 'sunrise':
+        return sunrise;
+      case 'dhuhr':
+        return dhuhr;
+      case 'asr':
+        return asr;
+      case 'maghrib':
+        return maghrib;
+      case 'isha':
+        return isha;
+      default:
+        return null;
     }
   }
 }
@@ -79,4 +87,3 @@ class NextPrayerInfo {
     required this.progress,
   });
 }
-

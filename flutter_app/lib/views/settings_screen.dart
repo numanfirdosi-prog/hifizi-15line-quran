@@ -7,6 +7,16 @@ class SettingsScreen extends StatelessWidget {
   final Function(int page) onOpenPage;
   const SettingsScreen({Key? key, required this.onOpenPage}) : super(key: key);
 
+  Future<void> _reschedule(PreferencesService prefs) {
+    return AzanAlarmService().scheduleDailyPrayerAlarms(
+      location: prefs.selectedCity,
+      asrMode: prefs.asrMethod,
+      enabledAlarms: prefs.prayerAlarms,
+      azanSoundEnabled: prefs.azanSoundEnabled,
+      lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
@@ -17,7 +27,10 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF0F3A2C),
         title: const Text(
           'تنظیمات (Settings & Bookmarks)',
-          style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+              color: Color(0xFFD4AF37),
+              fontWeight: FontWeight.bold,
+              fontSize: 18),
         ),
       ),
       body: ListView(
@@ -26,7 +39,8 @@ class SettingsScreen extends StatelessWidget {
           // Juristic Method Card
           Card(
             color: const Color(0xFF0F3A2C),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -34,40 +48,36 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   const Text(
                     'Asr Juristic Method / عصر کا طریقہ',
-                    style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 15),
+                    style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: const Text('Hanafi / حنفی (Double shadow factor)', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    title: const Text('Hanafi / حنفی (Double shadow factor)',
+                        style: TextStyle(color: Colors.white, fontSize: 14)),
                     value: 'Hanafi',
                     groupValue: prefs.asrMethod,
                     activeColor: const Color(0xFFD4AF37),
                     onChanged: (val) {
                       if (val != null) {
                         prefs.setAsrMethod(val);
-                        AzanAlarmService().scheduleDailyPrayerAlarms(
-                          location: prefs.selectedCity,
-                          asrMode: val,
-                          enabledAlarms: prefs.prayerAlarms,
-                          azanSoundEnabled: prefs.azanSoundEnabled,
-                        );
+                        _reschedule(prefs);
                       }
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('Shafi\'i / Maliki / Hanbali / شافعی (Single shadow)', style: TextStyle(color: Colors.white, fontSize: 14)),
+                    title: const Text(
+                        'Shafi\'i / Maliki / Hanbali / شافعی (Single shadow)',
+                        style: TextStyle(color: Colors.white, fontSize: 14)),
                     value: 'Standard',
                     groupValue: prefs.asrMethod,
                     activeColor: const Color(0xFFD4AF37),
                     onChanged: (val) {
                       if (val != null) {
                         prefs.setAsrMethod(val);
-                        AzanAlarmService().scheduleDailyPrayerAlarms(
-                          location: prefs.selectedCity,
-                          asrMode: val,
-                          enabledAlarms: prefs.prayerAlarms,
-                          azanSoundEnabled: prefs.azanSoundEnabled,
-                        );
+                        _reschedule(prefs);
                       }
                     },
                   ),
@@ -81,23 +91,40 @@ class SettingsScreen extends StatelessWidget {
           // Alarm & Azan Sound Switches
           Card(
             color: const Color(0xFF0F3A2C),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('Play Azan Sound', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Play full Azan audio when prayer time starts', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  title: const Text('Play Azan Sound',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: const Text(
+                      'Play full Azan audio when prayer time starts',
+                      style: TextStyle(color: Colors.white54, fontSize: 12)),
                   value: prefs.azanSoundEnabled,
                   activeColor: const Color(0xFFD4AF37),
-                  onChanged: (val) => prefs.setAzanSoundEnabled(val),
+                  onChanged: (val) {
+                    prefs.setAzanSoundEnabled(val);
+                    _reschedule(prefs);
+                  },
                 ),
                 const Divider(color: Colors.white12, height: 1),
                 SwitchListTile(
-                  title: const Text('Lockscreen Exact Alarm', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Wake up locked phone & display prayer alarm', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  title: const Text('Lockscreen Exact Alarm',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: const Text(
+                      'Wake up locked phone & display prayer alarm',
+                      style: TextStyle(color: Colors.white54, fontSize: 12)),
                   value: prefs.lockscreenAlarmEnabled,
                   activeColor: const Color(0xFFD4AF37),
-                  onChanged: (val) => prefs.setLockscreenAlarmEnabled(val),
+                  onChanged: (val) {
+                    prefs.setLockscreenAlarmEnabled(val);
+                    // M2: the toggle now actually takes effect — turning it OFF
+                    // cancels exact alarms and falls back to notifications.
+                    _reschedule(prefs);
+                  },
                 ),
               ],
             ),
@@ -108,7 +135,8 @@ class SettingsScreen extends StatelessWidget {
           // Bookmarks Section
           Card(
             color: const Color(0xFF0F3A2C),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -119,16 +147,24 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       const Text(
                         'علامات / محفوظ شدہ صفحات (Bookmarks)',
-                        style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 15),
+                        style: TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15),
                       ),
-                      Text('${prefs.bookmarks.length} saved', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                      Text('${prefs.bookmarks.length} saved',
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 12),
                   if (prefs.bookmarks.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.', style: TextStyle(color: Colors.white60, fontSize: 13)),
+                      child: Text(
+                          'No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.',
+                          style:
+                              TextStyle(color: Colors.white60, fontSize: 13)),
                     )
                   else
                     Wrap(
@@ -137,8 +173,10 @@ class SettingsScreen extends StatelessWidget {
                       children: prefs.bookmarks.map((p) {
                         return ActionChip(
                           backgroundColor: const Color(0xFF144234),
-                          avatar: const Icon(Icons.bookmark, color: Color(0xFFD4AF37), size: 16),
-                          label: Text('Page $p', style: const TextStyle(color: Colors.white)),
+                          avatar: const Icon(Icons.bookmark,
+                              color: Color(0xFFD4AF37), size: 16),
+                          label: Text('Page $p',
+                              style: const TextStyle(color: Colors.white)),
                           onPressed: () => onOpenPage(p),
                         );
                       }).toList(),
@@ -163,12 +201,16 @@ class SettingsScreen extends StatelessWidget {
               children: const [
                 Text(
                   'About Nur-ul-Quran (نور القرآن)',
-                  style: TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                      color: Color(0xFFD4AF37),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14),
                 ),
                 SizedBox(height: 6),
                 Text(
                   '15-Line South Asian / Indo-Pak Hifzi Mushaf (القرآن الكريم). 100% offline, exact astronomical prayer times with lockscreen Azan, Kaaba Qiblah compass, and multi-language voice search.',
-                  style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                  style: TextStyle(
+                      color: Colors.white70, fontSize: 12, height: 1.4),
                 ),
                 SizedBox(height: 6),
                 Text(
@@ -183,4 +225,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-

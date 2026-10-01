@@ -22,9 +22,50 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = Provider.of<PreferencesService>(context, listen: false);
       _mushafTargetPage = prefs.lastReadPage;
+
+      // M8: On Android 12+, exact alarms need a dedicated permission. If the
+      // user has the lockscreen alarm ON but the permission is missing, ask
+      // once — otherwise alarms would silently never fire.
+      if (prefs.lockscreenAlarmEnabled) {
+        final canSchedule = await AzanAlarmService().canScheduleExactAlarms();
+        if (!canSchedule && mounted) {
+          final granted = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF0F3A2C),
+              title: const Text('Allow Exact Alarms?',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+              content: const Text(
+                'To play the Azan exactly on time even when your phone is locked, please allow "Alarms & reminders" on the next screen.',
+                style:
+                    TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Not now',
+                      style: TextStyle(color: Colors.white54)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4AF37),
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Allow'),
+                ),
+              ],
+            ),
+          );
+          if (granted == true) {
+            await AzanAlarmService().requestExactAlarmPermission();
+          }
+        }
+      }
 
       // Schedule background alarms for prayer times
       AzanAlarmService().scheduleDailyPrayerAlarms(
@@ -32,6 +73,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
         asrMode: prefs.asrMethod,
         enabledAlarms: prefs.prayerAlarms,
         azanSoundEnabled: prefs.azanSoundEnabled,
+        lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
       );
     });
   }
@@ -46,7 +88,8 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      MushafScreen(key: ValueKey(_mushafTargetPage), initialPage: _mushafTargetPage),
+      MushafScreen(
+          key: ValueKey(_mushafTargetPage), initialPage: _mushafTargetPage),
       SurahsScreen(onOpenPage: _jumpToMushafPage),
       const PrayerScreen(),
       const QiblahScreen(),
@@ -62,9 +105,13 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
         data: NavigationBarThemeData(
           backgroundColor: const Color(0xFF0F3A2C),
           indicatorColor: const Color(0xFFD4AF37).withOpacity(0.2),
-          labelTextStyle: MaterialStateProperty.resolveWith<TextStyle>((states) {
+          labelTextStyle:
+              MaterialStateProperty.resolveWith<TextStyle>((states) {
             if (states.contains(MaterialState.selected)) {
-              return const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold, fontSize: 11);
+              return const TextStyle(
+                  color: Color(0xFFD4AF37),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11);
             }
             return const TextStyle(color: Colors.white60, fontSize: 11);
           }),
@@ -114,4 +161,3 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
     );
   }
 }
-
