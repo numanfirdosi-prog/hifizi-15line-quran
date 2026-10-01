@@ -281,15 +281,119 @@ function formatTime(secs) {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-function showToast(message) {
+function showToast(message, type = 'info', duration = 3200) {
   const toast = $('shareToast');
   if (!toast) return;
   toast.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;">${message}</span>`;
   toast.classList.remove('hidden');
+
+  if (type === 'warning') {
+    toast.style.background = '#78350f';
+    toast.style.borderColor = '#f59e0b';
+    toast.style.color = '#ffffff';
+    toast.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.45)';
+  } else {
+    toast.style.background = '';
+    toast.style.borderColor = '';
+    toast.style.color = '';
+    toast.style.boxShadow = '';
+  }
+
   clearTimeout(window.__toastTimeout);
   window.__toastTimeout = setTimeout(() => {
     toast.classList.add('hidden');
-  }, 3200);
+    toast.style.background = '';
+    toast.style.borderColor = '';
+    toast.style.color = '';
+    toast.style.boxShadow = '';
+  }, duration);
+}
+
+function getDirectAyahAudioUrl(globalAyahNumber, qariId) {
+  let bitrate = 128;
+  if (qariId === 'ar.abdulbasitmurattal') bitrate = 192;
+  else if (qariId === 'ar.abdulsamad') bitrate = 64;
+  return `https://cdn.islamic.network/quran/audio/${bitrate}/${qariId}/${globalAyahNumber}.mp3`;
+}
+
+function getSurahNumberForGlobalAyah(globalAyahNumber) {
+  for (let i = 0; i < surahStartAyahs.length; i++) {
+    const start = surahStartAyahs[i];
+    const count = surahs[i][3];
+    if (globalAyahNumber >= start && globalAyahNumber < start + count) {
+      return i + 1;
+    }
+  }
+  return 1;
+}
+
+function getGlobalAyahRangeForSurah(surahNum) {
+  const sIdx = Math.max(1, Math.min(114, Number(surahNum))) - 1;
+  const start = surahStartAyahs[sIdx] || 1;
+  const count = surahs[sIdx] ? surahs[sIdx][3] : 7;
+  return { start, end: start + count - 1, count };
+}
+
+async function isAudioUrlCached(url) {
+  if (!('caches' in window)) return false;
+  try {
+    const match = await caches.match(url);
+    return !!match;
+  } catch (e) {
+    return false;
+  }
+}
+
+function isSurahAudioDownloaded(surahNum, qariId) {
+  try {
+    const key = `nur_dl_surahs_${qariId}`;
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    return list.includes(Number(surahNum));
+  } catch (e) {
+    return false;
+  }
+}
+
+function markSurahAudioDownloaded(surahNum, qariId, downloaded = true) {
+  try {
+    const key = `nur_dl_surahs_${qariId}`;
+    let list = JSON.parse(localStorage.getItem(key) || '[]');
+    surahNum = Number(surahNum);
+    if (downloaded) {
+      if (!list.includes(surahNum)) list.push(surahNum);
+    } else {
+      list = list.filter(n => n !== surahNum);
+    }
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function showNoDownloadAlert(surahNum, ayahNum) {
+  const surahObj = surahs[surahNum - 1];
+  const surahName = surahObj ? surahObj[0] : `Surah ${surahNum}`;
+  const alertSms = `⚠️ Ye audio offline download nahi hai! Online sunne ke liye internet connect karein, ya 'Download Center' se Surah ${surahName} download karein.`;
+
+  // 1. Prominent warning toast (No download SMS)
+  showToast(alertSms, 'warning', 6500);
+
+  // 2. Update player audio bar with warning and clickable download link
+  $('audioBar')?.classList.remove('hidden');
+  if ($('audioAyahLabel')) {
+    $('audioAyahLabel').innerHTML = `<span style="color:#d97706;font-weight:700;">⚠️ Not Downloaded (Offline)</span> · <a href="#" id="playerAlertDownloadLink" style="color:var(--primary);text-decoration:underline;font-weight:700;">Download Karein 📥</a>`;
+    $('playerAlertDownloadLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      openDownloadCenter('audio', surahNum);
+    });
+  }
+
+  // 3. Reset play button back to Play state
+  if ($('audioPlay')) $('audioPlay').textContent = '▶';
+  if ($('deckPlayPause')) $('deckPlayPause').textContent = '▶ Resume Recitation';
+
+  // 4. Mobile haptic feedback
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate([120, 80, 120]); } catch (e) {}
+  }
 }
 
 function saveState() {
@@ -815,11 +919,19 @@ async function loadQuranPage(page) {
     pageImg.src = `assets/pages/${page}.webp`;
     pageImg.onload = () => {
       pageImg.classList.remove('loading');
+      $('mushafOfflinePlaceholder')?.classList.add('hidden');
       resizeAnnotationCanvas();
       loadPageAnnotation(page);
     };
-    if (pageImg.complete) {
+    pageImg.onerror = () => {
       pageImg.classList.remove('loading');
+      if (!navigator.onLine) {
+        $('mushafOfflinePlaceholder')?.classList.remove('hidden');
+      }
+    };
+    if (pageImg.complete && pageImg.naturalWidth > 0) {
+      pageImg.classList.remove('loading');
+      $('mushafOfflinePlaceholder')?.classList.add('hidden');
       resizeAnnotationCanvas();
       loadPageAnnotation(page);
     }
@@ -1464,13 +1576,30 @@ async function playAyah(number, withBismillah = true) {
   const current = audioState.ayahs.findIndex(a => a.number === number);
   if (current >= 0) audioState.index = current;
   const targetAyah = audioState.ayahs[current] || null;
+  const targetSurahNum = (targetAyah && targetAyah.surah && targetAyah.surah.number) || getSurahNumberForGlobalAyah(number);
+
+  // Offline pre-check: if offline, check whether audio or surah is cached
+  const isOnline = navigator.onLine;
+  const directMp3Url = getDirectAyahAudioUrl(number, audioState.qari);
+  const apiUrl = `https://api.alquran.cloud/v1/ayah/${number}/${audioState.qari}`;
+
+  if (!isOnline) {
+    const isDirectCached = await isAudioUrlCached(directMp3Url);
+    const isApiCached = await isAudioUrlCached(apiUrl);
+    const isSurahMarked = isSurahAudioDownloaded(targetSurahNum, audioState.qari);
+
+    if (!isDirectCached && !isApiCached && !isSurahMarked) {
+      showNoDownloadAlert(targetSurahNum, number);
+      return;
+    }
+  }
 
   // Bismillah Auto-Play Rule:
   // Surah 1: Ayah 1 is Bismillah -> plays directly
   // Surahs 2 to 114 (except Surah 9): Ayah 1 auto-plays Bismillah first!
   // Surah 9: No Bismillah -> plays directly
-  if (withBismillah && targetAyah && targetAyah.numberInSurah === 1 && targetAyah.surah && targetAyah.surah.number !== 1 && targetAyah.surah.number !== 9) {
-    playBismillah(targetAyah.surah.number, number);
+  if (withBismillah && targetAyah && targetAyah.numberInSurah === 1 && targetSurahNum !== 1 && targetSurahNum !== 9) {
+    playBismillah(targetSurahNum, number);
     return;
   }
 
@@ -1481,27 +1610,57 @@ async function playAyah(number, withBismillah = true) {
   if ($('audioAyahLabel')) $('audioAyahLabel').textContent = 'Loading recitation...';
 
   try {
-    const response = await fetch(`https://api.alquran.cloud/v1/ayah/${number}/${audioState.qari}`);
-    if (!response.ok) throw new Error('Audio unavailable');
-    const result = await response.json();
+    let audioSrc = null;
+    let surahEngName = (targetAyah && targetAyah.surah && targetAyah.surah.englishName) || (surahs[targetSurahNum - 1] && surahs[targetSurahNum - 1][0]) || '';
+    let surahArName = (targetAyah && targetAyah.surah && targetAyah.surah.name) || (surahs[targetSurahNum - 1] && surahs[targetSurahNum - 1][2]) || '';
+    let ayahInSurah = targetAyah ? targetAyah.numberInSurah : (number - getGlobalAyahRangeForSurah(targetSurahNum).start + 1);
+
+    // Try API fetch for metadata & official audio stream
+    try {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.data && result.data.audio) {
+          audioSrc = result.data.audio;
+          if (result.data.surah) {
+            surahEngName = result.data.surah.englishName || surahEngName;
+            surahArName = result.data.surah.name || surahArName;
+          }
+          if (result.data.numberInSurah) {
+            ayahInSurah = result.data.numberInSurah;
+          }
+        }
+      }
+    } catch (apiErr) {
+      // Offline fallback: Use direct CDN mp3 URL (which is cached when downloaded)
+      audioSrc = directMp3Url;
+    }
+
+    if (!audioSrc) audioSrc = directMp3Url;
+
     const audio = $('quranAudio');
-    audio.src = result.data.audio;
+    audio.src = audioSrc;
     audio.playbackRate = Number($('audioSpeed')?.value || 1);
     await audio.play();
 
     const qariObj = qarisData.find(q => q.id === audioState.qari);
     const qariName = qariObj ? qariObj.name : 'Al-Quran Audio';
 
-    if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Ayah ${result.data.numberInSurah} · ${result.data.surah.englishName}`;
-    if ($('playerSurahTitle')) $('playerSurahTitle').textContent = `سُورَةُ ${(result.data.surah.name || '').replace(/^سُورَةُ\s*/, '')}`;
-    if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(result.data.surah.number);
+    if ($('audioAyahLabel')) $('audioAyahLabel').textContent = `Ayah ${ayahInSurah} · ${surahEngName}`;
+    if ($('playerSurahTitle')) $('playerSurahTitle').textContent = `سُورَةُ ${(surahArName || '').replace(/^سُورَةُ\s*/, '')}`;
+    if ($('playerSurahNum')) $('playerSurahNum').textContent = toArabicDigits(targetSurahNum);
     if ($('audioPlay')) $('audioPlay').textContent = 'Ⅱ';
+    if ($('deckPlayPause')) $('deckPlayPause').textContent = 'Ⅱ Pause Recitation';
 
     highlightPlayingAyah(number);
 
-    updateMediaSession(`Ayah ${result.data.numberInSurah} · ${result.data.surah.englishName}`, qariName, `Surah ${result.data.surah.englishName} (${result.data.surah.name})`);
+    updateMediaSession(`Ayah ${ayahInSurah} · ${surahEngName}`, qariName, `Surah ${surahEngName} (${surahArName})`);
   } catch (error) {
-    if ($('audioAyahLabel')) $('audioAyahLabel').textContent = 'Audio unavailable. Try again.';
+    if (!navigator.onLine || !isSurahAudioDownloaded(targetSurahNum, audioState.qari)) {
+      showNoDownloadAlert(targetSurahNum, number);
+    } else {
+      if ($('audioAyahLabel')) $('audioAyahLabel').textContent = 'Audio unavailable. Try again.';
+    }
   }
 }
 
@@ -1770,6 +1929,20 @@ async function playSurahByNumber(surahNum) {
 
   if ($('deckStatusText')) {
     $('deckStatusText').textContent = `Preparing Surah ${s[0]} (${qari.name})...`;
+  }
+
+  // Offline verification for Surah playback
+  const isOnline = navigator.onLine;
+  const directMp3Url = getDirectAyahAudioUrl(startAyah, audioState.qari);
+  if (!isOnline) {
+    const isCached = (await isAudioUrlCached(directMp3Url)) || isSurahAudioDownloaded(surahNum, audioState.qari);
+    if (!isCached) {
+      if ($('deckStatusText')) {
+        $('deckStatusText').textContent = `⚠️ Surah ${s[0]} offline download nahi hai. Download Center se download karein.`;
+      }
+      showNoDownloadAlert(surahNum, startAyah);
+      return;
+    }
   }
 
   try {
@@ -3577,13 +3750,23 @@ document.addEventListener('DOMContentLoaded', () => {
       $('sidebar')?.classList.remove('open');
       $('sidebarBackdrop')?.classList.remove('active');
       if (v === 'reader') openReader();
+      else if (v === 'download-center') openDownloadCenter('pages');
       else showView(v);
     };
   });
 
   document.querySelectorAll('.tool-card[data-view], .tool-card-box[data-view]').forEach(card => {
-    card.onclick = () => showView(card.dataset.view);
+    card.onclick = () => {
+      if (card.dataset.view === 'download-center') openDownloadCenter('pages');
+      else showView(card.dataset.view);
+    };
   });
+
+  // Offline Download Center Buttons
+  $('headerDownloadCenterBtn')?.addEventListener('click', () => openDownloadCenter('pages'));
+  $('readerOfflineBtn')?.addEventListener('click', () => openDownloadCenter('pages'));
+  $('btnPlaceholderOpenDownload')?.addEventListener('click', () => openDownloadCenter('pages'));
+  initOfflineDownloadCenter();
 
   // Home Screen Actions
   $('homeContinueBtn')?.addEventListener('click', () => openReader());
@@ -4835,6 +5018,398 @@ window.addEventListener('appinstalled', () => {
   showToast('🎉 Nūr Al-Quran installed successfully!');
 });
 
+// -----------------------------------------------------------------------------
+// 14. OFFLINE DOWNLOAD CENTER ENGINE (611 PAGES PRECACHE, PDF & AUDIO DOWNLOADS)
+// -----------------------------------------------------------------------------
+let isDownloadingPages = false;
+let cancelPagesDownload = false;
+const activeAudioDownloads = {};
+
+function initOfflineDownloadCenter() {
+  // Modal close handlers
+  $('btnCloseDownloadCenterModal')?.addEventListener('click', closeDownloadCenter);
+  $('offlineDownloadCenterModal')?.addEventListener('click', (e) => {
+    if (e.target === $('offlineDownloadCenterModal')) closeDownloadCenter();
+  });
+
+  // Tab switching
+  $('tabBtnQuranPages')?.addEventListener('click', () => switchDownloadTab('pages'));
+  $('tabBtnAudioDownloads')?.addEventListener('click', () => switchDownloadTab('audio'));
+
+  // Precache All Pages button
+  $('btnDownloadAllPages')?.addEventListener('click', downloadAllQuranPages);
+  $('btnCancelDownloadPages')?.addEventListener('click', cancelQuranPagesDownload);
+
+  // Qari selector change in audio tab
+  $('selectDlQari')?.addEventListener('change', (e) => {
+    renderAudioSurahsList(e.target.value);
+  });
+
+  // Filter input in audio tab
+  $('inputFilterAudioSurahs')?.addEventListener('input', (e) => {
+    const qariId = $('selectDlQari')?.value || audioState.qari || 'ar.alafasy';
+    renderAudioSurahsList(qariId, e.target.value);
+  });
+
+  // Quick Pack download buttons
+  document.querySelectorAll('.btn-download-pack').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pack = btn.dataset.pack;
+      const qariId = $('selectDlQari')?.value || audioState.qari || 'ar.alafasy';
+      downloadAudioPack(pack, qariId);
+    });
+  });
+}
+
+function openDownloadCenter(tab = 'pages', targetSurah = null) {
+  const modal = $('offlineDownloadCenterModal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+  switchDownloadTab(tab);
+
+  if (tab === 'pages') {
+    checkPagesCacheStatus();
+  } else if (tab === 'audio') {
+    const qariId = $('selectDlQari')?.value || audioState.qari || 'ar.alafasy';
+    renderAudioSurahsList(qariId);
+    if (targetSurah) {
+      setTimeout(() => {
+        const row = document.getElementById(`audioSurahRow_${targetSurah}`);
+        if (row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.style.background = 'rgba(46,125,50,0.15)';
+          setTimeout(() => { row.style.background = ''; }, 2500);
+        }
+      }, 100);
+    }
+  }
+}
+
+function closeDownloadCenter() {
+  $('offlineDownloadCenterModal')?.classList.add('hidden');
+}
+
+function switchDownloadTab(tabName) {
+  const isPages = tabName === 'pages';
+  $('tabBtnQuranPages')?.classList.toggle('active', isPages);
+  $('tabBtnAudioDownloads')?.classList.toggle('active', !isPages);
+
+  const panePages = $('paneQuranPages');
+  const paneAudio = $('paneAudioDownloads');
+
+  if (panePages) panePages.style.display = isPages ? 'block' : 'none';
+  if (paneAudio) {
+    paneAudio.style.display = !isPages ? 'block' : 'none';
+    if (!isPages) {
+      const qariId = $('selectDlQari')?.value || audioState.qari || 'ar.alafasy';
+      renderAudioSurahsList(qariId);
+    }
+  }
+}
+
+async function checkPagesCacheStatus() {
+  const badge = $('pagesCacheBadge');
+  if (!badge) return;
+  if (!('caches' in window)) {
+    badge.textContent = 'Offline cache unavailable';
+    return;
+  }
+
+  badge.textContent = 'Checking cache...';
+  try {
+    const cache = await caches.open('nur-al-quran-v3.4.2');
+    let cachedCount = 0;
+    const isAllMarked = localStorage.getItem('nur_quran_pages_cached') === 'true';
+    if (isAllMarked) {
+      badge.textContent = `611 / 611 Cached (100% Offline)`;
+      badge.className = 'download-status-badge badge-green';
+      return;
+    }
+
+    const keys = await cache.keys();
+    cachedCount = keys.filter(req => req.url.includes('/assets/pages/') && req.url.endsWith('.webp')).length;
+
+    if (cachedCount >= 611) {
+      badge.textContent = `611 / 611 Cached (100% Offline)`;
+      badge.className = 'download-status-badge badge-green';
+      localStorage.setItem('nur_quran_pages_cached', 'true');
+    } else if (cachedCount > 0) {
+      badge.textContent = `${cachedCount} / 611 Pages Cached`;
+      badge.className = 'download-status-badge badge-amber';
+    } else {
+      badge.textContent = `0 / 611 Pages Cached (Online Only)`;
+      badge.className = 'download-status-badge';
+    }
+  } catch (e) {
+    badge.textContent = 'Ready to download';
+  }
+}
+
+async function downloadAllQuranPages() {
+  if (isDownloadingPages) return;
+  if (!('caches' in window)) {
+    showToast('CacheStorage not supported on this browser', 'warning');
+    return;
+  }
+
+  isDownloadingPages = true;
+  cancelPagesDownload = false;
+
+  const btnStart = $('btnDownloadAllPages');
+  const btnCancel = $('btnCancelDownloadPages');
+  const progressWrap = $('pagesProgressWrap');
+  const progressFill = $('pagesProgressFill');
+  const progressText = $('pagesProgressText');
+  const progressSpeed = $('pagesProgressSpeed');
+  const badge = $('pagesCacheBadge');
+
+  if (btnStart) btnStart.disabled = true;
+  if (btnCancel) btnCancel.classList.remove('hidden');
+  if (progressWrap) progressWrap.style.display = 'block';
+
+  let downloadedCount = 0;
+  const total = TOTAL_PAGES;
+  const cache = await caches.open('nur-al-quran-v3.4.2');
+
+  const toDownload = [];
+  for (let p = 1; p <= total; p++) {
+    toDownload.push(p);
+  }
+
+  const CONCURRENCY = 6;
+  let nextIdx = 0;
+
+  async function worker() {
+    while (nextIdx < toDownload.length && !cancelPagesDownload) {
+      const pageNum = toDownload[nextIdx++];
+      const pageUrl = `assets/pages/${pageNum}.webp`;
+
+      try {
+        const cached = await cache.match(pageUrl);
+        if (!cached) {
+          const resp = await fetch(pageUrl);
+          if (resp.ok) {
+            await cache.put(pageUrl, resp);
+          }
+        }
+      } catch (e) {
+        console.warn(`[Precache] Failed page ${pageNum}:`, e);
+      }
+
+      downloadedCount++;
+      const pct = Math.round((downloadedCount / total) * 100);
+      if (progressFill) progressFill.style.width = `${pct}%`;
+      if (progressText) progressText.textContent = `${downloadedCount} / ${total} Pages (${pct}%)`;
+      if (progressSpeed) progressSpeed.textContent = `Saving Page ${pageNum}...`;
+    }
+  }
+
+  const workers = [];
+  for (let i = 0; i < CONCURRENCY; i++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  isDownloadingPages = false;
+  if (btnStart) btnStart.disabled = false;
+  if (btnCancel) btnCancel.classList.add('hidden');
+
+  if (cancelPagesDownload) {
+    if (progressSpeed) progressSpeed.textContent = 'Precache cancelled';
+    showToast('Download cancelled', 'info');
+  } else {
+    if (progressSpeed) progressSpeed.textContent = '✅ All 611 Pages Cached!';
+    if (badge) {
+      badge.textContent = '611 / 611 Cached (100% Offline)';
+      badge.className = 'download-status-badge badge-green';
+    }
+    localStorage.setItem('nur_quran_pages_cached', 'true');
+    showToast('✅ Sabhi 611 Pages Offline Download Ho Gaye!', 'info', 4000);
+  }
+}
+
+function cancelQuranPagesDownload() {
+  cancelPagesDownload = true;
+  isDownloadingPages = false;
+  $('btnCancelDownloadPages')?.classList.add('hidden');
+  $('btnDownloadAllPages')?.removeAttribute('disabled');
+}
+
+function renderAudioSurahsList(qariId, filterQuery = '') {
+  const container = $('audioSurahsContainer');
+  if (!container) return;
+
+  const query = (filterQuery || '').trim().toLowerCase();
+
+  let html = '';
+  for (let sNum = 1; sNum <= 114; sNum++) {
+    const s = surahs[sNum - 1];
+    const engName = s[0];
+    const arName = s[2];
+    const ayahCount = s[3];
+    const hindiName = s[6] || '';
+
+    if (query) {
+      const matchEng = engName.toLowerCase().includes(query);
+      const matchNum = String(sNum) === query;
+      const matchHindi = hindiName.includes(query);
+      const matchAr = arName.includes(query);
+      if (!matchEng && !matchNum && !matchHindi && !matchAr) continue;
+    }
+
+    const isDownloaded = isSurahAudioDownloaded(sNum, qariId);
+    const isDownloading = !!activeAudioDownloads[`${sNum}_${qariId}`];
+
+    html += `
+      <div class="audio-surah-row" id="audioSurahRow_${sNum}">
+        <div class="audio-surah-info">
+          <div class="audio-surah-num">${sNum}</div>
+          <div>
+            <strong style="display:block;font-size:13.5px;color:var(--text-main);">${engName} <span style="font-family:'Amiri Quran',serif;font-size:14px;color:var(--primary);margin-left:6px;">${arName}</span></strong>
+            <small style="font-size:11.5px;color:var(--text-muted);">${ayahCount} Verses · Page ${s[5]}</small>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="download-status-badge ${isDownloaded ? 'badge-green' : ''}" id="surahBadge_${sNum}">
+            ${isDownloading ? '⏳ Downloading...' : (isDownloaded ? '✅ Downloaded' : 'Not Downloaded')}
+          </span>
+          <button class="btn-primary-green btn-download-surah" data-surah="${sNum}" data-qari="${qariId}" ${isDownloading ? 'disabled' : ''} style="font-size:11.5px;padding:5px 10px;">
+            ${isDownloaded ? '🔄 Re-download' : '📥 Download'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!html) {
+    html = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No Surah found matching "${filterQuery}"</div>`;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll('.btn-download-surah').forEach(btn => {
+    btn.onclick = () => {
+      const surahNum = Number(btn.dataset.surah);
+      const currentQari = btn.dataset.qari;
+      downloadSurahAudio(surahNum, currentQari);
+    };
+  });
+}
+
+function updateSurahDownloadRowUI(surahNum, qariId) {
+  const badge = $(`surahBadge_${surahNum}`);
+  if (badge) {
+    const isDownloaded = isSurahAudioDownloaded(surahNum, qariId);
+    badge.textContent = isDownloaded ? '✅ Downloaded' : 'Not Downloaded';
+    badge.className = `download-status-badge ${isDownloaded ? 'badge-green' : ''}`;
+  }
+  const btn = document.querySelector(`.btn-download-surah[data-surah="${surahNum}"]`);
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = isSurahAudioDownloaded(surahNum, qariId) ? '🔄 Re-download' : '📥 Download';
+  }
+}
+
+async function downloadSurahAudio(surahNum, qariId, onProgress = null) {
+  const downloadKey = `${surahNum}_${qariId}`;
+  if (activeAudioDownloads[downloadKey]) return;
+  activeAudioDownloads[downloadKey] = true;
+
+  const badge = $(`surahBadge_${surahNum}`);
+  if (badge) {
+    badge.textContent = '⏳ Downloading...';
+    badge.className = 'download-status-badge badge-amber';
+  }
+  const btn = document.querySelector(`.btn-download-surah[data-surah="${surahNum}"]`);
+  if (btn) btn.disabled = true;
+
+  const range = getGlobalAyahRangeForSurah(surahNum);
+  const total = range.count;
+  const sObj = surahs[surahNum - 1];
+  const sName = sObj ? sObj[0] : `Surah ${surahNum}`;
+
+  showToast(`📥 Downloading Surah ${sName} (${total} Ayahs)...`, 'info', 3000);
+
+  try {
+    const cache = await caches.open('nur-al-quran-v3.4.2');
+    let downloaded = 0;
+
+    for (let ayah = range.start; ayah <= range.end; ayah++) {
+      const directMp3 = getDirectAyahAudioUrl(ayah, qariId);
+      const apiUrl = `https://api.alquran.cloud/v1/ayah/${ayah}/${qariId}`;
+
+      try {
+        const cachedMp3 = await cache.match(directMp3);
+        if (!cachedMp3) {
+          const respMp3 = await fetch(directMp3);
+          if (respMp3.ok) {
+            await cache.put(directMp3, respMp3);
+          }
+        }
+
+        const cachedApi = await cache.match(apiUrl);
+        if (!cachedApi) {
+          try {
+            const respApi = await fetch(apiUrl);
+            if (respApi.ok) {
+              await cache.put(apiUrl, respApi);
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn(`[Audio Precache] Failed ayah ${ayah}:`, err);
+      }
+
+      downloaded++;
+      if (onProgress) {
+        onProgress(downloaded, total, Math.round((downloaded / total) * 100));
+      }
+    }
+
+    try {
+      const bismillahMp3 = `https://cdn.islamic.network/quran/audio/128/${qariId}/1.mp3`;
+      if (!(await cache.match(bismillahMp3))) {
+        const respB = await fetch(bismillahMp3);
+        if (respB.ok) await cache.put(bismillahMp3, respB);
+      }
+    } catch (e) {}
+
+    markSurahAudioDownloaded(surahNum, qariId, true);
+    showToast(`✅ Surah ${sName} Offline Download Ho Gayi!`, 'info', 4000);
+  } catch (e) {
+    console.error(`Error downloading Surah ${surahNum}:`, e);
+    showToast(`⚠️ Surah ${sName} download failed. Please check internet.`, 'warning');
+  } finally {
+    delete activeAudioDownloads[downloadKey];
+    updateSurahDownloadRowUI(surahNum, qariId);
+  }
+}
+
+async function downloadAudioPack(packType, qariId) {
+  let surahList = [];
+  let packTitle = 'Audio Pack';
+
+  if (packType === 'daily') {
+    packTitle = 'Daily Essential Surahs';
+    surahList = [36, 55, 56, 67, 18, 112, 113, 114];
+  } else if (packType === 'juz30') {
+    packTitle = '30th Juz (Amma Para)';
+    for (let s = 78; s <= 114; s++) surahList.push(s);
+  } else if (packType === 'all') {
+    packTitle = 'All 114 Surahs Tilawat';
+    for (let s = 1; s <= 114; s++) surahList.push(s);
+  }
+
+  showToast(`⚡ Downloading ${packTitle} (${surahList.length} Surahs)...`, 'info', 4000);
+
+  for (let i = 0; i < surahList.length; i++) {
+    const sNum = surahList[i];
+    await downloadSurahAudio(sNum, qariId);
+  }
+
+  showToast(`✅ ${packTitle} Complete! All Surahs ready offline.`, 'info', 5000);
+}
+
 // Expose globals for inline HTML event handlers & dynamic router
 window.openReader = openReader;
 window.openReaderPage = openReaderPage;
@@ -4857,3 +5432,10 @@ window.toggleAnnotationSuite = toggleAnnotationSuite;
 window.saveCurrentPageAnnotation = saveCurrentPageAnnotation;
 window.loadPageAnnotation = loadPageAnnotation;
 window.clearPageAnnotation = clearPageAnnotation;
+window.openDownloadCenter = openDownloadCenter;
+window.closeDownloadCenter = closeDownloadCenter;
+window.downloadAllQuranPages = downloadAllQuranPages;
+window.cancelQuranPagesDownload = cancelQuranPagesDownload;
+window.downloadSurahAudio = downloadSurahAudio;
+window.downloadAudioPack = downloadAudioPack;
+window.showNoDownloadAlert = showNoDownloadAlert;

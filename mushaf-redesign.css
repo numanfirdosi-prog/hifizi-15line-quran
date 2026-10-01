@@ -6549,5 +6549,307 @@ body.theme-parchment .lock-alarm-banner {
   box-shadow: 0 0 8px #4caf50;
 }
 
+/* -----------------------------------------------------------------------------
+   OFFLINE DOWNLOAD CENTER & OFFLINE PROTECTION STYLES (v3.4.2)
+   ----------------------------------------------------------------------------- */
+.header-offline-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--primary);
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.header-offline-badge-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+@media (max-width: 480px) {
+  .header-offline-text {
+    display: none;
+  }
+  .header-offline-badge-btn {
+    padding: 5px 8px;
+  }
+}
+
+/* Offline Download Modal */
+.offline-download-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInModal 0.2s ease-out;
+}
+.offline-download-modal.hidden {
+  display: none !important;
+}
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.offline-download-box {
+  background: var(--bg-surface);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  border: 1px solid var(--border-line);
+}
+
+.offline-download-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-line);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--bg-card-subtle);
+}
+
+.offline-modal-tabs {
+  display: flex;
+  background: var(--bg-card-subtle);
+  border-bottom: 1px solid var(--border-line);
+  padding: 0 16px;
+  gap: 8px;
+}
+
+.offline-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.offline-tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.offline-tab-pane {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Download Cards & Progress */
+.download-card-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.download-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.download-card-title-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.download-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(46, 125, 50, 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.download-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--bg-card-subtle);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.download-status-badge.badge-green {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.download-status-badge.badge-amber {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.download-progress-wrap {
+  margin-top: 12px;
+}
+.download-progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--bg-card-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-line);
+}
+.download-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #4caf50);
+  transition: width 0.15s ease;
+  border-radius: 8px;
+}
+
+/* Audio Tab Controls */
+.audio-dl-control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.dl-qari-select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-line);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.audio-packs-section {
+  margin-bottom: 20px;
+}
+.audio-packs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+.audio-pack-card {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+.audio-pack-card strong {
+  font-size: 13px;
+  color: var(--text-main);
+  display: block;
+}
+.audio-pack-card p {
+  margin: 3px 0 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.audio-surah-search-row {
+  margin-bottom: 12px;
+}
+.audio-surah-filter-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-line);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.audio-surahs-scroll-container {
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--border-line);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+
+.audio-surah-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-line);
+  transition: background 0.15s;
+}
+.audio-surah-row:last-child {
+  border-bottom: none;
+}
+.audio-surah-row:hover {
+  background: var(--bg-card-subtle);
+}
+.audio-surah-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.audio-surah-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--bg-card-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Mushaf Offline Placeholder */
+.mushaf-offline-placeholder {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+  text-align: center;
+}
+[data-theme="dark"] .mushaf-offline-placeholder {
+  background: rgba(18, 18, 18, 0.95);
+}
+.offline-placeholder-box {
+  max-width: 360px;
+  background: var(--bg-surface);
+  border: 1.5px dashed var(--border-line);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+
 
 

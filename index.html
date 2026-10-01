@@ -49,6 +49,7 @@
 					<button class="nav-item" data-view="bookmarks"><span class="nav-icon">⚑</span>Bookmarks & Saved</button>
 					<button class="nav-item" data-view="search"><span class="nav-icon">⌕</span>Search Quran</button>
 					<button class="nav-item" data-view="audio"><span class="nav-icon">🎧</span>Audio Recitations</button>
+					<button class="nav-item" id="sidebarDownloadCenterBtn" data-view="download-center"><span class="nav-icon">📥</span>Offline Download Center (ڈاؤن لوڈ سینٹر)</button>
 					<button class="nav-item" data-view="prayer"><span class="nav-icon">🕌</span>Prayer Times & Azan (اوقات الصلوٰۃ)</button>
 					<button class="nav-item" data-view="qiblah"><span class="nav-icon">🧭</span>Qiblah Compass (قبلہ نما)</button>
 					<button class="nav-item" data-view="ramadan"><span class="nav-icon">☾</span>Ramzan & Duas</button>
@@ -116,6 +117,11 @@
 						<button class="theme-pill-btn" id="btnThemeDark">Dark</button>
 						<button class="theme-pill-btn" id="btnThemeParchment">Parchment</button>
 					</div>
+					<!-- Offline Download Center Shortcut -->
+					<button class="header-offline-badge-btn" id="headerDownloadCenterBtn" title="Offline Quran & Audio Downloads" aria-label="Offline Downloads">
+						<span style="font-size:14px;">📥</span>
+						<span class="header-offline-text">Offline</span>
+					</button>
 					<!-- Mobile Capsule Theme Toggle -->
 					<div class="mobile-theme-capsule" id="mobileThemeCapsule" title="Toggle Theme">
 						<span class="capsule-moon">🌙</span>
@@ -269,6 +275,12 @@
 									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#455a64" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
 								</div>
 								<span class="tool-box-label">About &<br>Licenses</span>
+							</div>
+							<div class="tool-card-box card-emerald" id="cardOfflineManager" data-view="download-center" style="cursor:pointer;">
+								<div class="tool-card-icon-wrap emerald-bg" style="background:#e8f5e9;">
+									<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+								</div>
+								<span class="tool-box-label">Offline<br>Downloads</span>
 							</div>
 						</div>
 					</div>
@@ -1369,6 +1381,7 @@
 				<button class="btn-outline-green" id="readerFavourite" style="padding:4px 8px;font-size:11px;" title="Favourite this page">♥</button>
 				<button class="btn-outline-green" id="readerBookmark" style="padding:4px 8px;font-size:11px;" title="Bookmark this page">⚑</button>
 				<button class="btn-outline-green" id="readerShare" style="padding:4px 8px;font-size:11px;" title="Share this page">↗</button>
+				<button class="btn-outline-green" id="readerOfflineBtn" style="padding:4px 8px;font-size:11px;" title="Offline Quran & Audio Downloads">📥 Offline</button>
 			</div>
 		</div>
 
@@ -1431,6 +1444,18 @@
 						<img id="mushafPageImage" class="mushaf-page-image" src="assets/pages/2.webp" alt="15 Line Quran Page" />
 						<div id="mushafAyahOverlay" class="mushaf-ayah-overlay"></div>
 						<canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+						<!-- Offline Missing Page Fallback Notice -->
+						<div class="mushaf-offline-placeholder hidden" id="mushafOfflinePlaceholder">
+							<div class="offline-placeholder-box">
+								<div style="font-size:44px;margin-bottom:8px;">📵</div>
+								<h3 style="margin:0 0 6px 0;font-size:17px;color:var(--text-main);">Page Offline Cached Nahi Hai</h3>
+								<p style="margin:0 0 14px 0;font-size:13px;color:var(--text-muted);line-height:1.5;">Aap offline hain aur ye page abhi download nahi hua hai. Internet connect karein ya Download Center se sabhi 611 pages ek sath download karein.</p>
+								<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+									<button class="btn-primary-green" id="btnPlaceholderOpenDownload" style="padding:8px 14px;font-size:12px;">📥 Open Download Center</button>
+									<a href="QuraneKareem15Line_copy.pdf" download="QuraneKareem15Line.pdf" class="btn-outline-green" style="padding:8px 14px;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">📄 Open Quran PDF</a>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<!-- Interactive Ayah Quick Selector Bar -->
@@ -1778,14 +1803,157 @@
 			</div>
 			<div class="prayer-city-list" id="prayerCityList"></div>
 		</div>
-	<script src="assets/data/page_ayahs_15lines.js?v=3.4.1"></script>
-	<script src="prayer-engine.js?v=3.4.1"></script>
-	<script src="code.js?v=3.4.1"></script>
+	</div>
+
+	<!-- Offline Download Center Modal (611 Quran Pages Precache, 180MB Quran PDF, and Audio Tilawat Downloads) -->
+	<div class="offline-download-modal hidden" id="offlineDownloadCenterModal">
+		<div class="offline-download-box">
+			<div class="offline-download-header">
+				<div class="modal-title-wrap">
+					<div class="modal-title-row" style="display:flex;align-items:center;gap:8px;">
+						<span style="font-size:22px;">📥</span>
+						<h3 style="margin:0;font-size:17px;font-weight:700;color:var(--text-main);">Offline Download Center (ڈاؤن لوڈ سینٹر)</h3>
+					</div>
+					<small style="display:block;font-size:12px;color:var(--text-muted);margin-top:2px;">Download 15-Line Quran pages, full PDF & Audio tilawat to use 100% offline without internet</small>
+				</div>
+				<button class="icon-button" id="btnCloseDownloadCenterModal" aria-label="Close" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-muted);">✕</button>
+			</div>
+
+			<!-- Tab Navigation -->
+			<div class="offline-modal-tabs">
+				<button class="offline-tab-btn active" id="tabBtnQuranPages" data-tab="pages">
+					<span>📖</span> 15-Line Quran (Pages & PDF)
+				</button>
+				<button class="offline-tab-btn" id="tabBtnAudioDownloads" data-tab="audio">
+					<span>🎧</span> Audio Tilawat (تلاوت قران)
+				</button>
+			</div>
+
+			<!-- Tab 1: 15-Line Quran Pages & Complete PDF -->
+			<div class="offline-tab-pane active" id="paneQuranPages">
+				<!-- Section 1: Precache all 611 Mushaf Page Images -->
+				<div class="download-card-box">
+					<div class="download-card-top">
+						<div class="download-card-title-group">
+							<span class="download-card-icon">⚡</span>
+							<div>
+								<h4 style="margin:0;font-size:15px;color:var(--text-main);">611 Mushaf Pages Precache (سبھی صفحات)</h4>
+								<p style="margin:2px 0 0 0;font-size:12px;color:var(--text-muted);">Poora 15-line Quran (Page 1 se 611) offline cache me save karein taake bina internet har page foran khule.</p>
+							</div>
+						</div>
+						<span class="download-status-badge" id="pagesCacheBadge">Checking...</span>
+					</div>
+
+					<div class="download-progress-wrap" id="pagesProgressWrap" style="display:none;margin-top:12px;">
+						<div class="download-progress-bar">
+							<div class="download-progress-fill" id="pagesProgressFill" style="width:0%;"></div>
+						</div>
+						<div class="download-progress-meta" style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text-muted);">
+							<span id="pagesProgressText">0 / 611 Pages (0%)</span>
+							<span id="pagesProgressSpeed">Downloading...</span>
+						</div>
+					</div>
+
+					<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+						<button class="btn-primary-green" id="btnDownloadAllPages" style="padding:9px 16px;font-size:13px;font-weight:600;">
+							⚡ Download All 611 Pages Now
+						</button>
+						<button class="btn-outline-danger hidden" id="btnCancelDownloadPages" style="padding:9px 14px;font-size:12.5px;">
+							⏹ Cancel Precache
+						</button>
+					</div>
+				</div>
+
+				<!-- Section 2: Complete 15-Line Quran PDF Document (180MB) -->
+				<div class="download-card-box" style="margin-top:14px;">
+					<div class="download-card-top">
+						<div class="download-card-title-group">
+							<span class="download-card-icon" style="background:#fef2f2;color:#dc2626;">📄</span>
+							<div>
+								<h4 style="margin:0;font-size:15px;color:var(--text-main);">Complete 15-Line Quran PDF (قرآن کریم ۱۵ سطر پی ڈی ایف)</h4>
+								<p style="margin:2px 0 0 0;font-size:12px;color:var(--text-muted);">Original verified 15-Line Deobandi/Pakistani Mushaf PDF (180 MB). Direct device storage me save karein.</p>
+							</div>
+						</div>
+						<span class="download-status-badge badge-green">180 MB · Ready</span>
+					</div>
+
+					<div style="background:var(--bg-card-subtle);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.5;">
+						📌 <strong>Offline PDF Benefit:</strong> Ye PDF ek baar download karne ke baad aapke phone / computer ke Download folder me hamesha save rahegi aur bina kisi internet ke kisi bhi PDF viewer me asani se khulegi.
+					</div>
+
+					<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+						<a href="QuraneKareem15Line_copy.pdf" download="QuraneKareem15Line.pdf" class="btn-primary-green" id="btnSaveFullQuranPdf" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-size:13px;font-weight:600;">
+							📥 Save Quran PDF to Device (180 MB)
+						</a>
+						<a href="QuraneKareem15Line_copy.pdf" target="_blank" class="btn-outline-green" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:9px 14px;font-size:12.5px;">
+							👁 Open PDF in New Tab
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Tab 2: Audio Tilawat Downloads -->
+			<div class="offline-tab-pane" id="paneAudioDownloads" style="display:none;">
+				<!-- Qari Selection Bar -->
+				<div class="audio-dl-control-row">
+					<label for="selectDlQari" style="font-size:12.5px;font-weight:600;color:var(--text-main);">Select Reciter / قاری منتخب کریں:</label>
+					<select id="selectDlQari" class="dl-qari-select">
+						<option value="ar.alafasy">Mishary Rashid Alafasy (مشاري راشد العفاسي)</option>
+						<option value="ar.abdulbasitmurattal">Abdul Basit Abdus Samad (عبد الباسط عبد الصمد)</option>
+						<option value="ar.abdulsamad">Abdul Basit (Mujawwad - ترتيل وتجويد)</option>
+						<option value="ar.saoodshuraym">Saud Ash-Shuraim (سعود الشريم)</option>
+					</select>
+				</div>
+
+				<!-- Quick Audio Download Packs -->
+				<div class="audio-packs-section">
+					<span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">⚡ Quick Download Packs</span>
+					<div class="audio-packs-grid">
+						<div class="audio-pack-card">
+							<div>
+								<strong>⭐ Daily Essential Surahs</strong>
+								<p>Yasin, Ar-Rahman, Al-Waqi'ah, Al-Mulk, Al-Kahf, 4 Quls</p>
+							</div>
+							<button class="btn-primary-green btn-download-pack" data-pack="daily" style="font-size:12px;padding:6px 12px;white-space:nowrap;">📥 Download Pack</button>
+						</div>
+						<div class="audio-pack-card">
+							<div>
+								<strong>📖 30th Juz (Amma Para)</strong>
+								<p>Surah An-Naba se An-Nas (37 Surahs total)</p>
+							</div>
+							<button class="btn-primary-green btn-download-pack" data-pack="juz30" style="font-size:12px;padding:6px 12px;white-space:nowrap;">📥 Download 30th Juz</button>
+						</div>
+						<div class="audio-pack-card">
+							<div>
+								<strong>🕋 All 114 Surahs Tilawat</strong>
+								<p>Poora Quran Kareem audio (All 114 Surahs complete)</p>
+							</div>
+							<button class="btn-outline-green btn-download-pack" data-pack="all" style="font-size:12px;padding:6px 12px;white-space:nowrap;">📥 Download All Surahs</button>
+						</div>
+					</div>
+				</div>
+
+				<!-- Individual Surahs List & Filter -->
+				<div class="audio-surah-list-section">
+					<div class="audio-surah-search-row">
+						<input type="text" id="inputFilterAudioSurahs" class="audio-surah-filter-input" placeholder="🔍 Filter Surah by name or number (e.g. Yasin, Baqarah, 36, 67)...">
+					</div>
+					<div class="audio-surahs-scroll-container" id="audioSurahsContainer">
+						<!-- Injected by JavaScript -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/data/page_ayahs_15lines.js?v=3.4.2"></script>
+	<script src="prayer-engine.js?v=3.4.2"></script>
+	<script src="code.js?v=3.4.2"></script>
 	<script>
 		if ('caches' in window) {
 			caches.keys().then(function(keys) {
 				keys.forEach(function(k) {
-					if (k !== 'nur-al-quran-v3.4.1') {
+					if (k !== 'nur-al-quran-v3.4.2') {
 						caches.delete(k);
 					}
 				});
