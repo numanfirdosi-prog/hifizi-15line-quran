@@ -104,9 +104,9 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   String _getPageImageUrl(int page) {
-    // 15-line high-resolution Quran page CDN
-    final pStr = page.toString().padLeft(3, '0');
-    return 'https://raw.githubusercontent.com/numanfirdosi-prog/hifzi-15line-quran/main/assets/pages/page_$pStr.webp';
+    // 15-line high-resolution Quran page images, served from this repo.
+    // Files are named 1.webp … 611.webp (no zero-padding, no prefix).
+    return 'https://raw.githubusercontent.com/numanfirdosi-prog/hifizi-15line-quran/main/assets/pages/$page.webp';
   }
 
   @override
