@@ -8,9 +8,11 @@ import '../data/ayah_of_day.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../models/surah.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
+import 'ayah_player_sheet.dart';
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
@@ -204,11 +206,13 @@ class DashboardScreen extends StatelessWidget {
               ),
               OutlinedButton.icon(
                 onPressed: () {
-                  final audio = Provider.of<AudioRecitationService>(context,
-                      listen: false);
-                  audio.setRepeatMode(prefs.repeatMode);
-                  audio.setSpeed(prefs.playbackSpeed);
-                  audio.playSurah(surahNumber: prefs.lastReadSurah);
+                  // Opens the ayah player: highlights the ayah and plays
+                  // its audio ayah-by-ayah until stopped.
+                  showAyahPlayer(
+                    context,
+                    surah: prefs.lastReadSurah,
+                    ayah: prefs.lastReadAyah,
+                  );
                 },
                 icon: const Icon(Icons.headphones_outlined),
                 label: Text('Listen from Ayah ${prefs.lastReadAyah}'),
@@ -373,8 +377,8 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: () {
-                  Provider.of<AudioRecitationService>(context, listen: false)
-                      .playSurah(surahNumber: a.surah);
+                  // Highlights the ayah and plays its audio ayah-by-ayah.
+                  showAyahPlayer(context, surah: a.surah, ayah: a.ayah);
                 },
                 icon: const Icon(Icons.headphones_outlined),
                 label: const Text('Listen'),
@@ -384,6 +388,135 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Surah quick-jump card (type a surah name -> opens its first page)
+  // ------------------------------------------------------------------
+
+  Widget _surahPickerCard(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return _card(
+      context,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.menu_book_outlined, color: cs.primary, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '114 Surahs',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Jump to any surah',
+                      style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => onSelectTab(2),
+                icon: const Icon(Icons.list, size: 18),
+                label: const Text('Browse All'),
+                style: TextButton.styleFrom(foregroundColor: cs.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Autocomplete<Surah>(
+            displayStringForOption: (s) => s.nameEn,
+            optionsBuilder: (textEditingValue) {
+              final q = textEditingValue.text.trim().toLowerCase();
+              if (q.isEmpty) return const Iterable<Surah>.empty();
+              return allSurahs.where((s) =>
+                  s.nameEn.toLowerCase().contains(q) ||
+                  s.nameAr.contains(textEditingValue.text.trim()) ||
+                  s.number.toString() == q);
+            },
+            onSelected: (surah) => onOpenPage(surah.startPage),
+            fieldViewBuilder:
+                (context, controller, focusNode, onFieldSubmitted) {
+              return TextField(
+                controller: controller,
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  hintText: 'Type surah name… e.g. Ya-Sin',
+                  hintStyle: TextStyle(
+                      color: cs.onSurface.withValues(alpha: 0.5)),
+                  prefixIcon: Icon(Icons.search, color: cs.primary),
+                  filled: true,
+                  fillColor:
+                      cs.onSurface.withValues(alpha: 0.06),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: TextStyle(color: cs.onSurface),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  color: cs.surface,
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width - 64,
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        final s = options.elementAt(index);
+                        return ListTile(
+                          dense: true,
+                          leading: Text(
+                            '${s.number}',
+                            style: TextStyle(
+                                color: cs.primary,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          title: Text(s.nameEn,
+                              style: TextStyle(color: cs.onSurface)),
+                          subtitle: Text(
+                            '${s.meaning} • Page ${s.startPage}',
+                            style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.6),
+                                fontSize: 12),
+                          ),
+                          trailing: Text(
+                            s.nameAr,
+                            style: TextStyle(
+                                color: cs.primary, fontSize: 16),
+                          ),
+                          onTap: () => onSelected(s),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -654,6 +787,7 @@ class DashboardScreen extends StatelessWidget {
         _lastReadCard(context),
         _progressCard(context),
         _ayahOfDayCard(context),
+        _surahPickerCard(context),
         _quickAccessSection(context),
         _mushafInfoCard(context),
         _savedAyahsSection(context),

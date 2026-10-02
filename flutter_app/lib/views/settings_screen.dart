@@ -26,6 +26,7 @@ class SettingsScreen extends StatelessWidget {
     required bool selected,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -35,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
             color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? const Color(0xFFD4AF37) : Colors.white12,
+              color: selected ? cs.primary : Colors.white12,
               width: selected ? 2 : 1,
             ),
           ),
@@ -51,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? const Color(0xFFD4AF37) : Colors.white70,
+                  color: selected ? cs.primary : Colors.white70,
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -63,13 +64,15 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _themeCard({
+  Widget _themeCard(
+    BuildContext context, {
     required String label,
     required Color previewBg,
     required Color previewText,
     required bool selected,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -81,7 +84,7 @@ class SettingsScreen extends StatelessWidget {
                 color: previewBg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: selected ? const Color(0xFFD4AF37) : Colors.white12,
+                  color: selected ? cs.primary : Colors.white12,
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -100,7 +103,9 @@ class SettingsScreen extends StatelessWidget {
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: selected ? const Color(0xFFD4AF37) : Colors.white70,
+                color: selected
+                    ? cs.primary
+                    : cs.onSurface.withValues(alpha: 0.7),
                 fontSize: 11,
               ),
             ),
@@ -113,17 +118,15 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF071F17),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F3A2C),
-        title: const Text(
+        title: Text(
           'تنظیمات (Settings & Bookmarks)',
           style: TextStyle(
-              color: Color(0xFFD4AF37),
-              fontWeight: FontWeight.bold,
-              fontSize: 18),
+              color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
       body: ListView(
@@ -131,7 +134,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           // Juristic Method Card
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
@@ -139,20 +142,20 @@ class SettingsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Asr Juristic Method / عصر کا طریقہ',
                     style: TextStyle(
-                        color: Color(0xFFD4AF37),
+                        color: cs.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: const Text('Hanafi / حنفی (Double shadow factor)',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    title: Text('Hanafi / حنفی (Double shadow factor)',
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'Hanafi',
                     groupValue: prefs.asrMethod,
-                    activeColor: const Color(0xFFD4AF37),
+                    activeColor: cs.primary,
                     onChanged: (val) {
                       if (val != null) {
                         prefs.setAsrMethod(val);
@@ -161,12 +164,12 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text(
+                    title: Text(
                         'Shafi\'i / Maliki / Hanbali / شافعی (Single shadow)',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'Standard',
                     groupValue: prefs.asrMethod,
-                    activeColor: const Color(0xFFD4AF37),
+                    activeColor: cs.primary,
                     onChanged: (val) {
                       if (val != null) {
                         prefs.setAsrMethod(val);
@@ -183,35 +186,35 @@ class SettingsScreen extends StatelessWidget {
 
           // Alarm & Azan Sound Switches
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('Play Azan Sound',
+                  title: Text('Play Azan Sound',
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text(
+                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
                       'Play full Azan audio when prayer time starts',
-                      style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      style: TextStyle(color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                   value: prefs.azanSoundEnabled,
-                  activeColor: const Color(0xFFD4AF37),
+                  activeColor: cs.primary,
                   onChanged: (val) {
                     prefs.setAzanSoundEnabled(val);
                     _reschedule(prefs);
                   },
                 ),
-                const Divider(color: Colors.white12, height: 1),
+                Divider(color: cs.onSurface.withValues(alpha: 0.12), height: 1),
                 SwitchListTile(
-                  title: const Text('Lockscreen Exact Alarm',
+                  title: Text('Lockscreen Exact Alarm',
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                  subtitle: const Text(
+                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
                       'Wake up locked phone & display prayer alarm',
-                      style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      style: TextStyle(color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                   value: prefs.lockscreenAlarmEnabled,
-                  activeColor: const Color(0xFFD4AF37),
+                  activeColor: cs.primary,
                   onChanged: (val) {
                     prefs.setLockscreenAlarmEnabled(val);
                     // M2: the toggle now actually takes effect — turning it OFF
@@ -227,7 +230,7 @@ class SettingsScreen extends StatelessWidget {
 
           // Reading Section (mode, script, theme, ayah scale)
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
@@ -235,43 +238,43 @@ class SettingsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Reading / مطالعہ',
                     style: TextStyle(
-                        color: Color(0xFFD4AF37),
+                        color: cs.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Reading Mode / مطالعے کا انداز',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   RadioListTile<String>(
-                    title: const Text('Page Slide / صفحہ بہ صفحہ',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    title: Text('Page Slide / صفحہ بہ صفحہ',
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'slide',
                     groupValue: prefs.readingMode,
-                    activeColor: const Color(0xFFD4AF37),
+                    activeColor: cs.primary,
                     onChanged: (val) {
                       if (val != null) prefs.setReadingMode(val);
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('Continuous Scroll / مسلسل اسکرول',
-                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    title: Text('Continuous Scroll / مسلسل اسکرول',
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'scroll',
                     groupValue: prefs.readingMode,
-                    activeColor: const Color(0xFFD4AF37),
+                    activeColor: cs.primary,
                     onChanged: (val) {
                       if (val != null) prefs.setReadingMode(val);
                     },
                   ),
-                  const Divider(color: Colors.white12),
+                  Divider(color: cs.onSurface.withValues(alpha: 0.12)),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Script Style / رسم الخط',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -294,14 +297,15 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Theme / تھیم',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       _themeCard(
+                        context,
                         label: 'Night Slate',
                         previewBg: const Color(0xFF071F17),
                         previewText: const Color(0xFFD4AF37),
@@ -310,6 +314,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       _themeCard(
+                        context,
                         label: 'Emerald Day',
                         previewBg: const Color(0xFFE8F5E9),
                         previewText: const Color(0xFF1B5E20),
@@ -318,6 +323,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       _themeCard(
+                        context,
                         label: 'Antique Parchment',
                         previewBg: const Color(0xFFF5E6C4),
                         previewText: const Color(0xFF5D4037),
@@ -330,14 +336,14 @@ class SettingsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Ayah Text Size / آیت کا سائز',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       Text(
                         '${(prefs.ayahScale * 100).round()}%',
-                        style: const TextStyle(
-                            color: Color(0xFFD4AF37),
+                        style: TextStyle(
+                            color: cs.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 13),
                       ),
@@ -349,8 +355,8 @@ class SettingsScreen extends StatelessWidget {
                     max: 1.3,
                     divisions: 10,
                     label: '${(prefs.ayahScale * 100).round()}%',
-                    activeColor: const Color(0xFFD4AF37),
-                    inactiveColor: Colors.white24,
+                    activeColor: cs.primary,
+                    inactiveColor: cs.onSurface.withValues(alpha: 0.24),
                     onChanged: (v) => prefs.setAyahScale(v),
                   ),
                   Center(
@@ -370,7 +376,7 @@ class SettingsScreen extends StatelessWidget {
 
           // Audio Section (default qari, repeat, speed)
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
@@ -389,24 +395,24 @@ class SettingsScreen extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Audio / تلاوت',
                         style: TextStyle(
-                            color: Color(0xFFD4AF37),
+                            color: cs.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 15),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Default Qari / قاری کا انتخاب',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       DropdownButton<Qari>(
                         value: audio.selectedQari,
-                        dropdownColor: const Color(0xFF0F3A2C),
+                        dropdownColor: cs.surface,
                         style:
-                            const TextStyle(color: Colors.white, fontSize: 14),
+                            TextStyle(color: cs.onSurface, fontSize: 14),
                         isExpanded: true,
                         items: availableQaris
                             .map((q) => DropdownMenuItem<Qari>(
@@ -422,9 +428,9 @@ class SettingsScreen extends StatelessWidget {
                         },
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Repeat / تکرار',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 6),
                       Wrap(
@@ -435,10 +441,10 @@ class SettingsScreen extends StatelessWidget {
                           return ChoiceChip(
                             label: Text(repeatLabels[m]!),
                             selected: selected,
-                            selectedColor: const Color(0xFFD4AF37),
+                            selectedColor: cs.primary,
                             backgroundColor: const Color(0xFF144234),
                             labelStyle: TextStyle(
-                              color: selected ? Colors.black : Colors.white70,
+                              color: selected ? cs.onPrimary : Colors.white70,
                               fontSize: 12,
                             ),
                             onSelected: (_) {
@@ -449,9 +455,9 @@ class SettingsScreen extends StatelessWidget {
                         }).toList(),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Playback Speed / رفتار',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 6),
                       Wrap(
@@ -464,10 +470,10 @@ class SettingsScreen extends StatelessWidget {
                                 ? '${v.toInt()}x'
                                 : '${v}x'),
                             selected: selected,
-                            selectedColor: const Color(0xFFD4AF37),
+                            selectedColor: cs.primary,
                             backgroundColor: const Color(0xFF144234),
                             labelStyle: TextStyle(
-                              color: selected ? Colors.black : Colors.white70,
+                              color: selected ? cs.onPrimary : Colors.white70,
                               fontSize: 12,
                             ),
                             onSelected: (_) {
@@ -488,7 +494,7 @@ class SettingsScreen extends StatelessWidget {
 
           // Reading Goal Section
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
@@ -496,18 +502,18 @@ class SettingsScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Reading Goal / روزانہ ہدف',
                     style: TextStyle(
-                        color: Color(0xFFD4AF37),
+                        color: cs.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.remove,
-                            color: Colors.white70, size: 20),
+                        icon: Icon(Icons.remove,
+                            color: cs.onSurface.withValues(alpha: 0.7), size: 20),
                         onPressed: prefs.dailyTargetPages > 1
                             ? () => prefs
                                 .setDailyTargetPages(prefs.dailyTargetPages - 1)
@@ -515,14 +521,14 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       Text(
                         '${prefs.dailyTargetPages} pages / day',
-                        style: const TextStyle(
-                            color: Colors.white,
+                        style: TextStyle(
+                            color: cs.onSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 14),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.add,
-                            color: Colors.white70, size: 20),
+                        icon: Icon(Icons.add,
+                            color: cs.onSurface.withValues(alpha: 0.7), size: 20),
                         onPressed: prefs.dailyTargetPages < 20
                             ? () => prefs
                                 .setDailyTargetPages(prefs.dailyTargetPages + 1)
@@ -539,7 +545,7 @@ class SettingsScreen extends StatelessWidget {
 
           // Bookmarks Section
           Card(
-            color: const Color(0xFF0F3A2C),
+            color: cs.surface,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
@@ -550,26 +556,26 @@ class SettingsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'علامات / محفوظ شدہ صفحات (Bookmarks)',
                         style: TextStyle(
-                            color: Color(0xFFD4AF37),
+                            color: cs.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 15),
                       ),
                       Text('${prefs.bookmarks.length} saved',
-                          style: const TextStyle(
-                              color: Colors.white54, fontSize: 12)),
+                          style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 12),
                   if (prefs.bookmarks.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                           'No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.',
                           style:
-                              TextStyle(color: Colors.white60, fontSize: 13)),
+                              TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
                     )
                   else
                     Wrap(
@@ -578,8 +584,7 @@ class SettingsScreen extends StatelessWidget {
                       children: prefs.bookmarks.map((p) {
                         return ActionChip(
                           backgroundColor: const Color(0xFF144234),
-                          avatar: const Icon(Icons.bookmark,
-                              color: Color(0xFFD4AF37), size: 16),
+                          avatar: Icon(Icons.bookmark, color: cs.primary, size: 16),
                           label: Text('Page $p',
                               style: const TextStyle(color: Colors.white)),
                           onPressed: () => onOpenPage(p),
@@ -603,11 +608,11 @@ class SettingsScreen extends StatelessWidget {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'About Nur-ul-Quran (نور القرآن)',
                   style: TextStyle(
-                      color: Color(0xFFD4AF37),
+                      color: cs.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14),
                 ),
@@ -620,7 +625,7 @@ class SettingsScreen extends StatelessWidget {
                 SizedBox(height: 6),
                 Text(
                   'Version 1.0.0 (Flutter Standalone Edition)',
-                  style: TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
+                  style: TextStyle(color: cs.primary, fontSize: 11),
                 ),
               ],
             ),

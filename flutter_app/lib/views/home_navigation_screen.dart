@@ -32,28 +32,32 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       if (prefs.lockscreenAlarmEnabled) {
         final canSchedule = await AzanAlarmService().canScheduleExactAlarms();
         if (!canSchedule && mounted) {
+          final cs = Theme.of(context).colorScheme;
           final granted = await showDialog<bool>(
             context: context,
             builder: (ctx) => AlertDialog(
-              backgroundColor: const Color(0xFF0F3A2C),
-              title: const Text('Allow Exact Alarms?',
+              backgroundColor: cs.surface,
+              title: Text('Allow Exact Alarms?',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              content: const Text(
+                      color: cs.onSurface, fontWeight: FontWeight.bold)),
+              content: Text(
                 'To play the Azan exactly on time even when your phone is locked, please allow "Alarms & reminders" on the next screen.',
-                style:
-                    TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                    fontSize: 13,
+                    height: 1.5),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Not now',
-                      style: TextStyle(color: Colors.white54)),
+                  child: Text('Not now',
+                      style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.6))),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFD4AF37),
-                    foregroundColor: Colors.black,
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
                   ),
                   onPressed: () => Navigator.pop(ctx, true),
                   child: const Text('Allow'),
@@ -93,6 +97,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final screens = [
       DashboardScreen(
         onOpenPage: _jumpToMushafPage,
@@ -115,23 +120,23 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          backgroundColor: const Color(0xFF0F3A2C),
-          indicatorColor: const Color(0xFFD4AF37).withOpacity(0.2),
+          backgroundColor: cs.surface,
+          indicatorColor: cs.primary.withValues(alpha: 0.2),
           labelTextStyle:
               MaterialStateProperty.resolveWith<TextStyle>((states) {
             if (states.contains(MaterialState.selected)) {
-              return const TextStyle(
-                  color: Color(0xFFD4AF37),
+              return TextStyle(
+                  color: cs.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 11);
             }
-            return const TextStyle(color: Colors.white60, fontSize: 11);
+            return TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 11);
           }),
           iconTheme: MaterialStateProperty.resolveWith<IconThemeData>((states) {
             if (states.contains(MaterialState.selected)) {
-              return const IconThemeData(color: Color(0xFFD4AF37), size: 24);
+              return IconThemeData(color: cs.primary, size: 24);
             }
-            return const IconThemeData(color: Colors.white60, size: 22);
+            return IconThemeData(color: cs.onSurface.withValues(alpha: 0.6), size: 22);
           }),
         ),
         child: NavigationBar(

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/quran_data.dart';
 
 class Qari {
   final String id;
@@ -10,6 +11,10 @@ class Qari {
   final String country;
   final String baseUrl;
 
+  /// Base URL for per-ayah MP3s on everyayah.com
+  /// (pattern: {ayahBaseUrl}{SSS}{VVV}.mp3, e.g. 002255.mp3).
+  final String ayahBaseUrl;
+
   const Qari({
     required this.id,
     required this.name,
@@ -17,10 +22,15 @@ class Qari {
     required this.style,
     required this.country,
     required this.baseUrl,
+    required this.ayahBaseUrl,
   });
 
   /// Full mp3 URL for surah [n] on this qari's mp3quran server.
   String urlForSurah(int n) => '$baseUrl${n.toString().padLeft(3, '0')}.mp3';
+
+  /// Full mp3 URL for ayah [v] of surah [s] on everyayah.com.
+  String ayahUrl(int s, int v) =>
+      '$ayahBaseUrl${s.toString().padLeft(3, '0')}${v.toString().padLeft(3, '0')}.mp3';
 }
 
 // Server URLs below were extracted from the mp3quran API
@@ -35,6 +45,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Kuwait',
     baseUrl: 'https://server8.mp3quran.net/afs/',
+    ayahBaseUrl: 'https://everyayah.com/data/Alafasy_128kbps/',
   ),
   Qari(
     id: 'ar.abdulbasitmurattal',
@@ -43,6 +54,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Egypt',
     baseUrl: 'https://server7.mp3quran.net/basit/',
+    ayahBaseUrl: 'https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/',
   ),
   Qari(
     id: 'ar.husary',
@@ -51,6 +63,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Egypt',
     baseUrl: 'https://server13.mp3quran.net/husr/',
+    ayahBaseUrl: 'https://everyayah.com/data/Husary_128kbps/',
   ),
   Qari(
     id: 'ar.minshawi',
@@ -59,6 +72,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Egypt',
     baseUrl: 'https://server10.mp3quran.net/minsh/',
+    ayahBaseUrl: 'https://everyayah.com/data/Minshawy_Murattal_128kbps/',
   ),
   Qari(
     id: 'ar.abdurrahmaansudais',
@@ -67,6 +81,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Makkah/Saudi Arabia',
     baseUrl: 'https://server11.mp3quran.net/sds/',
+    ayahBaseUrl: 'https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/',
   ),
   // --- expanded studio list (API-extracted servers) ---
   Qari(
@@ -76,6 +91,7 @@ const List<Qari> availableQaris = [
     style: 'Mujawwad',
     country: 'Egypt',
     baseUrl: 'https://server7.mp3quran.net/basit/Almusshaf-Al-Mojawwad/',
+    ayahBaseUrl: 'https://everyayah.com/data/Abdul_Basit_Mujawwad_128kbps/',
   ),
   Qari(
     id: 'ar.husarymujawwad',
@@ -84,6 +100,7 @@ const List<Qari> availableQaris = [
     style: 'Mujawwad',
     country: 'Egypt',
     baseUrl: 'https://server13.mp3quran.net/husr/Almusshaf-Al-Mojawwad/',
+    ayahBaseUrl: 'https://everyayah.com/data/Husary_Mujawwad_64kbps/',
   ),
   Qari(
     id: 'ar.minshawimujawwad',
@@ -92,6 +109,7 @@ const List<Qari> availableQaris = [
     style: 'Mujawwad',
     country: 'Egypt',
     baseUrl: 'https://server10.mp3quran.net/minsh/Almusshaf-Al-Mojawwad/',
+    ayahBaseUrl: 'https://everyayah.com/data/Minshawy_Mujawwad_192kbps/',
   ),
   Qari(
     id: 'ar.mahermuaiqly',
@@ -100,6 +118,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Makkah/Saudi Arabia',
     baseUrl: 'https://server12.mp3quran.net/maher/',
+    ayahBaseUrl: 'https://everyayah.com/data/MaherAlMuaiqly128kbps/',
   ),
   Qari(
     id: 'ar.saoodshuraym',
@@ -108,6 +127,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Makkah/Saudi Arabia',
     baseUrl: 'https://server7.mp3quran.net/shur/',
+    ayahBaseUrl: 'https://everyayah.com/data/Saood_ash-Shuraym_128kbps/',
   ),
   Qari(
     id: 'ar.abubakrshatree',
@@ -116,6 +136,7 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Saudi Arabia',
     baseUrl: 'https://server11.mp3quran.net/shatri/',
+    ayahBaseUrl: 'https://everyayah.com/data/Abu_Bakr_Ash-Shaatree_128kbps/',
   ),
   Qari(
     id: 'ar.alihudhaify',
@@ -124,8 +145,35 @@ const List<Qari> availableQaris = [
     style: 'Murattal',
     country: 'Madinah/Saudi Arabia',
     baseUrl: 'https://server9.mp3quran.net/hthfi/',
+    ayahBaseUrl: 'https://everyayah.com/data/Hudhaify_128kbps/',
   ),
 ];
+
+/// Pure helper: the (surah, ayah) following ([s], [v]), or null at the end
+/// of the Quran (after 114:6).
+(int, int)? nextAyahAfter(int s, int v) {
+  final total = allSurahs[s - 1].totalAyahs;
+  var ns = s;
+  var nv = v + 1;
+  if (nv > total) {
+    ns += 1;
+    nv = 1;
+  }
+  if (ns > 114) return null;
+  return (ns, nv);
+}
+
+/// Pure helper: the (surah, ayah) preceding ([s], [v]), or null at 1:1.
+(int, int)? prevAyahBefore(int s, int v) {
+  var ns = s;
+  var nv = v - 1;
+  if (nv < 1) {
+    ns -= 1;
+    if (ns < 1) return null;
+    nv = allSurahs[ns - 1].totalAyahs;
+  }
+  return (ns, nv);
+}
 
 class AudioRecitationService extends ChangeNotifier {
   static const String _selectedQariIdKey = 'selectedQariId';
@@ -139,6 +187,11 @@ class AudioRecitationService extends ChangeNotifier {
   /// 0 = off, 1/3/5 = that many total plays, -1 = infinite.
   int repeatMode = 0;
   int _completedPlays = 0;
+
+  /// Ayah-by-ayah mode: plays one ayah MP3 after another, advancing through
+  /// the Mushaf until the user stops. Ignores [repeatMode].
+  bool _ayahMode = false;
+  bool get ayahMode => _ayahMode;
 
   AudioPlayer get player => _player;
   Qari get selectedQari => _selectedQari;
@@ -172,7 +225,9 @@ class AudioRecitationService extends ChangeNotifier {
     _isPlaying =
         state.playing && state.processingState != ProcessingState.completed;
     if (state.processingState == ProcessingState.completed) {
-      if (repeatMode == -1) {
+      if (_ayahMode) {
+        await _advanceAyah();
+      } else if (repeatMode == -1) {
         // Infinite repeat.
         await _player.setLoopMode(LoopMode.one);
         await _player.seek(Duration.zero);
@@ -188,6 +243,40 @@ class AudioRecitationService extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  /// Advances to the next ayah (wrapping across surahs). Stops ayah mode at
+  /// the end of the Quran (114:6).
+  Future<void> _advanceAyah() async {
+    final next = _nextAyah();
+    if (next == null) {
+      _ayahMode = false;
+      await _player.stop();
+      notifyListeners();
+      return;
+    }
+    await playAyah(surah: next.$1, ayah: next.$2);
+  }
+
+  /// Returns (surah, ayah) of the ayah after the current one, or null at
+  /// the end of the Quran.
+  (int, int)? _nextAyah() => nextAyahAfter(_currentSurah, _currentAyah);
+
+  /// Skips to the next ayah (stays in ayah mode).
+  Future<void> playNextAyah() async {
+    final next = _nextAyah();
+    if (next == null) {
+      await stop();
+      return;
+    }
+    await playAyah(surah: next.$1, ayah: next.$2);
+  }
+
+  /// Skips to the previous ayah (stays in ayah mode).
+  Future<void> playPrevAyah() async {
+    final prev = prevAyahBefore(_currentSurah, _currentAyah);
+    if (prev == null) return;
+    await playAyah(surah: prev.$1, ayah: prev.$2);
   }
 
   void setSelectedQari(Qari qari) {
@@ -215,6 +304,7 @@ class AudioRecitationService extends ChangeNotifier {
   Future<void> setSpeed(double speed) => _player.setSpeed(speed);
 
   Future<void> playSurah({required int surahNumber}) async {
+    _ayahMode = false;
     _currentSurah = surahNumber;
     _currentAyah = 1;
     _completedPlays = 0;
@@ -235,6 +325,32 @@ class AudioRecitationService extends ChangeNotifier {
     }
   }
 
+  /// Plays a single ayah MP3 (everyayah.com) and enters ayah-by-ayah mode:
+  /// when the ayah finishes, the next ayah starts automatically until the
+  /// user stops. The current ayah is highlighted in the ayah player sheet.
+  Future<void> playAyah({required int surah, required int ayah}) async {
+    _ayahMode = true;
+    _currentSurah = surah;
+    _currentAyah = ayah;
+    _completedPlays = 0;
+
+    final audioUrl = _selectedQari.ayahUrl(surah, ayah);
+
+    try {
+      await _player.setLoopMode(LoopMode.off);
+      // Cache the ayah audio on disk while streaming, like surah audio.
+      await _player.setAudioSource(
+        LockCachingAudioSource(Uri.parse(audioUrl)),
+      );
+      await _player.play();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AudioRecitation] playAyah error: $e');
+      _ayahMode = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> pause() async {
     await _player.pause();
     notifyListeners();
@@ -246,6 +362,7 @@ class AudioRecitationService extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _ayahMode = false;
     await _player.stop();
     notifyListeners();
   }

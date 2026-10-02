@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
 import '../services/preferences_service.dart';
+import 'ayah_player_sheet.dart';
 
 /// Bookmarks & saved data: pages, ayahs and notes with export / import /
 /// clear-all toolbar actions.
@@ -301,11 +302,22 @@ Widget _ayahTile(
       leading: Icon(Icons.favorite, color: theme.colorScheme.primary),
       title: Text('$surahName • Ayah $v'),
       subtitle: Text(index == null ? 'Loading page…' : 'Page ${page ?? '?'}'),
-      onTap: () => onOpenPage(page ?? 1),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
-        tooltip: 'Remove ayah',
-        onPressed: () => prefs.toggleSavedAyah(key),
+      // Tapping a saved ayah highlights it and plays its audio ayah-by-ayah.
+      onTap: () => showAyahPlayer(context, surah: s, ayah: v),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.menu_book_outlined),
+            tooltip: 'Open page ${page ?? '?'}',
+            onPressed: () => onOpenPage(page ?? 1),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Remove ayah',
+            onPressed: () => prefs.toggleSavedAyah(key),
+          ),
+        ],
       ),
     ),
   );

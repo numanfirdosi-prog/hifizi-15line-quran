@@ -108,15 +108,16 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   void _showJumpToPageDialog() {
+    final cs = Theme.of(context).colorScheme;
     final textController = TextEditingController(text: _currentPage.toString());
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     // N5: dispose the controller when the dialog closes.
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F3A2C),
-        title: const Text('ورقہ / صفحہ منتخب کریں',
-            style: TextStyle(color: Colors.white, fontFamily: 'serif')),
+        backgroundColor: cs.surface,
+        title:  Text('ورقہ / صفحہ منتخب کریں',
+            style: TextStyle(color: cs.onSurface, fontFamily: 'serif')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -129,14 +130,14 @@ class _MushafScreenState extends State<MushafScreen> {
               controller: textController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
+              style: TextStyle(color: cs.onSurface, fontSize: 18),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF1B4D3E),
+                fillColor: cs.secondary,
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 hintText: 'Enter page 1-611',
-                hintStyle: const TextStyle(color: Colors.white54),
+                hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.54)),
               ),
             ),
           ],
@@ -145,12 +146,12 @@ class _MushafScreenState extends State<MushafScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child:
-                const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                Text('Cancel', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD4AF37),
-              foregroundColor: Colors.black,
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
             ),
             onPressed: () {
               final p = int.tryParse(textController.text.trim());
@@ -176,6 +177,7 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   void _showNoteDialog() {
+    final cs = Theme.of(context).colorScheme;
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     final textController = TextEditingController(
       text: prefs.pageNotes['$_currentPage'] ?? '',
@@ -183,34 +185,34 @@ class _MushafScreenState extends State<MushafScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F3A2C),
+        backgroundColor: cs.surface,
         title: Text(
           'نوٹ — صفحہ $_currentPage (Page Note)',
-          style: const TextStyle(
-              color: Color(0xFFD4AF37), fontWeight: FontWeight.bold),
+          style:  TextStyle(
+              color: cs.primary, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           controller: textController,
           maxLines: 4,
-          style: const TextStyle(color: Colors.white, fontSize: 15),
+          style: TextStyle(color: cs.onSurface, fontSize: 15),
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFF1B4D3E),
+            fillColor: cs.secondary,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             hintText: 'Write a note for this page...',
-            hintStyle: const TextStyle(color: Colors.white54),
+            hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.54)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child:
-                const Text('Cancel', style: TextStyle(color: Colors.white70)),
+                Text('Cancel', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD4AF37),
-              foregroundColor: Colors.black,
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
             ),
             onPressed: () {
               final text = textController.text.trim();
@@ -399,11 +401,12 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  Widget _buildStudyToolbar(PreferencesService prefs) {
+  Widget _buildStudyToolbar(BuildContext context, PreferencesService prefs) {
+    final cs = Theme.of(context).colorScheme;
     final currentHex = prefs.pageTint['$_currentPage'];
     final hasNote = prefs.pageNotes.containsKey('$_currentPage');
     return Container(
-      color: const Color(0xFF0F3A2C),
+      color: cs.surface,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
@@ -423,8 +426,8 @@ class _MushafScreenState extends State<MushafScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: currentHex == _tintHexOf(color)
-                        ? const Color(0xFFD4AF37)
-                        : Colors.white24,
+                        ? cs.primary
+                        : cs.onSurface.withValues(alpha: 0.24),
                     width: currentHex == _tintHexOf(color) ? 2.5 : 1,
                   ),
                 ),
@@ -436,7 +439,7 @@ class _MushafScreenState extends State<MushafScreen> {
             icon: Stack(
               clipBehavior: Clip.none,
               children: [
-                const Icon(Icons.note_add, color: Colors.white70),
+                Icon(Icons.note_add, color: cs.onSurface.withValues(alpha: 0.7)),
                 if (hasNote)
                   Positioned(
                     right: 0,
@@ -444,8 +447,8 @@ class _MushafScreenState extends State<MushafScreen> {
                     child: Container(
                       width: 9,
                       height: 9,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFD4AF37),
+                      decoration:  BoxDecoration(
+                        color: cs.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -456,7 +459,7 @@ class _MushafScreenState extends State<MushafScreen> {
             onPressed: _showNoteDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.clear, color: Colors.white70),
+            icon: Icon(Icons.clear, color: cs.onSurface.withValues(alpha: 0.7)),
             tooltip: 'Clear tint & note',
             onPressed: () {
               prefs.setPageTint(_currentPage, null);
@@ -472,6 +475,7 @@ class _MushafScreenState extends State<MushafScreen> {
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
     final audio = Provider.of<AudioRecitationService>(context);
+    final cs = Theme.of(context).colorScheme;
     final isBookmarked = prefs.bookmarks.contains(_currentPage);
     final isScroll = prefs.readingMode == 'scroll';
 
@@ -483,16 +487,16 @@ class _MushafScreenState extends State<MushafScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF071F17),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F3A2C),
+        // (AppBar background from theme)
         elevation: 2,
         title: Row(
           children: [
             Text(
               'صفحہ $_currentPage',
-              style: const TextStyle(
-                color: Color(0xFFD4AF37),
+              style:  TextStyle(
+                color: cs.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -500,7 +504,7 @@ class _MushafScreenState extends State<MushafScreen> {
             const SizedBox(width: 8),
             Text(
               '/ $totalPagesInMushaf',
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 14),
             ),
           ],
         ),
@@ -508,7 +512,7 @@ class _MushafScreenState extends State<MushafScreen> {
           IconButton(
             icon: Icon(
               audio.isPlaying ? Icons.pause : Icons.play_arrow,
-              color: Colors.white70,
+              color: cs.onSurface.withValues(alpha: 0.7),
             ),
             tooltip: 'Play / Pause Surah Recitation',
             onPressed: _onPlayPausePressed,
@@ -516,7 +520,7 @@ class _MushafScreenState extends State<MushafScreen> {
           IconButton(
             icon: Icon(
               isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: isBookmarked ? const Color(0xFFD4AF37) : Colors.white70,
+              color: isBookmarked ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
             ),
             onPressed: () => prefs.toggleBookmark(_currentPage),
           ),
@@ -524,14 +528,14 @@ class _MushafScreenState extends State<MushafScreen> {
             icon: Icon(
               Icons.brush,
               color:
-                  _showStudyToolbar ? const Color(0xFFD4AF37) : Colors.white70,
+                  _showStudyToolbar ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
             ),
             tooltip: 'Study Tools',
             onPressed: () =>
                 setState(() => _showStudyToolbar = !_showStudyToolbar),
           ),
           IconButton(
-            icon: const Icon(Icons.swap_horiz, color: Colors.white70),
+            icon: Icon(Icons.swap_horiz, color: cs.onSurface.withValues(alpha: 0.7)),
             tooltip: 'Jump to Page',
             onPressed: _showJumpToPageDialog,
           ),
@@ -540,7 +544,7 @@ class _MushafScreenState extends State<MushafScreen> {
       body: Column(
         children: [
           // Study toolbar (highlights + notes) below the AppBar
-          if (_showStudyToolbar) _buildStudyToolbar(prefs),
+          if (_showStudyToolbar) _buildStudyToolbar(context, prefs),
           Expanded(
             child: Stack(
               children: [
@@ -566,7 +570,7 @@ class _MushafScreenState extends State<MushafScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0F3A2C).withOpacity(0.9),
+                      color: cs.surface.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: const [
                         BoxShadow(color: Colors.black38, blurRadius: 8),
@@ -575,8 +579,8 @@ class _MushafScreenState extends State<MushafScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back_ios,
-                              size: 16, color: Colors.white70),
+                          icon:  Icon(Icons.arrow_back_ios,
+                              size: 16, color: cs.onSurface.withValues(alpha: 0.7)),
                           onPressed: () {
                             if (_currentPage > 1) {
                               if (isScroll) {
@@ -598,9 +602,9 @@ class _MushafScreenState extends State<MushafScreen> {
                         Expanded(
                           child: SliderTheme(
                             data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: const Color(0xFFD4AF37),
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: const Color(0xFFD4AF37),
+                              activeTrackColor: cs.primary,
+                              inactiveTrackColor: cs.onSurface.withValues(alpha: 0.24),
+                              thumbColor: cs.primary,
                               thumbShape: const RoundSliderThumbShape(
                                   enabledThumbRadius: 6),
                             ),
@@ -622,8 +626,8 @@ class _MushafScreenState extends State<MushafScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios,
-                              size: 16, color: Colors.white70),
+                          icon:  Icon(Icons.arrow_forward_ios,
+                              size: 16, color: cs.onSurface.withValues(alpha: 0.7)),
                           onPressed: () {
                             if (_currentPage < totalPagesInMushaf) {
                               if (isScroll) {
@@ -660,15 +664,15 @@ class _MushafScreenState extends State<MushafScreen> {
                         color: const Color(0xFF0A291E),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: const Color(0xFFD4AF37), width: 1.2),
+                            color: cs.primary, width: 1.2),
                         boxShadow: const [
                           BoxShadow(color: Colors.black54, blurRadius: 10),
                         ],
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.graphic_eq,
-                              color: Color(0xFFD4AF37)),
+                           Icon(Icons.graphic_eq,
+                              color: cs.primary),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -677,15 +681,15 @@ class _MushafScreenState extends State<MushafScreen> {
                               children: [
                                 Text(
                                   'Surah ${audio.currentSurah}: ${allSurahs[audio.currentSurah - 1].nameEn}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
+                                  style:  TextStyle(
+                                      color: cs.onSurface,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13),
                                 ),
                                 Text(
                                   audio.selectedQari.name,
-                                  style: const TextStyle(
-                                      color: Color(0xFFD4AF37), fontSize: 11),
+                                  style:  TextStyle(
+                                      color: cs.primary, fontSize: 11),
                                 ),
                               ],
                             ),
@@ -700,8 +704,8 @@ class _MushafScreenState extends State<MushafScreen> {
                             onPressed: _cycleSpeed,
                             child: Text(
                               _speedLabel(prefs.playbackSpeed),
-                              style: const TextStyle(
-                                  color: Color(0xFFD4AF37), fontSize: 11),
+                              style:  TextStyle(
+                                  color: cs.primary, fontSize: 11),
                             ),
                           ),
                           TextButton(
@@ -714,18 +718,18 @@ class _MushafScreenState extends State<MushafScreen> {
                             onPressed: _cycleRepeat,
                             child: Text(
                               _repeatLabels[prefs.repeatMode] ?? 'Off',
-                              style: const TextStyle(
-                                  color: Color(0xFFD4AF37), fontSize: 11),
+                              style:  TextStyle(
+                                  color: cs.primary, fontSize: 11),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.pause_circle_filled,
-                                color: Color(0xFFD4AF37), size: 32),
+                            icon:  Icon(Icons.pause_circle_filled,
+                                color: cs.primary, size: 32),
                             onPressed: _onPlayPausePressed,
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close,
-                                color: Colors.white54, size: 20),
+                            icon:  Icon(Icons.close,
+                                color: cs.onSurface.withValues(alpha: 0.54), size: 20),
                             onPressed: () => audio.stop(),
                           ),
                         ],

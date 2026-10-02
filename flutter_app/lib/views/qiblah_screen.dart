@@ -47,6 +47,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
+    final cs = Theme.of(context).colorScheme;
     final qiblah = PrayerCalculationService.calculateQiblah(
       prefs.selectedCity.lat,
       prefs.selectedCity.lng,
@@ -59,13 +60,12 @@ class _QiblahScreenState extends State<QiblahScreen> {
 
     if (!_hasSensor) {
       return Scaffold(
-        backgroundColor: const Color(0xFF071F17),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F3A2C),
-          title: const Text(
+          title: Text(
             'قبلہ نما (Qiblah Compass)',
             style: TextStyle(
-                color: Color(0xFFD4AF37),
+                color: cs.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18),
           ),
@@ -76,23 +76,25 @@ class _QiblahScreenState extends State<QiblahScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.compass_calibration,
-                    size: 72, color: Color(0xFFD4AF37)),
+                Icon(Icons.compass_calibration,
+                    size: 72, color: cs.primary),
                 const SizedBox(height: 20),
                 Text(
                   '${prefs.selectedCity.name}\nQiblah: ${qiblah.bearing}° ${qiblah.cardinal} • ${qiblah.distanceKm} km',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: cs.onSurface,
                       fontSize: 15,
                       fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'This device has no compass sensor, so the live needle cannot work here. The Qiblah bearing above is still correct — face that direction from North.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: Colors.white70, fontSize: 13, height: 1.5),
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                      fontSize: 13,
+                      height: 1.5),
                 ),
               ],
             ),
@@ -102,15 +104,12 @@ class _QiblahScreenState extends State<QiblahScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF071F17),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F3A2C),
-        title: const Text(
+        title: Text(
           'قبلہ نما (Qiblah Compass)',
           style: TextStyle(
-              color: Color(0xFFD4AF37),
-              fontWeight: FontWeight.bold,
-              fontSize: 18),
+              color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
       body: Center(
@@ -124,15 +123,15 @@ class _QiblahScreenState extends State<QiblahScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F3A2C),
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: const Color(0xFFD4AF37).withOpacity(0.5)),
+                      color: cs.primary.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   '${prefs.selectedCity.name} • ${qiblah.bearing}° ${qiblah.cardinal} • ${qiblah.distanceKm} km',
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: cs.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.bold),
                 ),
@@ -151,17 +150,16 @@ class _QiblahScreenState extends State<QiblahScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isFacingKaaba
-                            ? Colors.greenAccent
-                            : const Color(0xFFD4AF37),
+                        color:
+                            isFacingKaaba ? Colors.greenAccent : cs.primary,
                         width: 3,
                       ),
                       color: const Color(0xFF0B2D22),
                       boxShadow: [
                         BoxShadow(
                           color: isFacingKaaba
-                              ? Colors.greenAccent.withOpacity(0.4)
-                              : const Color(0xFFD4AF37).withOpacity(0.2),
+                              ? Colors.greenAccent.withValues(alpha: 0.4)
+                              : cs.primary.withValues(alpha: 0.2),
                           blurRadius: 18,
                         ),
                       ],
@@ -185,27 +183,30 @@ class _QiblahScreenState extends State<QiblahScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18)),
                           ),
-                          const Align(
+                          Align(
                             alignment: Alignment.bottomCenter,
                             child: Text('S',
                                 style: TextStyle(
-                                    color: Colors.white60,
+                                    color: cs.onSurface
+                                        .withValues(alpha: 0.6),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
                           ),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text('E',
                                 style: TextStyle(
-                                    color: Colors.white60,
+                                    color: cs.onSurface
+                                        .withValues(alpha: 0.6),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
                           ),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
                             child: Text('W',
                                 style: TextStyle(
-                                    color: Colors.white60,
+                                    color: cs.onSurface
+                                        .withValues(alpha: 0.6),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16)),
                           ),
@@ -219,10 +220,10 @@ class _QiblahScreenState extends State<QiblahScreen> {
                     angle: ((qiblah.bearing - _heading) * (math.pi / 180.0)),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(Icons.navigation,
-                            size: 52, color: Color(0xFFD4AF37)),
-                        SizedBox(height: 70),
+                            size: 52, color: cs.primary),
+                        const SizedBox(height: 70),
                       ],
                     ),
                   ),
@@ -233,12 +234,10 @@ class _QiblahScreenState extends State<QiblahScreen> {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isFacingKaaba
-                          ? Colors.green
-                          : const Color(0xFFD4AF37),
+                      color:
+                          isFacingKaaba ? Colors.green : cs.primary,
                     ),
-                    child:
-                        const Icon(Icons.mosque, color: Colors.black, size: 24),
+                    child: Icon(Icons.mosque, color: cs.onPrimary, size: 24),
                   ),
                 ],
               ),
@@ -254,9 +253,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
                         : 'Turn device to align needle with top',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isFacingKaaba
-                      ? Colors.greenAccent
-                      : const Color(0xFFD4AF37),
+                  color: isFacingKaaba ? Colors.greenAccent : cs.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -266,11 +263,13 @@ class _QiblahScreenState extends State<QiblahScreen> {
 
               // N2: calibration hint — an uncalibrated magnetometer is the
               // most common cause of a steady compass offset.
-              const Text(
+              Text(
                 'Needle looks off? Move your phone in a figure-8 (∞) motion a few times to calibrate the compass, and keep it away from laptops, speakers & magnets.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    color: Colors.white54, fontSize: 11.5, height: 1.5),
+                    color: cs.onSurface.withValues(alpha: 0.54),
+                    fontSize: 11.5,
+                    height: 1.5),
               ),
             ],
           ),

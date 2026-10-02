@@ -4,6 +4,7 @@ import '../data/quran_data.dart';
 import '../data/verse_index.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
+import 'ayah_player_sheet.dart';
 
 /// Full-text search across the Quran (Arabic + English). Filter runs only on
 /// submit, never on every keystroke.
@@ -169,16 +170,9 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(16),
                           onTap: () {
-                            if (page != null) {
-                              widget.onOpenPage(page);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Page not found for this verse'),
-                                ),
-                              );
-                            }
+                            // Tapping an ayah highlights it and plays its
+                            // audio ayah-by-ayah until stopped.
+                            showAyahPlayer(context, surah: e.s, ayah: e.v);
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(14),
@@ -208,13 +202,30 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  '$surahName ${e.v} • Page ${page ?? '?'}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.primary,
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '$surahName ${e.v} • Page ${page ?? '?'}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: cs.primary,
+                                        ),
+                                      ),
+                                    ),
+                                    if (page != null)
+                                      IconButton(
+                                        tooltip: 'Open page $page',
+                                        icon: Icon(
+                                          Icons.menu_book_outlined,
+                                          color: cs.primary,
+                                          size: 20,
+                                        ),
+                                        onPressed: () =>
+                                            widget.onOpenPage(page),
+                                      ),
+                                  ],
                                 ),
                               ],
                             ),
