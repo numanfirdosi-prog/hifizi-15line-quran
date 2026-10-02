@@ -1,5 +1,5 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
-import 'package:uni_links/uni_links.dart';
 
 import '../data/quran_data.dart';
 
@@ -29,16 +29,15 @@ class DeepLinkService {
   static Future<void> init() async {
     if (_started) return;
     _started = true;
+    final appLinks = AppLinks();
     try {
-      final initial = await getInitialUri();
+      final initial = await appLinks.getInitialLink();
       if (initial != null) _handle(initial);
     } catch (_) {
-      // uni_links unavailable — deep links simply won't work.
+      // Link handling unavailable — deep links simply won't work.
     }
     try {
-      uriLinkStream.listen((uri) {
-        if (uri != null) _handle(uri);
-      }, onError: (_) {});
+      appLinks.uriLinkStream.listen(_handle, onError: (_) {});
     } catch (_) {}
   }
 
