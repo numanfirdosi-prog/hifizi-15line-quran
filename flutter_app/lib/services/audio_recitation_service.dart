@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -202,7 +204,23 @@ class AudioRecitationService extends ChangeNotifier {
   AudioRecitationService() {
     _restoreSelectedQari();
     _player.playerStateStream.listen(_onPlayerState);
+    // Website-style highlight fill: 0..1 progress of the current ayah.
+    _player.positionStream.listen((pos) {
+      if (!_ayahMode || _progressClosed) return;
+      final d = _player.duration;
+      final p = (d == null || d.inMilliseconds <= 0)
+          ? 0.0
+          : (pos.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
+      _ayahProgressController.add(p);
+    });
   }
+
+  final _ayahProgressController = StreamController<double>.broadcast();
+  bool _progressClosed = false;
+
+  /// 0..1 playback progress of the currently playing ayah (ayah mode).
+  /// Drives the website-style right-to-left highlight fill.
+  Stream<double> get ayahProgressStream => _ayahProgressController.stream;
 
   Future<void> _restoreSelectedQari() async {
     try {
@@ -374,6 +392,8 @@ class AudioRecitationService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _progressClosed = true;
+    _ayahProgressController.close();
     _player.dispose();
     super.dispose();
   }

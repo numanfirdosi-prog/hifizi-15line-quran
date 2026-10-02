@@ -175,38 +175,44 @@ AyahSeg? hitTestAyah(List<AyahSeg> segs, double fx, double fy, int page) {
   return _matchLine(segs, lineNo, tx);
 }
 
+/// Highlight rectangle (fractions 0..1 of the page-image box) for one segment.
+AyahRect rectForSeg(AyahSeg seg, int page) {
+  if (_isLauhPage(page)) {
+    if (seg.line == 0) {
+      return AyahRect(
+        left: _kLauhBisLeft + (100 - seg.right - seg.width) / 100 * _kLauhBisW,
+        top: _kLauhBisTop,
+        width: seg.width / 100 * _kLauhBisW,
+        height: _kLauhBisH,
+      );
+    }
+    final row = _kLauhRows[seg.line];
+    if (row == null) {
+      return const AyahRect(left: 0, top: 0, width: 0, height: 0);
+    }
+    return AyahRect(
+      left: _kLauhRowLeft + (100 - seg.right - seg.width) / 100 * _kLauhRowW,
+      top: row.$1,
+      width: seg.width / 100 * _kLauhRowW,
+      height: row.$2,
+    );
+  }
+  // Regular page: segment % is relative to the text-area row.
+  return AyahRect(
+    left: _kTextLeft + (100 - seg.right - seg.width) / 100 * _kTextWidth,
+    top: _kTextTop + (seg.line - 1) / 15 * _kTextHeight,
+    width: seg.width / 100 * _kTextWidth,
+    height: _kTextHeight / 15,
+  );
+}
+
 /// Highlight rectangles (fractions 0..1 of the page-image box) for one ayah.
 List<AyahRect> rectsForAyah(List<AyahSeg> segs, int s, int v, int page) {
   final out = <AyahRect>[];
   for (final seg in segs) {
     if (seg.surah != s || seg.ayah != v) continue;
-    if (_isLauhPage(page)) {
-      if (seg.line == 0) {
-        out.add(AyahRect(
-          left: _kLauhBisLeft + (100 - seg.right - seg.width) / 100 * _kLauhBisW,
-          top: _kLauhBisTop,
-          width: seg.width / 100 * _kLauhBisW,
-          height: _kLauhBisH,
-        ));
-      } else {
-        final row = _kLauhRows[seg.line];
-        if (row == null) continue;
-        out.add(AyahRect(
-          left: _kLauhRowLeft + (100 - seg.right - seg.width) / 100 * _kLauhRowW,
-          top: row.$1,
-          width: seg.width / 100 * _kLauhRowW,
-          height: row.$2,
-        ));
-      }
-      continue;
-    }
-    // Regular page: segment % is relative to the text-area row.
-    out.add(AyahRect(
-      left: _kTextLeft + (100 - seg.right - seg.width) / 100 * _kTextWidth,
-      top: _kTextTop + (seg.line - 1) / 15 * _kTextHeight,
-      width: seg.width / 100 * _kTextWidth,
-      height: _kTextHeight / 15,
-    ));
+    final r = rectForSeg(seg, page);
+    if (r.width > 0 && r.height > 0) out.add(r);
   }
   return out;
 }

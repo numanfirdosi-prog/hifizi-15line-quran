@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -470,8 +472,10 @@ class _MushafScreenState extends State<MushafScreen> {
   );
   }
 
-  /// Gold highlight rectangles over the currently playing ayah's segments
-  /// (visible only while ayah-by-ayah audio is active).
+  /// Website-exact ayah highlight (visible only while ayah-by-ayah audio is
+  /// active): a thin gold band (15px equivalent, vertically centered on the
+  /// line row, no border) that fills right-to-left with the audio progress,
+  /// just like `.ayah-segment.playing` on the 15-line Quran website.
   Widget _buildAyahHighlights(int pageNum) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -481,35 +485,82 @@ class _MushafScreenState extends State<MushafScreen> {
           future: _segmentsFuture,
           builder: (context, snap) {
             final segs = snap.data?[pageNum] ?? const <AyahSeg>[];
-            final rects = rectsForAyah(
-                segs, audio.currentSurah, audio.currentAyah, pageNum);
-            if (rects.isEmpty) return const SizedBox.shrink();
+            final ayahSegs = segs
+                .where((s) =>
+                    s.surah == audio.currentSurah &&
+                    s.ayah == audio.currentAyah)
+                .toList()
+              ..sort((a, b) => a.line.compareTo(b.line));
+            if (ayahSegs.isEmpty) return const SizedBox.shrink();
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
-            return IgnorePointer(
-              child: Stack(
-                children: [
-                  for (final r in rects)
-                    Positioned(
-                      left: r.left * w,
-                      top: r.top * h,
-                      width: r.width * w,
-                      height: r.height * h,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD4AF37)
-                              .withValues(alpha: 0.35),
-                          border: Border.all(
-                            color: const Color(0xFFD4AF37)
-                                .withValues(alpha: 0.85),
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            // Website: 15px band on the (max 580px wide -> ~870px tall) wrapper.
+            final bandH = h * 0.0172;
+            final isDark =
+                Theme.of(context).brightness == Brightness.dark;
+            // Website gold: light rgba(212,175,55,0.45), dark rgba(240,205,95,0.50).
+            final gold = isDark
+                ? const Color.fromRGBO(240, 205, 95, 0.50)
+                : const Color.fromRGBO(212, 175, 55, 0.45);
+            return StreamBuilder<double>(
+              stream: audio.ayahProgressStream,
+              initialData: 0.0,
+              builder: (context, progSnap) {
+                final progress =
+                    (progSnap.data ?? 0.0).clamp(0.0, 1.0);
+                // Website progress distribution: segments fill in line order,
+                // weighted by width (min 5), each filling right-to-left.
+                final weights = ayahSegs
+                    .map((s) => max(5.0, s.width))
+                    .toList();
+                final total = weights.fold(0.0, (a, b) => a + b);
+                double acc = 0;
+                return IgnorePointer(
+                  child: Stack(
+                    children: [
+                      for (int i = 0; i < ayahSegs.length; i++)
+                        Builder(builder: (context) {
+                          final seg = ayahSegs[i];
+                          final startFrac = acc / total;
+                          acc += weights[i];
+                          final endFrac = acc / total;
+                          double segProg;
+                          if (progress >= endFrac) {
+                            segProg = 1.0;
+                          } else if (progress <= startFrac) {
+                            segProg = 0.0;
+                          } else {
+                            segProg = (progress - startFrac) /
+                                (endFrac - startFrac);
+                          }
+                          final r = rectForSeg(seg, pageNum);
+                          final rw = r.width * w;
+                          return Positioned(
+                            left: r.left * w,
+                            top: r.top * h + (r.height * h - bandH) / 2,
+                            width: rw,
+                            height: bandH,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3),
+                              child: Stack(
+                                children: [
+                                  // RTL fill: gold grows from the right edge.
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: rw * segProg.clamp(0.0, 1.0),
+                                    child: Container(color: gold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                    ],
+                  ),
+                );
+              },
             );
           },
         );
