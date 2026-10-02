@@ -328,7 +328,10 @@ class AudioRecitationService extends ChangeNotifier {
   /// Plays a single ayah MP3 (everyayah.com) and enters ayah-by-ayah mode:
   /// when the ayah finishes, the next ayah starts automatically until the
   /// user stops. The current ayah is highlighted in the ayah player sheet.
-  Future<void> playAyah({required int surah, required int ayah}) async {
+  /// Plays a single ayah's audio and auto-advances ayah-by-ayah.
+  /// Returns true on success, false when the audio could not be loaded
+  /// (e.g. no internet).
+  Future<bool> playAyah({required int surah, required int ayah}) async {
     _ayahMode = true;
     _currentSurah = surah;
     _currentAyah = ayah;
@@ -344,10 +347,12 @@ class AudioRecitationService extends ChangeNotifier {
       );
       await _player.play();
       notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('[AudioRecitation] playAyah error: $e');
       _ayahMode = false;
       notifyListeners();
+      return false;
     }
   }
 

@@ -17,8 +17,15 @@ void showAyahPlayer(BuildContext context,
   final audio = Provider.of<AudioRecitationService>(context, listen: false);
   _quranTextFuture ??= loadQuranText();
   // Start playback after the sheet is on screen so the UI updates live.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    audio.playAyah(surah: surah, ayah: ayah);
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    final ok = await audio.playAyah(surah: surah, ayah: ayah);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Audio nahi chal saka — internet check karein'),
+        ),
+      );
+    }
   });
   showModalBottomSheet(
     context: context,

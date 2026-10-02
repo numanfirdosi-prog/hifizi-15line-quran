@@ -29,6 +29,7 @@ class PreferencesService extends ChangeNotifier {
   List<String> _savedAyahs = []; // 's:v'
   Map<String, String> _pageNotes = {}; // page -> note
   Map<String, String> _pageTint = {}; // page -> color hex
+  bool _ayahTapHintShown = false;
 
   Map<String, bool> _prayerAlarms = {
     'fajr': true,
@@ -60,6 +61,7 @@ class PreferencesService extends ChangeNotifier {
   List<String> get savedAyahs => _savedAyahs;
   Map<String, String> get pageNotes => _pageNotes;
   Map<String, String> get pageTint => _pageTint;
+  bool get ayahTapHintShown => _ayahTapHintShown;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -79,6 +81,7 @@ class PreferencesService extends ChangeNotifier {
     _readingMode = _prefs.getString('nur_reading_mode') ?? 'slide';
     _repeatMode = _prefs.getInt('nur_repeat_mode') ?? 0;
     _playbackSpeed = _prefs.getDouble('nur_playback_speed') ?? 1.0;
+    _ayahTapHintShown = _prefs.getBool('nur_ayah_tap_hint_shown') ?? false;
 
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
     if (savedAyahsJson != null) {
@@ -247,6 +250,12 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setPlaybackSpeed(double speed) async {
     _playbackSpeed = speed;
     await _prefs.setDouble('nur_playback_speed', speed);
+    notifyListeners();
+  }
+
+  Future<void> setAyahTapHintShown(bool shown) async {
+    _ayahTapHintShown = shown;
+    await _prefs.setBool('nur_ayah_tap_hint_shown', shown);
     notifyListeners();
   }
 

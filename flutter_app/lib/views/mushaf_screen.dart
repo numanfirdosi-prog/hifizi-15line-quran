@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
 import '../utils/page_image_url.dart';
@@ -35,6 +36,13 @@ class _MushafScreenState extends State<MushafScreen> {
   // Cached page -> first 's:v' index (loaded once, used for audio + markRead).
   late final Future<Map<int, String>> _firstVerseIndex;
 
+  // Ayah tap-to-play: per-page ayah segments + verseKey->page index,
+  // both loaded once and cached.
+  late final Future<Map<int, List<AyahSeg>>> _segmentsFuture;
+  late final Future<Map<String, int>> _versePageIndexFuture;
+  late final AudioRecitationService _audio;
+  bool _followingAyah = false;
+
   static const List<double> _speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
   static const List<int> _repeatModes = [0, 1, 3, 5, -1];
   static const Map<int, String> _repeatLabels = {
@@ -54,10 +62,16 @@ class _MushafScreenState extends State<MushafScreen> {
     // Pages in Mushaf are 1 to 611
     _pageController = PageController(initialPage: _currentPage - 1);
     _firstVerseIndex = loadPageFirstVerseIndex();
+    _segmentsFuture = loadPageAyahSegments();
+    _versePageIndexFuture = loadVersePageIndex();
+    _audio = Provider.of<AudioRecitationService>(context, listen: false);
+    _audio.addListener(_followAyah);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTapHint());
   }
 
   @override
   void dispose() {
+    _audio.removeListener(_followAyah);
     _pageController.dispose();
     _scrollController?.dispose();
     _transformController.dispose();
@@ -91,6 +105,82 @@ class _MushafScreenState extends State<MushafScreen> {
       final ayah = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 1;
       await prefs.markRead(surah: surah, ayah: ayah, page: page);
     } catch (_) {}
+  }
+
+  /// When ayah-by-ayah audio is playing, keep the visible page on the
+  /// currently playing ayah's page.
+  Future<void> _followAyah() async {
+    if (_followingAyah || !mounted) return;
+    if (!_audio.ayahMode) return;
+    final key = '${_audio.currentSurah}:${_audio.currentAyah}';
+    final index = await _versePageIndexFuture;
+    if (!mounted) return;
+    final page = index[key];
+    if (page == null || page == _currentPage) return;
+    _followingAyah = true;
+    try {
+      final prefs = Provider.of<PreferencesService>(context, listen: false);
+      if (prefs.readingMode == 'scroll') {
+        final itemHeight = _scrollItemHeight(context);
+        await _scrollController?.animateTo(
+          (page - 1) * itemHeight,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      } else if (_pageController.hasClients) {
+        await _pageController.animateToPage(
+          page - 1,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    } catch (_) {
+    } finally {
+      _followingAyah = false;
+    }
+  }
+
+  /// One-time hint telling the user that ayahs on the page are tappable.
+  Future<void> _maybeShowTapHint() async {
+    if (!mounted) return;
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    if (prefs.ayahTapHintShown) return;
+    try {
+      await prefs.setAyahTapHintShown(true);
+    } catch (_) {
+      return; // SharedPreferences not ready — skip the one-time hint.
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+            '💡 Kisi bhi ayat par tap karein — woh highlight hogi aur tilawat shuru ho jayegi'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+  }
+
+  /// Handles a tap on the page image: hit-tests the ayah segments and
+  /// starts ayah-by-ayah audio for the tapped ayah.
+  Future<void> _onPageTap(
+      BuildContext tapCtx, TapUpDetails details, int pageNum) async {
+    final box = tapCtx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final local = box.globalToLocal(details.globalPosition);
+    final fx = (local.dx / box.size.width).clamp(0.0, 1.0);
+    final fy = (local.dy / box.size.height).clamp(0.0, 1.0);
+    final segsMap = await _segmentsFuture;
+    if (!mounted) return;
+    final hit = hitTestAyah(segsMap[pageNum] ?? const <AyahSeg>[], fx, fy);
+    if (hit == null) return;
+    final ok = await _audio.playAyah(surah: hit.surah, ayah: hit.ayah);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Audio nahi chal saka — internet check karein'),
+        ),
+      );
+    }
   }
 
   String _tintHexOf(Color color) =>
@@ -268,10 +358,12 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   double _scrollItemHeight(BuildContext context) =>
-      (MediaQuery.of(context).size.width - 8) * 4 / 3;
+      (MediaQuery.of(context).size.width - 8) / 0.6908;
 
   /// The page image Container + CachedNetworkImage (with tint overlay),
-  /// without the InteractiveViewer wrapper.
+  /// without the InteractiveViewer wrapper. The image box keeps the exact
+  /// page-image aspect (7428x10753 -> 0.6908) so ayah tap coordinates map
+  /// 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
     final prefs = Provider.of<PreferencesService>(context);
     final tint = _pageTintColor(prefs.pageTint['$pageNum']);
@@ -290,11 +382,13 @@ class _MushafScreenState extends State<MushafScreen> {
           ],
         ),
         clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            CachedNetworkImage(
-              imageUrl: mushafPageImageUrl(pageNum),
-              fit: BoxFit.contain,
+        child: AspectRatio(
+          aspectRatio: 0.6908,
+          child: Stack(
+            children: [
+              CachedNetworkImage(
+                imageUrl: mushafPageImageUrl(pageNum),
+                fit: BoxFit.contain,
               // M7: pages are cached on disk — the Mushaf keeps working offline.
               progressIndicatorBuilder: (context, url, progress) {
                 return Center(
@@ -356,9 +450,70 @@ class _MushafScreenState extends State<MushafScreen> {
                   ),
                 ),
               ),
+            // Currently playing ayah highlight (ayah-by-ayah audio mode).
+            _buildAyahHighlights(pageNum),
+            // Tap-to-ayah detector: LAST so it sits above the overlays.
+            // Translucent: taps pass through visually but are still caught.
+            Positioned.fill(
+              child: Builder(
+                builder: (tapCtx) => GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+            ),
           ],
         ),
       ),
+    ),
+  );
+  }
+
+  /// Gold highlight rectangles over the currently playing ayah's segments
+  /// (visible only while ayah-by-ayah audio is active).
+  Widget _buildAyahHighlights(int pageNum) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final audio = Provider.of<AudioRecitationService>(context);
+        if (!audio.ayahMode) return const SizedBox.shrink();
+        return FutureBuilder<Map<int, List<AyahSeg>>>(
+          future: _segmentsFuture,
+          builder: (context, snap) {
+            final segs = snap.data?[pageNum] ?? const <AyahSeg>[];
+            final rects =
+                rectsForAyah(segs, audio.currentSurah, audio.currentAyah);
+            if (rects.isEmpty) return const SizedBox.shrink();
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            return IgnorePointer(
+              child: Stack(
+                children: [
+                  for (final r in rects)
+                    Positioned(
+                      left: r.leftPct / 100 * w,
+                      top: r.topPct / 100 * h,
+                      width: r.widthPct / 100 * w,
+                      height: r.heightPct / 100 * h,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD4AF37)
+                              .withValues(alpha: 0.35),
+                          border: Border.all(
+                            color: const Color(0xFFD4AF37)
+                                .withValues(alpha: 0.85),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -368,7 +523,7 @@ class _MushafScreenState extends State<MushafScreen> {
       {bool interactive = true}) {
     final pageImage = _buildPageImage(context, pageNum);
     if (!interactive) {
-      return AspectRatio(aspectRatio: 3 / 4, child: pageImage);
+      return AspectRatio(aspectRatio: 0.6908, child: pageImage);
     }
     return InteractiveViewer(
       transformationController: _transformController,
