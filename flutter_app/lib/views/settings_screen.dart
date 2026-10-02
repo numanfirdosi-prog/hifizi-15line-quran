@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
+import '../services/audio_recitation_service.dart';
 import '../services/azan_alarm_service.dart';
+import '../utils/script_font.dart';
 
 class SettingsScreen extends StatelessWidget {
-  final Function(int page) onOpenPage;
-  const SettingsScreen({Key? key, required this.onOpenPage}) : super(key: key);
+  final void Function(int page) onOpenPage;
+  const SettingsScreen({super.key, required this.onOpenPage});
 
   Future<void> _reschedule(PreferencesService prefs) {
     return AzanAlarmService().scheduleDailyPrayerAlarms(
@@ -14,6 +16,97 @@ class SettingsScreen extends StatelessWidget {
       enabledAlarms: prefs.prayerAlarms,
       azanSoundEnabled: prefs.azanSoundEnabled,
       lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
+    );
+  }
+
+  Widget _scriptCard(
+    BuildContext context, {
+    required String style,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? const Color(0xFFD4AF37) : Colors.white12,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+                style: arabicStyle(style, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? const Color(0xFFD4AF37) : Colors.white70,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _themeCard({
+    required String label,
+    required Color previewBg,
+    required Color previewText,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: previewBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selected ? const Color(0xFFD4AF37) : Colors.white12,
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'آ',
+                  style: TextStyle(
+                      color: previewText,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: selected ? const Color(0xFFD4AF37) : Colors.white70,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -127,6 +220,318 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Reading Section (mode, script, theme, ayah scale)
+          Card(
+            color: const Color(0xFF0F3A2C),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Reading / مطالعہ',
+                    style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Reading Mode / مطالعے کا انداز',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Page Slide / صفحہ بہ صفحہ',
+                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    value: 'slide',
+                    groupValue: prefs.readingMode,
+                    activeColor: const Color(0xFFD4AF37),
+                    onChanged: (val) {
+                      if (val != null) prefs.setReadingMode(val);
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Continuous Scroll / مسلسل اسکرول',
+                        style: TextStyle(color: Colors.white, fontSize: 14)),
+                    value: 'scroll',
+                    groupValue: prefs.readingMode,
+                    activeColor: const Color(0xFFD4AF37),
+                    onChanged: (val) {
+                      if (val != null) prefs.setReadingMode(val);
+                    },
+                  ),
+                  const Divider(color: Colors.white12),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Script Style / رسم الخط',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _scriptCard(
+                        context,
+                        style: 'nastaliq',
+                        label: 'Indo-Pak Nastaliq',
+                        selected: prefs.scriptStyle == 'nastaliq',
+                        onTap: () => prefs.setScriptStyle('nastaliq'),
+                      ),
+                      const SizedBox(width: 8),
+                      _scriptCard(
+                        context,
+                        style: 'uthmani',
+                        label: 'Uthmani Madinah',
+                        selected: prefs.scriptStyle == 'uthmani',
+                        onTap: () => prefs.setScriptStyle('uthmani'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Theme / تھیم',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _themeCard(
+                        label: 'Night Slate',
+                        previewBg: const Color(0xFF071F17),
+                        previewText: const Color(0xFFD4AF37),
+                        selected: prefs.themeName == 'night',
+                        onTap: () => prefs.setThemeName('night'),
+                      ),
+                      const SizedBox(width: 8),
+                      _themeCard(
+                        label: 'Emerald Day',
+                        previewBg: const Color(0xFFE8F5E9),
+                        previewText: const Color(0xFF1B5E20),
+                        selected: prefs.themeName == 'emerald',
+                        onTap: () => prefs.setThemeName('emerald'),
+                      ),
+                      const SizedBox(width: 8),
+                      _themeCard(
+                        label: 'Antique Parchment',
+                        previewBg: const Color(0xFFF5E6C4),
+                        previewText: const Color(0xFF5D4037),
+                        selected: prefs.themeName == 'parchment',
+                        onTap: () => prefs.setThemeName('parchment'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Ayah Text Size / آیت کا سائز',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      Text(
+                        '${(prefs.ayahScale * 100).round()}%',
+                        style: const TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: prefs.ayahScale,
+                    min: 0.8,
+                    max: 1.3,
+                    divisions: 10,
+                    label: '${(prefs.ayahScale * 100).round()}%',
+                    activeColor: const Color(0xFFD4AF37),
+                    inactiveColor: Colors.white24,
+                    onChanged: (v) => prefs.setAyahScale(v),
+                  ),
+                  Center(
+                    child: Text(
+                      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                      textDirection: TextDirection.rtl,
+                      style: arabicStyle(prefs.scriptStyle,
+                          fontSize: 20, scale: prefs.ayahScale),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Audio Section (default qari, repeat, speed)
+          Card(
+            color: const Color(0xFF0F3A2C),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Consumer<AudioRecitationService>(
+                builder: (context, audio, _) {
+                  const repeatModes = [0, 1, 3, 5, -1];
+                  const repeatLabels = {
+                    0: 'Off',
+                    1: '1x',
+                    3: '3x',
+                    5: '5x',
+                    -1: '∞'
+                  };
+                  const speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Audio / تلاوت',
+                        style: TextStyle(
+                            color: Color(0xFFD4AF37),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Default Qari / قاری کا انتخاب',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      DropdownButton<Qari>(
+                        value: audio.selectedQari,
+                        dropdownColor: const Color(0xFF0F3A2C),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 14),
+                        isExpanded: true,
+                        items: availableQaris
+                            .map((q) => DropdownMenuItem<Qari>(
+                                  value: q,
+                                  child: Text(
+                                    '${q.name} (${q.style})',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (q) {
+                          if (q != null) audio.setQari(q);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Repeat / تکرار',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: repeatModes.map((m) {
+                          final selected = prefs.repeatMode == m;
+                          return ChoiceChip(
+                            label: Text(repeatLabels[m]!),
+                            selected: selected,
+                            selectedColor: const Color(0xFFD4AF37),
+                            backgroundColor: const Color(0xFF144234),
+                            labelStyle: TextStyle(
+                              color: selected ? Colors.black : Colors.white70,
+                              fontSize: 12,
+                            ),
+                            onSelected: (_) {
+                              prefs.setRepeatMode(m);
+                              audio.setRepeatMode(m);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Playback Speed / رفتار',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: speeds.map((v) {
+                          final selected = prefs.playbackSpeed == v;
+                          return ChoiceChip(
+                            label: Text(v == v.roundToDouble()
+                                ? '${v.toInt()}x'
+                                : '${v}x'),
+                            selected: selected,
+                            selectedColor: const Color(0xFFD4AF37),
+                            backgroundColor: const Color(0xFF144234),
+                            labelStyle: TextStyle(
+                              color: selected ? Colors.black : Colors.white70,
+                              fontSize: 12,
+                            ),
+                            onSelected: (_) {
+                              prefs.setPlaybackSpeed(v);
+                              audio.setSpeed(v);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Reading Goal Section
+          Card(
+            color: const Color(0xFF0F3A2C),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Reading Goal / روزانہ ہدف',
+                    style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove,
+                            color: Colors.white70, size: 20),
+                        onPressed: prefs.dailyTargetPages > 1
+                            ? () => prefs
+                                .setDailyTargetPages(prefs.dailyTargetPages - 1)
+                            : null,
+                      ),
+                      Text(
+                        '${prefs.dailyTargetPages} pages / day',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add,
+                            color: Colors.white70, size: 20),
+                        onPressed: prefs.dailyTargetPages < 20
+                            ? () => prefs
+                                .setDailyTargetPages(prefs.dailyTargetPages + 1)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
 

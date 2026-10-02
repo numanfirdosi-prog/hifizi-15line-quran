@@ -6,6 +6,87 @@ import 'services/audio_recitation_service.dart';
 import 'services/azan_alarm_service.dart';
 import 'views/home_navigation_screen.dart';
 
+/// App theme palettes, switchable live from Preferences (themeName:
+/// 'night' | 'emerald' | 'parchment').
+ThemeData buildTheme(String name) {
+  switch (name) {
+    case 'emerald':
+      // Emerald Day — light mint sanctuary with crisp emerald typography.
+      return ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFEAF5EF),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF1B4D3E), // Deep Emerald
+          secondary: Color(0xFFD4AF37), // Gold
+          surface: Color(0xFFFFFFFF),
+          onPrimary: Colors.white,
+          onSecondary: Colors.black,
+          onSurface: Color(0xFF1A2B23),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1B4D3E),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
+        ),
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          elevation: 1,
+        ),
+      );
+    case 'parchment':
+      // Antique Parchment — warm sepia, aged-manuscript feel.
+      return ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF3E9D2),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF8B5E34),
+          secondary: Color(0xFF1B4D3E),
+          surface: Color(0xFFFBF6E9),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Color(0xFF3E2F1C),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF8B5E34),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: IconThemeData(color: Color(0xFFFFE9B8)),
+        ),
+        cardTheme: const CardThemeData(
+          color: Color(0xFFFBF6E9),
+          elevation: 1,
+        ),
+      );
+    case 'night':
+    default:
+      // Night Slate — the original dark emerald/gold theme.
+      return ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF071F17),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFD4AF37), // Gold
+          secondary: Color(0xFF1B4D3E), // Deep Emerald
+          surface: Color(0xFF0F3A2C),
+          onPrimary: Colors.black,
+          onSecondary: Colors.white,
+          onSurface: Colors.white,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0F3A2C),
+          elevation: 0,
+          centerTitle: false,
+          iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
+        ),
+      );
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -38,29 +119,17 @@ class NurAlQuranApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'نور القرآن (Nur-ul-Quran)',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF071F17),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFD4AF37), // Gold
-          secondary: Color(0xFF1B4D3E), // Deep Emerald
-          surface: Color(0xFF0F3A2C),
-          onPrimary: Colors.black,
-          onSecondary: Colors.white,
-          onSurface: Colors.white,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F3A2C),
-          elevation: 0,
-          centerTitle: false,
-          iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
-        ),
-      ),
-      home: const HomeNavigationScreen(),
+    // Rebuild MaterialApp whenever the theme preference changes so the
+    // palette applies live without restarting the app.
+    return Consumer<PreferencesService>(
+      builder: (context, prefs, _) {
+        return MaterialApp(
+          title: 'نور القرآن (Nur-ul-Quran)',
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(prefs.themeName),
+          home: const HomeNavigationScreen(),
+        );
+      },
     );
   }
 }

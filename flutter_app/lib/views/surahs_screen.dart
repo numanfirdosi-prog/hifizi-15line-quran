@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../models/surah.dart';
 import '../services/voice_search_service.dart';
 import '../services/audio_recitation_service.dart';
+import '../services/preferences_service.dart';
+import '../utils/script_font.dart';
 
 class SurahsScreen extends StatefulWidget {
-  final Function(int page) onOpenPage;
-  const SurahsScreen({Key? key, required this.onOpenPage}) : super(key: key);
+  final void Function(int page) onOpenPage;
+  const SurahsScreen({required this.onOpenPage, super.key});
 
   @override
   State<SurahsScreen> createState() => _SurahsScreenState();
@@ -16,7 +19,10 @@ class SurahsScreen extends StatefulWidget {
 class _SurahsScreenState extends State<SurahsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final VoiceSearchService _voiceService = VoiceSearchService();
-  List<Surah> _displayedSurahs = allSurahs;
+  String _query = '';
+  // 0 = All, 1 = Makki, 2 = Madani, 3 = Bookmarked
+  int _filterIndex = 0;
+  String _sort = 'Mushaf Order';
   bool _isListening = false;
   String _voiceFeedback = '';
 
@@ -32,18 +38,27 @@ class _SurahsScreenState extends State<SurahsScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged(String query) {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _displayedSurahs = allSurahs;
-        _voiceFeedback = '';
-      });
-      return;
+  List<Surah> _filteredSurahs(List<int> bookmarks) {
+    List<Surah> base = _query.trim().isEmpty
+        ? List<Surah>.from(allSurahs)
+        : _voiceService.searchSurahs(_query);
+    if (_filterIndex == 1) {
+      base = base.where((s) => s.isMeccan).toList();
+    } else if (_filterIndex == 2) {
+      base = base.where((s) => !s.isMeccan).toList();
+    } else if (_filterIndex == 3) {
+      base = base.where((s) => bookmarks.contains(s.startPage)).toList();
     }
+    if (_sort == 'Alphabetical') {
+      base.sort((a, b) => a.nameEn.compareTo(b.nameEn));
+    }
+    return base;
+  }
 
-    final results = _voiceService.searchSurahs(query);
+  void _onSearchChanged(String query) {
     setState(() {
-      _displayedSurahs = results;
+      _query = query;
+      _voiceFeedback = '';
     });
   }
 
@@ -66,8 +81,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
       onResult: (spokenText, matchedSurahs) {
         setState(() {
           _searchController.text = spokenText;
-          _displayedSurahs =
-              matchedSurahs.isNotEmpty ? matchedSurahs : allSurahs;
+          _query = spokenText;
           _voiceFeedback = 'Heard: "$spokenText"';
           _isListening = false;
         });
@@ -78,6 +92,18 @@ class _SurahsScreenState extends State<SurahsScreen> {
   @override
   Widget build(BuildContext context) {
     final audio = Provider.of<AudioRecitationService>(context);
+    final prefs = Provider.of<PreferencesService>(context);
+    final bookmarked = prefs.bookmarks;
+    final displayedSurahs = _filteredSurahs(bookmarked);
+
+    final makkiCount = allSurahs.where((s) => s.isMeccan).length;
+    final madaniCount = allSurahs.length - makkiCount;
+    final filterLabels = [
+      'All ${allSurahs.length}',
+      'Makki $makkiCount',
+      'Madani $madaniCount',
+      'Bookmarked (${bookmarked.length})',
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFF071F17),
@@ -176,13 +202,69 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       ),
                     ),
                   ),
+                const SizedBox(height: 8),
+                // Filter chips: All / Makki / Madani / Bookmarked
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(filterLabels.length, (i) {
+                      final selected = _filterIndex == i;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(filterLabels[i]),
+                          selected: selected,
+                          onSelected: (_) => setState(() => _filterIndex = i),
+                          selectedColor: const Color(0xFFD4AF37),
+                          backgroundColor: const Color(0xFF144234),
+                          labelStyle: TextStyle(
+                            color: selected ? Colors.black87 : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // Sort dropdown
+                Row(
+                  children: [
+                    const Text('Sort:',
+                        style: TextStyle(color: Colors.white60, fontSize: 12)),
+                    const SizedBox(width: 8),
+                    DropdownButton<String>(
+                      value: _sort,
+                      dropdownColor: const Color(0xFF0F3A2C),
+                      style: const TextStyle(
+                          color: Color(0xFFD4AF37), fontSize: 13),
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.arrow_drop_down,
+                          color: Color(0xFFD4AF37)),
+                      items: const ['Mushaf Order', 'Alphabetical']
+                          .map((s) => DropdownMenuItem(
+                                value: s,
+                                child: Text(s),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setState(() => _sort = v);
+                      },
+                    ),
+                    const Spacer(),
+                    Text('${displayedSurahs.length} surahs',
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 11)),
+                  ],
+                ),
               ],
             ),
           ),
 
           // Surah List
           Expanded(
-            child: _displayedSurahs.isEmpty
+            child: displayedSurahs.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -198,13 +280,14 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     ),
                   )
                 : ListView.separated(
-                    itemCount: _displayedSurahs.length,
+                    itemCount: displayedSurahs.length,
                     separatorBuilder: (ctx, i) =>
                         const Divider(color: Colors.white12, height: 1),
                     itemBuilder: (context, index) {
-                      final surah = _displayedSurahs[index];
+                      final surah = displayedSurahs[index];
                       final isCurrentlyPlaying =
                           audio.isPlaying && audio.currentSurah == surah.number;
+                      final isBookmarked = bookmarked.contains(surah.startPage);
 
                       return Container(
                         color: isCurrentlyPlaying
@@ -237,19 +320,22 @@ class _SurahsScreenState extends State<SurahsScreen> {
                             ),
                             const SizedBox(width: 14),
 
-                            // Surah Details (English & Hindi)
+                            // Surah Details (trilingual)
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
-                                      Text(
-                                        surah.nameEn,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
+                                      Flexible(
+                                        child: Text(
+                                          surah.nameEn,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
@@ -273,7 +359,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${surah.meaning} • ${surah.totalAyahs} Ayahs • Page ${surah.startPage}',
+                                    '${surah.totalAyahs} verses • Page ${surah.startPage} • Juz ${juzForPage(surah.startPage)}',
                                     style: const TextStyle(
                                         color: Colors.white60, fontSize: 11),
                                   ),
@@ -284,19 +370,33 @@ class _SurahsScreenState extends State<SurahsScreen> {
                             // Arabic Name
                             Text(
                               surah.nameAr,
-                              style: const TextStyle(
-                                color: Color(0xFFD4AF37),
-                                fontSize: 18,
-                                fontFamily: 'serif',
-                              ),
+                              style: arabicStyle(prefs.scriptStyle,
+                                  fontSize: 20, color: const Color(0xFFD4AF37)),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
+
+                            // Bookmark toggle
+                            IconButton(
+                              icon: Icon(
+                                isBookmarked
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                color: const Color(0xFFD4AF37),
+                                size: 22,
+                              ),
+                              tooltip: isBookmarked
+                                  ? 'Remove bookmark'
+                                  : 'Bookmark this surah',
+                              onPressed: () {
+                                prefs.toggleBookmark(surah.startPage);
+                              },
+                            ),
 
                             // Read Button (opens Mushaf)
                             IconButton(
                               icon: const Icon(Icons.menu_book,
                                   color: Color(0xFFD4AF37), size: 22),
-                              tooltip: 'Read in 15-line Mushaf',
+                              tooltip: 'Read (p. ${surah.startPage})',
                               onPressed: () =>
                                   widget.onOpenPage(surah.startPage),
                             ),

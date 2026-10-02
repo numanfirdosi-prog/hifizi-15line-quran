@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../data/quran_data.dart';
+import '../data/verse_index.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
+import '../utils/page_image_url.dart';
 
 class MushafScreen extends StatefulWidget {
   final int initialPage;
@@ -18,6 +20,30 @@ class _MushafScreenState extends State<MushafScreen> {
   late int _currentPage;
   final TransformationController _transformController =
       TransformationController();
+  ScrollController? _scrollController;
+  bool _showStudyToolbar = false;
+
+  // Semi-transparent study highlight tints.
+  static const List<Color> _tintColors = [
+    Color(0x88FFEB3B), // yellow
+    Color(0x884CAF50), // green
+    Color(0x88F48FB1), // pink
+    Color(0x8890CAF9), // blue
+    Color(0x88FFB74D), // orange
+  ];
+
+  // Cached page -> first 's:v' index (loaded once, used for audio + markRead).
+  late final Future<Map<int, String>> _firstVerseIndex;
+
+  static const List<double> _speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
+  static const List<int> _repeatModes = [0, 1, 3, 5, -1];
+  static const Map<int, String> _repeatLabels = {
+    0: 'Off',
+    1: '1x',
+    3: '3x',
+    5: '5x',
+    -1: '∞',
+  };
 
   @override
   void initState() {
@@ -27,26 +53,63 @@ class _MushafScreenState extends State<MushafScreen> {
         widget.initialPage > 0 ? widget.initialPage : prefs.lastReadPage;
     // Pages in Mushaf are 1 to 611
     _pageController = PageController(initialPage: _currentPage - 1);
+    _firstVerseIndex = loadPageFirstVerseIndex();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _scrollController?.dispose();
     _transformController.dispose();
     super.dispose();
   }
 
-  void _onPageChanged(int index) {
-    final pageNum = index + 1;
+  void _setCurrentPage(int page) {
+    final pageNum = page.clamp(1, totalPagesInMushaf);
+    if (pageNum == _currentPage) return;
     setState(() {
       _currentPage = pageNum;
     });
-    Provider.of<PreferencesService>(context, listen: false)
-        .setLastReadPage(pageNum);
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    prefs.setLastReadPage(pageNum);
+    _markPageRead(pageNum, prefs);
+  }
+
+  void _onPageChanged(int index) {
+    _setCurrentPage(index + 1);
+  }
+
+  /// Records last-read surah/ayah/page from the page's first verse.
+  Future<void> _markPageRead(int page, PreferencesService prefs) async {
+    try {
+      final index = await _firstVerseIndex;
+      if (!mounted) return;
+      final firstVerse = index[page];
+      if (firstVerse == null) return;
+      final parts = firstVerse.split(':');
+      final surah = int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 1;
+      final ayah = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 1;
+      await prefs.markRead(surah: surah, ayah: ayah, page: page);
+    } catch (_) {}
+  }
+
+  String _tintHexOf(Color color) =>
+      '#${color.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
+
+  Color _parseHex(String hex) => Color(int.parse(hex.substring(1), radix: 16));
+
+  Color? _pageTintColor(String? hex) {
+    if (hex == null || hex.isEmpty) return null;
+    try {
+      return _parseHex(hex);
+    } catch (_) {
+      return null;
+    }
   }
 
   void _showJumpToPageDialog() {
     final textController = TextEditingController(text: _currentPage.toString());
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
     // N5: dispose the controller when the dialog closes.
     showDialog(
       context: context,
@@ -93,7 +156,16 @@ class _MushafScreenState extends State<MushafScreen> {
               final p = int.tryParse(textController.text.trim());
               if (p != null && p >= 1 && p <= totalPagesInMushaf) {
                 Navigator.pop(ctx);
-                _pageController.jumpToPage(p - 1);
+                if (prefs.readingMode == 'scroll') {
+                  final itemHeight = _scrollItemHeight(context);
+                  _scrollController?.animateTo(
+                    (p - 1) * itemHeight,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                } else {
+                  _pageController.jumpToPage(p - 1);
+                }
               }
             },
             child: const Text('Go to Page'),
@@ -103,10 +175,297 @@ class _MushafScreenState extends State<MushafScreen> {
     ).then((_) => textController.dispose());
   }
 
-  String _getPageImageUrl(int page) {
-    // 15-line high-resolution Quran page images, served from this repo.
-    // Files are named 1.webp … 611.webp (no zero-padding, no prefix).
-    return 'https://raw.githubusercontent.com/numanfirdosi-prog/hifizi-15line-quran/main/assets/pages/$page.webp';
+  void _showNoteDialog() {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final textController = TextEditingController(
+      text: prefs.pageNotes['$_currentPage'] ?? '',
+    );
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F3A2C),
+        title: Text(
+          'نوٹ — صفحہ $_currentPage (Page Note)',
+          style: const TextStyle(
+              color: Color(0xFFD4AF37), fontWeight: FontWeight.bold),
+        ),
+        content: TextField(
+          controller: textController,
+          maxLines: 4,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF1B4D3E),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            hintText: 'Write a note for this page...',
+            hintStyle: const TextStyle(color: Colors.white54),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD4AF37),
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              final text = textController.text.trim();
+              prefs.setPageNote(_currentPage, text.isEmpty ? null : text);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ).then((_) => textController.dispose());
+  }
+
+  String _speedLabel(double v) =>
+      v == v.roundToDouble() ? '${v.toInt()}x' : '${v}x';
+
+  void _cycleSpeed() {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
+    final next =
+        _speeds[(_speeds.indexOf(prefs.playbackSpeed) + 1) % _speeds.length];
+    audio.setSpeed(next);
+    prefs.setPlaybackSpeed(next);
+  }
+
+  void _cycleRepeat() {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
+    final next = _repeatModes[
+        (_repeatModes.indexOf(prefs.repeatMode) + 1) % _repeatModes.length];
+    audio.setRepeatMode(next);
+    prefs.setRepeatMode(next);
+  }
+
+  /// Toggles recitation of the Surah on the current page.
+  Future<void> _onPlayPausePressed() async {
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    if (audio.isPlaying) {
+      await audio.pause();
+      return;
+    }
+    final index = await _firstVerseIndex;
+    if (!mounted) return;
+    final firstVerse = index[_currentPage];
+    var surah = 1;
+    if (firstVerse != null) {
+      surah = int.tryParse(firstVerse.split(':').first) ?? 1;
+    }
+    audio.setRepeatMode(prefs.repeatMode);
+    await audio.setSpeed(prefs.playbackSpeed);
+    await audio.playSurah(surahNumber: surah);
+  }
+
+  double _scrollItemHeight(BuildContext context) =>
+      (MediaQuery.of(context).size.width - 8) * 4 / 3;
+
+  /// The page image Container + CachedNetworkImage (with tint overlay),
+  /// without the InteractiveViewer wrapper.
+  Widget _buildPageImage(BuildContext context, int pageNum) {
+    final prefs = Provider.of<PreferencesService>(context);
+    final tint = _pageTintColor(prefs.pageTint['$pageNum']);
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFAF7EE),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            CachedNetworkImage(
+              imageUrl: mushafPageImageUrl(pageNum),
+              fit: BoxFit.contain,
+              // M7: pages are cached on disk — the Mushaf keeps working offline.
+              progressIndicatorBuilder: (context, url, progress) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFF0F3A2C)),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Loading Page $pageNum...',
+                        style: const TextStyle(
+                            color: Color(0xFF0F3A2C),
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              errorWidget: (context, url, error) {
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  color: const Color(0xFFFAF7EE),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.menu_book,
+                            size: 64, color: Color(0xFF0F3A2C)),
+                        const SizedBox(height: 16),
+                        Text(
+                          'صفحہ $pageNum',
+                          style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F3A2C)),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '15-Line Offline Mushaf Page',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+            if (tint != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: tint,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Per-page widget reused by both reading modes. In scroll mode the page
+  /// is non-interactive (no pinch zoom) so the list can scroll.
+  Widget _buildPageItem(BuildContext context, int pageNum,
+      {bool interactive = true}) {
+    final pageImage = _buildPageImage(context, pageNum);
+    if (!interactive) {
+      return AspectRatio(aspectRatio: 3 / 4, child: pageImage);
+    }
+    return InteractiveViewer(
+      transformationController: _transformController,
+      minScale: 1.0,
+      maxScale: 3.5,
+      child: pageImage,
+    );
+  }
+
+  Widget _buildScrollView(BuildContext context) {
+    final itemHeight = _scrollItemHeight(context);
+    _scrollController ??= ScrollController(
+      initialScrollOffset: (_currentPage - 1) * itemHeight,
+    );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollUpdateNotification ||
+            notification is ScrollEndNotification) {
+          final page = (notification.metrics.pixels / itemHeight).floor() + 1;
+          _setCurrentPage(page);
+        }
+        return false;
+      },
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: totalPagesInMushaf,
+        itemBuilder: (context, index) =>
+            _buildPageItem(context, index + 1, interactive: false),
+      ),
+    );
+  }
+
+  Widget _buildStudyToolbar(PreferencesService prefs) {
+    final currentHex = prefs.pageTint['$_currentPage'];
+    final hasNote = prefs.pageNotes.containsKey('$_currentPage');
+    return Container(
+      color: const Color(0xFF0F3A2C),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          // Tint color dots
+          for (final color in _tintColors)
+            GestureDetector(
+              onTap: () {
+                final hex = _tintHexOf(color);
+                prefs.setPageTint(_currentPage, currentHex == hex ? null : hex);
+              },
+              child: Container(
+                width: 28,
+                height: 28,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: currentHex == _tintHexOf(color)
+                        ? const Color(0xFFD4AF37)
+                        : Colors.white24,
+                    width: currentHex == _tintHexOf(color) ? 2.5 : 1,
+                  ),
+                ),
+              ),
+            ),
+          const Spacer(),
+          // Note button with indicator badge
+          IconButton(
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.note_add, color: Colors.white70),
+                if (hasNote)
+                  Positioned(
+                    right: 0,
+                    top: 2,
+                    child: Container(
+                      width: 9,
+                      height: 9,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD4AF37),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            tooltip: 'Page Note',
+            onPressed: _showNoteDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.clear, color: Colors.white70),
+            tooltip: 'Clear tint & note',
+            onPressed: () {
+              prefs.setPageTint(_currentPage, null);
+              prefs.setPageNote(_currentPage, null);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -114,6 +473,14 @@ class _MushafScreenState extends State<MushafScreen> {
     final prefs = Provider.of<PreferencesService>(context);
     final audio = Provider.of<AudioRecitationService>(context);
     final isBookmarked = prefs.bookmarks.contains(_currentPage);
+    final isScroll = prefs.readingMode == 'scroll';
+
+    // Reset the scroll controller when leaving scroll mode so it re-syncs
+    // to the current page next time.
+    if (!isScroll && _scrollController != null) {
+      _scrollController!.dispose();
+      _scrollController = null;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF071F17),
@@ -140,10 +507,28 @@ class _MushafScreenState extends State<MushafScreen> {
         actions: [
           IconButton(
             icon: Icon(
+              audio.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white70,
+            ),
+            tooltip: 'Play / Pause Surah Recitation',
+            onPressed: _onPlayPausePressed,
+          ),
+          IconButton(
+            icon: Icon(
               isBookmarked ? Icons.bookmark : Icons.bookmark_border,
               color: isBookmarked ? const Color(0xFFD4AF37) : Colors.white70,
             ),
             onPressed: () => prefs.toggleBookmark(_currentPage),
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.brush,
+              color:
+                  _showStudyToolbar ? const Color(0xFFD4AF37) : Colors.white70,
+            ),
+            tooltip: 'Study Tools',
+            onPressed: () =>
+                setState(() => _showStudyToolbar = !_showStudyToolbar),
           ),
           IconButton(
             icon: const Icon(Icons.swap_horiz, color: Colors.white70),
@@ -152,215 +537,204 @@ class _MushafScreenState extends State<MushafScreen> {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // PageView with Reverse direction for Quranic Right-to-Left Reading
-          PageView.builder(
-            controller: _pageController,
-            reverse: true, // RTL for Mushaf reading
-            itemCount: totalPagesInMushaf,
-            onPageChanged: _onPageChanged,
-            itemBuilder: (context, index) {
-              final pageNum = index + 1;
-              return InteractiveViewer(
-                transformationController: _transformController,
-                minScale: 1.0,
-                maxScale: 3.5,
-                child: Center(
+          // Study toolbar (highlights + notes) below the AppBar
+          if (_showStudyToolbar) _buildStudyToolbar(prefs),
+          Expanded(
+            child: Stack(
+              children: [
+                // PageView with Reverse direction for Quranic Right-to-Left Reading
+                if (isScroll)
+                  _buildScrollView(context)
+                else
+                  PageView.builder(
+                    controller: _pageController,
+                    reverse: true, // RTL for Mushaf reading
+                    itemCount: totalPagesInMushaf,
+                    onPageChanged: _onPageChanged,
+                    itemBuilder: (context, index) =>
+                        _buildPageItem(context, index + 1),
+                  ),
+
+                // Bottom Quick Page Controller Slider
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: audio.isPlaying ? 80 : 16,
                   child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFAF7EE),
-                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFF0F3A2C).withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(30),
                       boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black45,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
+                        BoxShadow(color: Colors.black38, blurRadius: 8),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios,
+                              size: 16, color: Colors.white70),
+                          onPressed: () {
+                            if (_currentPage > 1) {
+                              if (isScroll) {
+                                final itemHeight = _scrollItemHeight(context);
+                                _scrollController?.animateTo(
+                                  (_currentPage - 2) * itemHeight,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              } else {
+                                _pageController.previousPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            }
+                          },
+                        ),
+                        Expanded(
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: const Color(0xFFD4AF37),
+                              inactiveTrackColor: Colors.white24,
+                              thumbColor: const Color(0xFFD4AF37),
+                              thumbShape: const RoundSliderThumbShape(
+                                  enabledThumbRadius: 6),
+                            ),
+                            child: Slider(
+                              value: _currentPage.toDouble(),
+                              min: 1.0,
+                              max: totalPagesInMushaf.toDouble(),
+                              onChanged: (val) {
+                                final target = val.toInt();
+                                if (isScroll) {
+                                  final itemHeight = _scrollItemHeight(context);
+                                  _scrollController
+                                      ?.jumpTo((target - 1) * itemHeight);
+                                } else {
+                                  _pageController.jumpToPage(target - 1);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.white70),
+                          onPressed: () {
+                            if (_currentPage < totalPagesInMushaf) {
+                              if (isScroll) {
+                                final itemHeight = _scrollItemHeight(context);
+                                _scrollController?.animateTo(
+                                  _currentPage * itemHeight,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              } else {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            }
+                          },
                         ),
                       ],
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: CachedNetworkImage(
-                      imageUrl: _getPageImageUrl(pageNum),
-                      fit: BoxFit.contain,
-                      // M7: pages are cached on disk — the Mushaf keeps working offline.
-                      progressIndicatorBuilder: (context, url, progress) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF0F3A2C)),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Loading Page $pageNum...',
-                                style: const TextStyle(
-                                    color: Color(0xFF0F3A2C),
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      errorWidget: (context, url, error) {
-                        return Container(
-                          padding: const EdgeInsets.all(24),
-                          color: const Color(0xFFFAF7EE),
-                          child: Center(
+                  ),
+                ),
+
+                // Audio Recitation Bar (when active)
+                if (audio.isPlaying)
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0A291E),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: const Color(0xFFD4AF37), width: 1.2),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black54, blurRadius: 10),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.graphic_eq,
+                              color: Color(0xFFD4AF37)),
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.menu_book,
-                                    size: 64, color: Color(0xFF0F3A2C)),
-                                const SizedBox(height: 16),
                                 Text(
-                                  'صفحہ $pageNum',
+                                  'Surah ${audio.currentSurah}: ${allSurahs[audio.currentSurah - 1].nameEn}',
                                   style: const TextStyle(
-                                      fontSize: 24,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0F3A2C)),
+                                      fontSize: 13),
                                 ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  '15-Line Offline Mushaf Page',
-                                  style: TextStyle(color: Colors.black54),
+                                Text(
+                                  audio.selectedQari.name,
+                                  style: const TextStyle(
+                                      color: Color(0xFFD4AF37), fontSize: 11),
                                 ),
                               ],
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-
-          // Bottom Quick Page Controller Slider
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: audio.isPlaying ? 80 : 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F3A2C).withOpacity(0.9),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black38, blurRadius: 8),
-                ],
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios,
-                        size: 16, color: Colors.white70),
-                    onPressed: () {
-                      if (_currentPage > 1) {
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    },
-                  ),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFFD4AF37),
-                        inactiveTrackColor: Colors.white24,
-                        thumbColor: const Color(0xFFD4AF37),
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      ),
-                      child: Slider(
-                        value: _currentPage.toDouble(),
-                        min: 1.0,
-                        max: totalPagesInMushaf.toDouble(),
-                        onChanged: (val) {
-                          _pageController.jumpToPage(val.toInt() - 1);
-                        },
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios,
-                        size: 16, color: Colors.white70),
-                    onPressed: () {
-                      if (_currentPage < totalPagesInMushaf) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Audio Recitation Bar (when active)
-          if (audio.isPlaying)
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0A291E),
-                  borderRadius: BorderRadius.circular(16),
-                  border:
-                      Border.all(color: const Color(0xFFD4AF37), width: 1.2),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black54, blurRadius: 10),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.graphic_eq, color: Color(0xFFD4AF37)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Surah ${audio.currentSurah}: ${allSurahs[audio.currentSurah - 1].nameEn}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 4),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: _cycleSpeed,
+                            child: Text(
+                              _speedLabel(prefs.playbackSpeed),
+                              style: const TextStyle(
+                                  color: Color(0xFFD4AF37), fontSize: 11),
+                            ),
                           ),
-                          Text(
-                            audio.selectedQari.name,
-                            style: const TextStyle(
-                                color: Color(0xFFD4AF37), fontSize: 11),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 4),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: _cycleRepeat,
+                            child: Text(
+                              _repeatLabels[prefs.repeatMode] ?? 'Off',
+                              style: const TextStyle(
+                                  color: Color(0xFFD4AF37), fontSize: 11),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.pause_circle_filled,
+                                color: Color(0xFFD4AF37), size: 32),
+                            onPressed: _onPlayPausePressed,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close,
+                                color: Colors.white54, size: 20),
+                            onPressed: () => audio.stop(),
                           ),
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.pause_circle_filled,
-                          color: Color(0xFFD4AF37), size: 32),
-                      onPressed: () => audio.pause(),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close,
-                          color: Colors.white54, size: 20),
-                      onPressed: () => audio.stop(),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );

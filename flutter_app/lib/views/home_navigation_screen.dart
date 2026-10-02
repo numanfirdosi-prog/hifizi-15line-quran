@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
 import '../services/azan_alarm_service.dart';
+import 'dashboard_screen.dart';
 import 'mushaf_screen.dart';
 import 'surahs_screen.dart';
 import 'prayer_screen.dart';
-import 'qiblah_screen.dart';
-import 'settings_screen.dart';
+import 'more_screen.dart';
 
 class HomeNavigationScreen extends StatefulWidget {
   const HomeNavigationScreen({Key? key}) : super(key: key);
@@ -81,19 +81,31 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   void _jumpToMushafPage(int page) {
     setState(() {
       _mushafTargetPage = page;
-      _currentIndex = 0; // Switch to Mushaf tab
+      _currentIndex = 1; // Switch to Mushaf tab
+    });
+  }
+
+  void _selectTab(int index) {
+    setState(() {
+      _currentIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final screens = [
+      DashboardScreen(
+        onOpenPage: _jumpToMushafPage,
+        onSelectTab: _selectTab,
+      ),
       MushafScreen(
           key: ValueKey(_mushafTargetPage), initialPage: _mushafTargetPage),
       SurahsScreen(onOpenPage: _jumpToMushafPage),
       const PrayerScreen(),
-      const QiblahScreen(),
-      SettingsScreen(onOpenPage: _jumpToMushafPage),
+      MoreScreen(
+        onOpenPage: _jumpToMushafPage,
+        onSelectTab: _selectTab,
+      ),
     ];
 
     return Scaffold(
@@ -131,6 +143,11 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
           },
           destinations: const [
             NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'ہوم',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.menu_book_outlined),
               selectedIcon: Icon(Icons.menu_book),
               label: 'مصحف',
@@ -146,14 +163,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
               label: 'نماز و اذان',
             ),
             NavigationDestination(
-              icon: Icon(Icons.explore_outlined),
-              selectedIcon: Icon(Icons.explore),
-              label: 'قبلہ',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'تنظیمات',
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view),
+              label: 'مزید',
             ),
           ],
         ),
