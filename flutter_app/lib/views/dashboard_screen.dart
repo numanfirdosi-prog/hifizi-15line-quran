@@ -18,6 +18,7 @@ import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
 import 'info_screens.dart';
 import 'juz_index_screen.dart';
+import 'khatm_planner_screen.dart';
 import 'offline_download_screen.dart';
 import 'qiblah_screen.dart';
 import 'ramzan_duas_screen.dart';
@@ -532,6 +533,8 @@ class DashboardScreen extends StatelessWidget {
             'All 114 Surahs', Icons.menu_book_outlined, () => onSelectTab(2)),
         _QuickItem('Juz Index', Icons.format_list_numbered,
             () => _push(context, JuzIndexScreen(onOpenPage: onOpenPage))),
+        _QuickItem('Khatm Planner', Icons.calendar_month_outlined,
+            () => _push(context, KhatmPlannerScreen(onOpenPage: onOpenPage))),
         _QuickItem('Bookmarks & Saved', Icons.bookmark_outline,
             () => _push(context, BookmarksScreen(onOpenPage: onOpenPage))),
         _QuickItem('Search Quran', Icons.search,

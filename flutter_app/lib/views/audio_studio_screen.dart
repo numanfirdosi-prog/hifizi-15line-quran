@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
+import '../models/surah.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 
 /// Audio Studio: choose a world-renowned reciter, quick-play beloved surahs,
-/// and control the currently playing recitation (speed + repeat).
-class AudioStudioScreen extends StatelessWidget {
+/// browse all surahs with filters (like the website's audio tab), and control
+/// the currently playing recitation (speed + repeat).
+class AudioStudioScreen extends StatefulWidget {
   const AudioStudioScreen({super.key});
+
+  @override
+  State<AudioStudioScreen> createState() => _AudioStudioScreenState();
+}
+
+class _AudioStudioScreenState extends State<AudioStudioScreen> {
+  // 0 = All 114, 1 = Juz 'Amma (78-114), 2 = Makki, 3 = Madani
+  int _filterIndex = 0;
+
+  List<Surah> _filteredSurahs() {
+    switch (_filterIndex) {
+      case 1:
+        return allSurahs.where((s) => s.number >= 78).toList();
+      case 2:
+        return allSurahs.where((s) => s.isMeccan).toList();
+      case 3:
+        return allSurahs.where((s) => !s.isMeccan).toList();
+      default:
+        return allSurahs;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,6 +309,121 @@ class AudioStudioScreen extends StatelessWidget {
               );
             },
           ),
+
+          const SizedBox(height: 16),
+
+          // ---------------------------------------------------------
+          // Browse & Play (website audio-tab filters)
+          // ---------------------------------------------------------
+          _sectionTitle(context, 'Browse & Play', '📚', gold),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: List.generate(4, (i) {
+              const labels = [
+                'All 114 Surahs',
+                "Juz 'Amma (78–114)",
+                'Makki Surahs',
+                'Madani Surahs',
+              ];
+              final selected = _filterIndex == i;
+              return ChoiceChip(
+                label: Text(labels[i]),
+                selected: selected,
+                selectedColor: gold,
+                backgroundColor: colorScheme.surface,
+                labelStyle: TextStyle(
+                  color: selected
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                side: BorderSide(color: gold.withOpacity(0.5)),
+                onSelected: (_) => setState(() => _filterIndex = i),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          Consumer<AudioRecitationService>(
+            builder: (context, audio, _) {
+              final list = _filteredSurahs();
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 6),
+                itemBuilder: (context, i) {
+                  final s = list[i];
+                  final isPlaying =
+                      audio.isPlaying && audio.currentSurah == s.number;
+                  return Card(
+                    color: colorScheme.surface,
+                    margin: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isPlaying
+                            ? gold
+                            : theme.dividerColor.withOpacity(0.3),
+                      ),
+                    ),
+                    child: ListTile(
+                      dense: true,
+                      leading: CircleAvatar(
+                        radius: 18,
+                        backgroundColor:
+                            gold.withOpacity(isPlaying ? 1.0 : 0.15),
+                        child: Text(
+                          '${s.number}',
+                          style: TextStyle(
+                            color: isPlaying
+                                ? colorScheme.onPrimary
+                                : gold,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        s.nameEn,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${s.totalAyahs} verses • ${s.isMeccan ? 'Makki' : 'Madani'}',
+                        style: theme.textTheme.labelSmall,
+                      ),
+                      trailing: Text(
+                        s.nameAr,
+                        style: arabicStyle(
+                            context
+                                .read<PreferencesService>()
+                                .scriptStyle,
+                            fontSize: 18,
+                            color: gold),
+                      ),
+                      onTap: () {
+                        if (isPlaying) {
+                          audio.pause();
+                        } else {
+                          final prefs =
+                              context.read<PreferencesService>();
+                          audio.setRepeatMode(prefs.repeatMode);
+                          audio
+                              .setSpeed(prefs.playbackSpeed)
+                              .then((_) => audio.playSurah(
+                                  surahNumber: s.number));
+                        }
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

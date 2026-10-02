@@ -1,3 +1,5 @@
+import 'quran_data.dart';
+
 class JuzInfo {
   final int number;
   final String nameAr;
@@ -301,4 +303,13 @@ int juzForPage(int page) {
     }
   }
   return result;
+}
+
+/// Khatm Planner: day N (1..30) covers Juz N.
+/// Returns (startPage, endPage); day 30 ends at the last mushaf page.
+(int, int) khatmDayPages(int day) {
+  assert(day >= 1 && day <= 30);
+  final start = juzList[day - 1].startPage;
+  final end = day < 30 ? juzList[day].startPage - 1 : totalPagesInMushaf;
+  return (start, end);
 }

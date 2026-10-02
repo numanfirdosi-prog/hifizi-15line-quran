@@ -142,6 +142,18 @@ AyahSeg? _matchLine(List<AyahSeg> segs, int line, double tx) {
   return best;
 }
 
+/// Distinct ayahs on a page, in first-appearance order (one entry per
+/// surah:ayah). Used by the ayah quick-jump pill strip.
+List<AyahSeg> distinctAyahs(List<AyahSeg> segs) {
+  final seen = <String>{};
+  final out = <AyahSeg>[];
+  for (final s in segs) {
+    final key = '${s.surah}:${s.ayah}';
+    if (seen.add(key)) out.add(s);
+  }
+  return out;
+}
+
 /// Hit-tests a tap at fractional page-image coordinates.
 /// [fx]: 0..1 from the LEFT edge, [fy]: 0..1 from the top.
 /// Returns the narrowest matching segment (null when the tap hit no ayah).

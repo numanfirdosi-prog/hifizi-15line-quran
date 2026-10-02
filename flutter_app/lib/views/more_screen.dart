@@ -5,6 +5,7 @@ import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
 import 'info_screens.dart';
 import 'juz_index_screen.dart';
+import 'khatm_planner_screen.dart';
 import 'offline_download_screen.dart';
 import 'qiblah_screen.dart';
 import 'ramzan_duas_screen.dart';
@@ -105,6 +106,14 @@ class MoreScreen extends StatelessWidget {
             title: 'Juz Index',
             subtitle: 'پارہ انڈیکس',
             onTap: () => _push(context, JuzIndexScreen(onOpenPage: onOpenPage)),
+          ),
+          _tile(
+            context,
+            icon: Icons.calendar_month_outlined,
+            title: 'Khatm Planner',
+            subtitle: 'تیس دن کا ختم شیڈول',
+            onTap: () =>
+                _push(context, KhatmPlannerScreen(onOpenPage: onOpenPage)),
           ),
           _tile(
             context,

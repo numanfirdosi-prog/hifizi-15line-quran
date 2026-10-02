@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
+import '../data/surah_intros.dart';
 import '../models/surah.dart';
 import '../services/voice_search_service.dart';
 import '../services/audio_recitation_service.dart';
@@ -86,6 +87,159 @@ class _SurahsScreenState extends State<SurahsScreen> {
           _isListening = false;
         });
       },
+    );
+  }
+
+  /// Surah intro bottom sheet: names, meaning, revelation type, verse
+  /// count, commentary, and Read / Play actions.
+  void _showSurahIntro(BuildContext context, Surah surah) {
+    final cs = Theme.of(context).colorScheme;
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
+    final intro = surahIntros[surah.number] ?? '';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${surah.number}. ${surah.nameEn}',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    surah.nameAr,
+                    style: arabicStyle(prefs.scriptStyle,
+                        fontSize: 26, color: cs.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                surah.meaning,
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.7),
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  Chip(
+                    label: Text(surah.isMeccan ? 'Makki' : 'Madani'),
+                    backgroundColor:
+                        cs.primary.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                        color: cs.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
+                    side: BorderSide.none,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  Chip(
+                    label: Text('${surah.totalAyahs} verses'),
+                    backgroundColor:
+                        cs.onSurface.withValues(alpha: 0.08),
+                    labelStyle: TextStyle(
+                        color: cs.onSurface, fontSize: 12),
+                    side: BorderSide.none,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  Chip(
+                    label: Text('Page ${surah.startPage}'),
+                    backgroundColor:
+                        cs.onSurface.withValues(alpha: 0.08),
+                    labelStyle: TextStyle(
+                        color: cs.onSurface, fontSize: 12),
+                    side: BorderSide.none,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                intro,
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.85),
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.menu_book, size: 18),
+                      label: const Text('Read'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: cs.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        widget.onOpenPage(surah.startPage);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.play_arrow, size: 18),
+                      label: const Text('Play'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: cs.primary,
+                        side: BorderSide(color: cs.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        audio.playSurah(surahNumber: surah.number);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -378,7 +532,17 @@ class _SurahsScreenState extends State<SurahsScreen> {
                               style: arabicStyle(prefs.scriptStyle,
                                   fontSize: 20, color: cs.primary),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 4),
+
+                            // Surah intro (tafsir-style commentary)
+                            IconButton(
+                              icon: Icon(Icons.info_outline,
+                                  color: cs.primary.withValues(alpha: 0.8),
+                                  size: 20),
+                              tooltip: 'About this surah',
+                              onPressed: () =>
+                                  _showSurahIntro(context, surah),
+                            ),
 
                             // Bookmark toggle
                             IconButton(

@@ -25,6 +25,8 @@ class _MushafScreenState extends State<MushafScreen> {
       TransformationController();
   ScrollController? _scrollController;
   bool _showStudyToolbar = false;
+  // Ayah quick-jump pill strip (collapsible).
+  bool _showAyahPills = true;
 
   // Semi-transparent study highlight tints.
   static const List<Color> _tintColors = [
@@ -568,6 +570,165 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  /// Ayah quick-jump pill strip (like the website's `.ayah-pill` bar):
+  /// distinct ayahs of the current page; tapping a pill plays that ayah
+  /// exactly like tapping it on the page image. Sits outside the
+  /// InteractiveViewer so pinch-zoom keeps working.
+  Widget _buildAyahPillStrip(BuildContext context, double bottomOffset) {
+    final cs = Theme.of(context).colorScheme;
+    if (!_showAyahPills) {
+      return Positioned(
+        right: 12,
+        bottom: bottomOffset,
+        child: Material(
+          color: cs.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(20),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => setState(() => _showAyahPills = true),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.format_list_numbered,
+                      size: 16, color: cs.primary),
+                  const SizedBox(width: 4),
+                  Text('آیات',
+                      style: TextStyle(
+                          color: cs.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
+                  Icon(Icons.expand_less,
+                      size: 16, color: cs.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: bottomOffset,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: cs.surface.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(24),
+          border:
+              Border.all(color: cs.primary.withValues(alpha: 0.3)),
+          boxShadow: const [
+            BoxShadow(color: Colors.black38, blurRadius: 8),
+          ],
+        ),
+        child: Row(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() => _showAyahPills = false),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Icon(Icons.expand_more,
+                    size: 18, color: cs.primary),
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder<Map<int, List<AyahSeg>>>(
+                future: _segmentsFuture,
+                builder: (context, snap) {
+                  final ayahs = distinctAyahs(
+                      snap.data?[_currentPage] ?? const <AyahSeg>[]);
+                  if (ayahs.isEmpty) {
+                    return Text(
+                      'No ayah data for this page',
+                      style: TextStyle(
+                        color:
+                            cs.onSurface.withValues(alpha: 0.5),
+                        fontSize: 11,
+                      ),
+                    );
+                  }
+                  return Consumer<AudioRecitationService>(
+                    builder: (context, audio, _) {
+                      return SizedBox(
+                        height: 34,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: ayahs.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 6),
+                          itemBuilder: (context, i) {
+                            final seg = ayahs[i];
+                            final isPlaying = audio.ayahMode &&
+                                audio.currentSurah == seg.surah &&
+                                audio.currentAyah == seg.ayah;
+                            final surahName =
+                                allSurahs[seg.surah - 1].nameEn;
+                            return Tooltip(
+                              message: '$surahName ${seg.surah}:${seg.ayah}',
+                              child: InkWell(
+                                borderRadius:
+                                    BorderRadius.circular(16),
+                                onTap: () async {
+                                  final ok = await _audio.playAyah(
+                                      surah: seg.surah,
+                                      ayah: seg.ayah);
+                                  if (!ok && mounted) {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            'Audio nahi chal saka — internet check karein'),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    color: isPlaying
+                                        ? cs.primary
+                                        : cs.primary.withValues(
+                                            alpha: 0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: cs.primary.withValues(
+                                          alpha:
+                                              isPlaying ? 1.0 : 0.4),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${seg.ayah}',
+                                    style: TextStyle(
+                                      color: isPlaying
+                                          ? cs.onPrimary
+                                          : cs.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Per-page widget reused by both reading modes. In scroll mode the page
   /// is non-interactive (no pinch zoom) so the list can scroll.
   Widget _buildPageItem(BuildContext context, int pageNum,
@@ -856,6 +1017,10 @@ class _MushafScreenState extends State<MushafScreen> {
                     ),
                   ),
                 ),
+
+                // Ayah quick-jump pills (above the page slider)
+                _buildAyahPillStrip(
+                    context, audio.isPlaying ? 150 : 86),
 
                 // Audio Recitation Bar (when active)
                 if (audio.isPlaying)

@@ -30,6 +30,7 @@ class PreferencesService extends ChangeNotifier {
   Map<String, String> _pageNotes = {}; // page -> note
   Map<String, String> _pageTint = {}; // page -> color hex
   bool _ayahTapHintShown = false;
+  List<int> _khatmDays = []; // completed khatm day numbers (1..30)
 
   Map<String, bool> _prayerAlarms = {
     'fajr': true,
@@ -62,6 +63,7 @@ class PreferencesService extends ChangeNotifier {
   Map<String, String> get pageNotes => _pageNotes;
   Map<String, String> get pageTint => _pageTint;
   bool get ayahTapHintShown => _ayahTapHintShown;
+  List<int> get khatmDays => _khatmDays;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -128,6 +130,14 @@ class PreferencesService extends ChangeNotifier {
     final bookmarksList = _prefs.getStringList('nur_bookmarks');
     if (bookmarksList != null) {
       _bookmarks = bookmarksList.map((e) => int.tryParse(e) ?? 2).toList();
+    }
+
+    final khatmList = _prefs.getStringList('nur_khatm_days');
+    if (khatmList != null) {
+      _khatmDays = khatmList
+          .map((e) => int.tryParse(e) ?? 0)
+          .where((d) => d >= 1 && d <= 30)
+          .toList();
     }
 
     final alarmsJson = _prefs.getString('nur_prayer_alarms');
@@ -256,6 +266,18 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setAyahTapHintShown(bool shown) async {
     _ayahTapHintShown = shown;
     await _prefs.setBool('nur_ayah_tap_hint_shown', shown);
+    notifyListeners();
+  }
+
+  /// Toggles a Khatm Planner day (1..30) as completed.
+  Future<void> toggleKhatmDay(int day) async {
+    if (_khatmDays.contains(day)) {
+      _khatmDays.remove(day);
+    } else {
+      _khatmDays.add(day);
+    }
+    await _prefs.setStringList(
+        'nur_khatm_days', _khatmDays.map((e) => e.toString()).toList());
     notifyListeners();
   }
 
