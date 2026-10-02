@@ -26,18 +26,8 @@ class _MushafScreenState extends State<MushafScreen> {
   final TransformationController _transformController =
       TransformationController();
   ScrollController? _scrollController;
-  bool _showStudyToolbar = false;
   // Ayah quick-jump pill strip (collapsible).
   bool _showAyahPills = true;
-
-  // Semi-transparent study highlight tints.
-  static const List<Color> _tintColors = [
-    Color(0x88FFEB3B), // yellow
-    Color(0x884CAF50), // green
-    Color(0x88F48FB1), // pink
-    Color(0x8890CAF9), // blue
-    Color(0x88FFB74D), // orange
-  ];
 
   // Cached page -> first 's:v' index (loaded once, used for audio + markRead).
   late final Future<Map<int, String>> _firstVerseIndex;
@@ -211,20 +201,6 @@ class _MushafScreenState extends State<MushafScreen> {
     }
   }
 
-  String _tintHexOf(Color color) =>
-      '#${color.value.toRadixString(16).padLeft(8, '0').toUpperCase()}';
-
-  Color _parseHex(String hex) => Color(int.parse(hex.substring(1), radix: 16));
-
-  Color? _pageTintColor(String? hex) {
-    if (hex == null || hex.isEmpty) return null;
-    try {
-      return _parseHex(hex);
-    } catch (_) {
-      return null;
-    }
-  }
-
   void _showJumpToPageDialog() {
     final cs = Theme.of(context).colorScheme;
     final textController = TextEditingController(text: _currentPage.toString());
@@ -294,56 +270,6 @@ class _MushafScreenState extends State<MushafScreen> {
     ).then((_) => textController.dispose());
   }
 
-  void _showNoteDialog() {
-    final cs = Theme.of(context).colorScheme;
-    final prefs = Provider.of<PreferencesService>(context, listen: false);
-    final textController = TextEditingController(
-      text: prefs.pageNotes['$_currentPage'] ?? '',
-    );
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surface,
-        title: Text(
-          'نوٹ — صفحہ $_currentPage (Page Note)',
-          style:  TextStyle(
-              color: cs.primary, fontWeight: FontWeight.bold),
-        ),
-        content: TextField(
-          controller: textController,
-          maxLines: 4,
-          style: TextStyle(color: cs.onSurface, fontSize: 15),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: cs.secondary,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            hintText: 'Write a note for this page...',
-            hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.54)),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child:
-                Text('Cancel', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-            ),
-            onPressed: () {
-              final text = textController.text.trim();
-              prefs.setPageNote(_currentPage, text.isEmpty ? null : text);
-              Navigator.pop(ctx);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    ).then((_) => textController.dispose());
-  }
-
   String _speedLabel(double v) =>
       v == v.roundToDouble() ? '${v.toInt()}x' : '${v}x';
 
@@ -393,8 +319,6 @@ class _MushafScreenState extends State<MushafScreen> {
   /// page-image aspect (7428x10753 -> 0.6908) so ayah tap coordinates map
   /// 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
-    final prefs = Provider.of<PreferencesService>(context);
-    final tint = _pageTintColor(prefs.pageTint['$pageNum']);
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -467,17 +391,6 @@ class _MushafScreenState extends State<MushafScreen> {
                 );
               },
             ),
-            if (tint != null)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: tint,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
             // Currently playing ayah highlight (ayah-by-ayah audio mode).
             _buildAyahHighlights(pageNum),
             // Tap-to-ayah detector: LAST so it sits above the overlays.
@@ -824,76 +737,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  Widget _buildStudyToolbar(BuildContext context, PreferencesService prefs) {
-    final cs = Theme.of(context).colorScheme;
-    final currentHex = prefs.pageTint['$_currentPage'];
-    final hasNote = prefs.pageNotes.containsKey('$_currentPage');
-    return Container(
-      color: cs.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        children: [
-          // Tint color dots
-          for (final color in _tintColors)
-            GestureDetector(
-              onTap: () {
-                final hex = _tintHexOf(color);
-                prefs.setPageTint(_currentPage, currentHex == hex ? null : hex);
-              },
-              child: Container(
-                width: 28,
-                height: 28,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: currentHex == _tintHexOf(color)
-                        ? cs.primary
-                        : cs.onSurface.withValues(alpha: 0.24),
-                    width: currentHex == _tintHexOf(color) ? 2.5 : 1,
-                  ),
-                ),
-              ),
-            ),
-          const Spacer(),
-          // Note button with indicator badge
-          IconButton(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(Icons.note_add, color: cs.onSurface.withValues(alpha: 0.7)),
-                if (hasNote)
-                  Positioned(
-                    right: 0,
-                    top: 2,
-                    child: Container(
-                      width: 9,
-                      height: 9,
-                      decoration:  BoxDecoration(
-                        color: cs.primary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            tooltip: 'Page Note',
-            onPressed: _showNoteDialog,
-          ),
-          IconButton(
-            icon: Icon(Icons.clear, color: cs.onSurface.withValues(alpha: 0.7)),
-            tooltip: 'Clear tint & note',
-            onPressed: () {
-              prefs.setPageTint(_currentPage, null);
-              prefs.setPageNote(_currentPage, null);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
@@ -949,16 +792,6 @@ class _MushafScreenState extends State<MushafScreen> {
             onPressed: () => prefs.toggleBookmark(_currentPage),
           ),
           IconButton(
-            icon: Icon(
-              Icons.brush,
-              color:
-                  _showStudyToolbar ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
-            ),
-            tooltip: 'Study Tools',
-            onPressed: () =>
-                setState(() => _showStudyToolbar = !_showStudyToolbar),
-          ),
-          IconButton(
             icon: Icon(Icons.swap_horiz, color: cs.onSurface.withValues(alpha: 0.7)),
             tooltip: 'Jump to Page',
             onPressed: _showJumpToPageDialog,
@@ -983,8 +816,6 @@ class _MushafScreenState extends State<MushafScreen> {
       ),
       body: Column(
         children: [
-          // Study toolbar (highlights + notes) below the AppBar
-          if (_showStudyToolbar) _buildStudyToolbar(context, prefs),
           Expanded(
             child: Stack(
               children: [
