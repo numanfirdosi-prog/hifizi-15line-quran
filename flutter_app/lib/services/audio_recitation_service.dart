@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import 'qari_audio_storage.dart';
 
 class Qari {
   final String id;
@@ -411,10 +412,16 @@ class AudioRecitationService extends ChangeNotifier {
 
     try {
       await _player.setLoopMode(repeatMode == -1 ? LoopMode.one : LoopMode.off);
-      // M7: cache the audio file on disk while streaming, so a played Surah
-      // keeps working offline afterwards.
+      // Offline first: play the downloaded pack file when present, so a
+      // fully downloaded qari works without internet. Falls back to the
+      // previous streaming behaviour otherwise.
+      final localFile = await QariAudioStorage.surahFile(_selectedQari, surahNumber);
       await _player.setAudioSource(
-        LockCachingAudioSource(Uri.parse(audioUrl)),
+        localFile != null
+            ? AudioSource.uri(Uri.file(localFile.path))
+            // M7: cache the audio file on disk while streaming, so a played
+            // Surah keeps working offline afterwards.
+            : LockCachingAudioSource(Uri.parse(audioUrl)),
       );
       await _player.play();
       notifyListeners();
@@ -439,9 +446,13 @@ class AudioRecitationService extends ChangeNotifier {
 
     try {
       await _player.setLoopMode(LoopMode.off);
-      // Cache the ayah audio on disk while streaming, like surah audio.
+      // Offline first: play the downloaded pack file when present.
+      final localFile = await QariAudioStorage.ayahFile(_selectedQari, surah, ayah);
       await _player.setAudioSource(
-        LockCachingAudioSource(Uri.parse(audioUrl)),
+        localFile != null
+            ? AudioSource.uri(Uri.file(localFile.path))
+            // Cache the ayah audio on disk while streaming, like surah audio.
+            : LockCachingAudioSource(Uri.parse(audioUrl)),
       );
       await _player.play();
       notifyListeners();

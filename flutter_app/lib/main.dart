@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'services/preferences_service.dart';
 import 'services/audio_recitation_service.dart';
+import 'services/qari_download_service.dart';
 import 'services/nur_audio_handler.dart';
 import 'services/deep_link_service.dart';
 import 'views/splash_screen.dart';
@@ -110,6 +111,8 @@ void main() async {
             value: preferencesService),
         ChangeNotifierProvider<AudioRecitationService>.value(
             value: audioService),
+        ChangeNotifierProvider<QariDownloadService>(
+            create: (_) => QariDownloadService()),
       ],
       child: const NurAlQuranApp(),
     ),

@@ -4,7 +4,9 @@ import '../data/quran_data.dart';
 import '../models/surah.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
+import '../services/qari_download_service.dart';
 import '../utils/script_font.dart';
+import 'offline_download_screen.dart';
 
 /// Audio Studio: choose a world-renowned reciter, quick-play beloved surahs,
 /// browse all surahs with filters (like the website's audio tab), and control
@@ -19,6 +21,16 @@ class AudioStudioScreen extends StatefulWidget {
 class _AudioStudioScreenState extends State<AudioStudioScreen> {
   // 0 = All 114, 1 = Juz 'Amma (78-114), 2 = Makki, 3 = Madani
   int _filterIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Lazy disk scan so "Offline" chips reflect already-downloaded packs.
+    Future.microtask(() {
+      if (!mounted) return;
+      context.read<QariDownloadService>().refreshCompleteCache();
+    });
+  }
 
   List<Surah> _filteredSurahs() {
     switch (_filterIndex) {
@@ -147,9 +159,59 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                                   style: theme.textTheme.labelSmall),
                             ],
                           ),
-                          trailing: selected
-                              ? Icon(Icons.check_circle, color: gold)
-                              : const Icon(Icons.radio_button_unchecked),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Consumer<QariDownloadService>(
+                                builder: (context, dl, _) {
+                                  final offline = dl
+                                              .progressOf(q.id)
+                                              .state ==
+                                          QariPackState.complete ||
+                                      dl.isKnownComplete(q.id);
+                                  if (!offline) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Container(
+                                    margin: const EdgeInsets.only(right: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: gold.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: gold.withOpacity(0.5)),
+                                    ),
+                                    child: Text(
+                                      'Offline',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                        color: gold,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.download_outlined),
+                                color: gold,
+                                tooltip: 'Download for offline',
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const OfflineDownloadScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              selected
+                                  ? Icon(Icons.check_circle, color: gold)
+                                  : const Icon(
+                                      Icons.radio_button_unchecked),
+                            ],
+                          ),
                           onTap: () => audio.setQari(q),
                         ),
                       );
