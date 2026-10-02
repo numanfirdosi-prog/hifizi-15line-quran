@@ -171,7 +171,7 @@ class _MushafScreenState extends State<MushafScreen> {
     final fy = (local.dy / box.size.height).clamp(0.0, 1.0);
     final segsMap = await _segmentsFuture;
     if (!mounted) return;
-    final hit = hitTestAyah(segsMap[pageNum] ?? const <AyahSeg>[], fx, fy);
+    final hit = hitTestAyah(segsMap[pageNum] ?? const <AyahSeg>[], fx, fy, pageNum);
     if (hit == null) return;
     final ok = await _audio.playAyah(surah: hit.surah, ayah: hit.ayah);
     if (!ok && mounted) {
@@ -481,8 +481,8 @@ class _MushafScreenState extends State<MushafScreen> {
           future: _segmentsFuture,
           builder: (context, snap) {
             final segs = snap.data?[pageNum] ?? const <AyahSeg>[];
-            final rects =
-                rectsForAyah(segs, audio.currentSurah, audio.currentAyah);
+            final rects = rectsForAyah(
+                segs, audio.currentSurah, audio.currentAyah, pageNum);
             if (rects.isEmpty) return const SizedBox.shrink();
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
@@ -491,10 +491,10 @@ class _MushafScreenState extends State<MushafScreen> {
                 children: [
                   for (final r in rects)
                     Positioned(
-                      left: r.leftPct / 100 * w,
-                      top: r.topPct / 100 * h,
-                      width: r.widthPct / 100 * w,
-                      height: r.heightPct / 100 * h,
+                      left: r.left * w,
+                      top: r.top * h,
+                      width: r.width * w,
+                      height: r.height * h,
                       child: Container(
                         decoration: BoxDecoration(
                           color: const Color(0xFFD4AF37)
