@@ -23,7 +23,7 @@ class PreferencesService extends ChangeNotifier {
   String _themeName = 'night'; // night | emerald | parchment
   String _scriptStyle = 'nastaliq'; // nastaliq | uthmani
   double _ayahScale = 1.0;
-  String _readingMode = 'slide'; // slide | scroll
+  String _readingMode = 'slide'; // slide | scroll | turn
   int _repeatMode = 0; // 0=off, 1/3/5, -1=infinite
   double _playbackSpeed = 1.0;
   List<String> _savedAyahs = []; // 's:v'
@@ -31,6 +31,9 @@ class PreferencesService extends ChangeNotifier {
   Map<String, String> _pageTint = {}; // page -> color hex
   bool _ayahTapHintShown = false;
   List<int> _khatmDays = []; // completed khatm day numbers (1..30)
+  bool _onboardingDone = false;
+  bool _autoBackup = false;
+  String _lastAutoBackup = '';
 
   Map<String, bool> _prayerAlarms = {
     'fajr': true,
@@ -63,6 +66,9 @@ class PreferencesService extends ChangeNotifier {
   Map<String, String> get pageNotes => _pageNotes;
   Map<String, String> get pageTint => _pageTint;
   bool get ayahTapHintShown => _ayahTapHintShown;
+  bool get onboardingDone => _onboardingDone;
+  bool get autoBackup => _autoBackup;
+  String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
   Future<void> init() async {
@@ -84,6 +90,9 @@ class PreferencesService extends ChangeNotifier {
     _repeatMode = _prefs.getInt('nur_repeat_mode') ?? 0;
     _playbackSpeed = _prefs.getDouble('nur_playback_speed') ?? 1.0;
     _ayahTapHintShown = _prefs.getBool('nur_ayah_tap_hint_shown') ?? false;
+    _onboardingDone = _prefs.getBool('nur_onboarding_done') ?? false;
+    _autoBackup = _prefs.getBool('nur_auto_backup') ?? false;
+    _lastAutoBackup = _prefs.getString('nur_last_auto_backup') ?? '';
 
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
     if (savedAyahsJson != null) {
@@ -266,6 +275,24 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setAyahTapHintShown(bool shown) async {
     _ayahTapHintShown = shown;
     await _prefs.setBool('nur_ayah_tap_hint_shown', shown);
+    notifyListeners();
+  }
+
+  Future<void> setOnboardingDone(bool done) async {
+    _onboardingDone = done;
+    await _prefs.setBool('nur_onboarding_done', done);
+    notifyListeners();
+  }
+
+  Future<void> setAutoBackup(bool enabled) async {
+    _autoBackup = enabled;
+    await _prefs.setBool('nur_auto_backup', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setLastAutoBackup(String isoTime) async {
+    _lastAutoBackup = isoTime;
+    await _prefs.setString('nur_last_auto_backup', isoTime);
     notifyListeners();
   }
 

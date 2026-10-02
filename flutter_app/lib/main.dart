@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'services/preferences_service.dart';
 import 'services/audio_recitation_service.dart';
-import 'services/azan_alarm_service.dart';
-import 'views/home_navigation_screen.dart';
+import 'services/nur_audio_handler.dart';
+import 'services/deep_link_service.dart';
+import 'views/splash_screen.dart';
 
 /// App theme palettes, switchable live from Preferences (themeName:
 /// 'night' | 'emerald' | 'parchment').
@@ -98,20 +99,26 @@ void main() async {
   final preferencesService = PreferencesService();
   await preferencesService.init();
 
-  final azanAlarmService = AzanAlarmService();
-  await azanAlarmService.init();
+  // Audio service is created up-front so the background-audio bridge and
+  // deep-link handler can attach to the same instance.
+  final audioService = AudioRecitationService();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<PreferencesService>.value(
             value: preferencesService),
-        ChangeNotifierProvider<AudioRecitationService>(
-            create: (_) => AudioRecitationService()),
+        ChangeNotifierProvider<AudioRecitationService>.value(
+            value: audioService),
       ],
       child: const NurAlQuranApp(),
     ),
   );
+
+  // Best-effort background services: guarded internally, never block or
+  // crash startup, and the app works fully without them.
+  initBackgroundAudio(audioService);
+  DeepLinkService.init();
 }
 
 class NurAlQuranApp extends StatelessWidget {
@@ -127,7 +134,7 @@ class NurAlQuranApp extends StatelessWidget {
           title: 'نور القرآن (Nur-ul-Quran)',
           debugShowCheckedModeBanner: false,
           theme: buildTheme(prefs.themeName),
-          home: const HomeNavigationScreen(),
+          home: const SplashScreen(),
         );
       },
     );

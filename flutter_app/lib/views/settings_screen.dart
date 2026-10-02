@@ -270,6 +270,16 @@ class SettingsScreen extends StatelessWidget {
                       if (val != null) prefs.setReadingMode(val);
                     },
                   ),
+                  RadioListTile<String>(
+                    title: Text('Page Turn / ورق پلٹنا',
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
+                    value: 'turn',
+                    groupValue: prefs.readingMode,
+                    activeColor: cs.primary,
+                    onChanged: (val) {
+                      if (val != null) prefs.setReadingMode(val);
+                    },
+                  ),
                   Divider(color: cs.onSurface.withValues(alpha: 0.12)),
                   const SizedBox(height: 4),
                   Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
@@ -9,6 +10,28 @@ import '../utils/script_font.dart';
 
 /// Cached full-Quran text (Arabic + English) for the player sheet.
 Future<List<QuranTextEntry>>? _quranTextFuture;
+
+/// Shares an ayah via the Android share sheet (Arabic + English + reference).
+/// Never includes private notes.
+Future<void> shareAyah(BuildContext context,
+    {required int surah, required int ayah}) async {
+  _quranTextFuture ??= loadQuranText();
+  final list = await _quranTextFuture;
+  QuranTextEntry? entry;
+  if (list != null) {
+    for (final e in list) {
+      if (e.s == surah && e.v == ayah) {
+        entry = e;
+        break;
+      }
+    }
+  }
+  final name = allSurahs[(surah - 1).clamp(0, 113)].nameEn;
+  final text = entry == null
+      ? 'Surah $name ($surah:$ayah) — Nur Al-Quran'
+      : '${entry.ar}\n\n"${entry.en}"\n\n— Surah $name ($surah:$ayah) • Nur Al-Quran';
+  await Share.share(text);
+}
 
 /// Opens the ayah player: highlights the tapped ayah and plays its audio,
 /// advancing ayah-by-ayah until the user presses stop.
@@ -89,6 +112,13 @@ class _AyahPlayerSheet extends StatelessWidget {
                         fontSize: 16,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.share,
+                        color: cs.onSurface.withValues(alpha: 0.6)),
+                    tooltip: 'Share ayah',
+                    onPressed: () =>
+                        shareAyah(context, surah: s, ayah: v),
                   ),
                   IconButton(
                     icon: Icon(Icons.close,
@@ -197,6 +227,8 @@ class _AyahPlayerSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
+              _RepeatRangeRow(surah: s),
+              const SizedBox(height: 4),
               Text(
                 audio.selectedQari.name,
                 style: TextStyle(
@@ -215,6 +247,142 @@ class _AyahPlayerSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Repeat-range picker: loops ayahs [start]..[end] of the current surah.
+/// Validates start <= end within the surah's ayah count.
+class _RepeatRangeRow extends StatefulWidget {
+  final int surah;
+  const _RepeatRangeRow({required this.surah});
+
+  @override
+  State<_RepeatRangeRow> createState() => _RepeatRangeRowState();
+}
+
+class _RepeatRangeRowState extends State<_RepeatRangeRow> {
+  final _startCtrl = TextEditingController();
+  final _endCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _startCtrl.dispose();
+    _endCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final audio = Provider.of<AudioRecitationService>(context);
+    final total = allSurahs[(widget.surah - 1).clamp(0, 113)].totalAyahs;
+    if (audio.hasAyahRepeatRange) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: cs.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.repeat, size: 18, color: cs.primary),
+            const SizedBox(width: 8),
+            Text(
+              'Repeating ${audio.repeatRangeStart}–${audio.repeatRangeEnd}',
+              style: TextStyle(
+                  color: cs.onSurface, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: audio.clearAyahRepeatRange,
+              child: const Text('Stop'),
+            ),
+          ],
+        ),
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Repeat range:',
+          style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 64,
+          child: TextField(
+            controller: _startCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: cs.onSurface, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: '1',
+              hintStyle: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.4)),
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text('–',
+              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6))),
+        ),
+        SizedBox(
+          width: 64,
+          child: TextField(
+            controller: _endCtrl,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: cs.onSurface, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: '$total',
+              hintStyle: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.4)),
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          onPressed: () async {
+            final start = int.tryParse(_startCtrl.text.trim());
+            final end = int.tryParse(_endCtrl.text.trim());
+            if (start == null ||
+                end == null ||
+                !AudioRecitationService.isValidAyahRange(
+                    widget.surah, start, end)) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        'Invalid range — use 1–$total with start ≤ end'),
+                  ),
+                );
+              }
+              return;
+            }
+            await audio.setAyahRepeatRange(
+              surah: widget.surah,
+              startAyah: start,
+              endAyah: end,
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          child: const Text('Start'),
+        ),
+      ],
     );
   }
 }

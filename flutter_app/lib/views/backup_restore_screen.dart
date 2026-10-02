@@ -5,21 +5,98 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../services/auto_backup_service.dart';
 import '../services/preferences_service.dart';
 
-/// Export / import a JSON backup of all preferences, plus a danger-zone
-/// full reset.
+/// Export / import a JSON backup of all preferences, plus automatic weekly
+/// backups and a danger-zone full reset.
 class BackupRestoreScreen extends StatelessWidget {
   const BackupRestoreScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Backup & Restore')),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          // Automatic backup card.
+          Card(
+            color: cs.surface,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Consumer<PreferencesService>(
+                builder: (context, prefs, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Automatic Backup',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Auto backup (weekly)',
+                          style: TextStyle(color: cs.onSurface)),
+                      subtitle: Text(
+                        'Quietly saves your data to this device once a week. No internet needed.',
+                        style: TextStyle(
+                            color:
+                                cs.onSurface.withValues(alpha: 0.6),
+                            fontSize: 12),
+                      ),
+                      value: prefs.autoBackup,
+                      activeColor: cs.primary,
+                      onChanged: (val) async {
+                        await prefs.setAutoBackup(val);
+                        if (val) {
+                          await AutoBackupService.scheduleWeekly();
+                        } else {
+                          await AutoBackupService.cancel();
+                        }
+                      },
+                    ),
+                    if (prefs.lastAutoBackup.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Last auto backup: ${_formatBackupTime(prefs.lastAutoBackup)}',
+                          style: TextStyle(
+                              color: cs.onSurface
+                                  .withValues(alpha: 0.6),
+                              fontSize: 12),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final ok =
+                            await AutoBackupService.runNow();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(
+                            SnackBar(
+                              content: Text(ok
+                                  ? 'Backup saved on this device.'
+                                  : 'Backup failed — please try again.'),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.backup_outlined, size: 18),
+                      label: const Text('Back Up Now'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           // Export card.
           Card(
             color: theme.colorScheme.surface,
@@ -255,5 +332,19 @@ class _ImportFieldState extends State<_ImportField> {
         ),
       ],
     );
+  }
+}
+
+/// Formats an ISO-8601 backup timestamp for display; never throws.
+String _formatBackupTime(String iso) {
+  try {
+    final dt = DateTime.parse(iso).toLocal();
+    final d =
+        '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    final t =
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '$d $t';
+  } catch (_) {
+    return iso;
   }
 }

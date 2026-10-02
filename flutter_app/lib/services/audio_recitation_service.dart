@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -195,6 +196,22 @@ class AudioRecitationService extends ChangeNotifier {
   bool _ayahMode = false;
   bool get ayahMode => _ayahMode;
 
+  /// Ayah-range repeat: when set, [_advanceAyah] loops within
+  /// [_repeatRangeSurah]:[_repeatRangeStart]..[_repeatRangeEnd].
+  int? _repeatRangeSurah;
+  int? _repeatRangeStart;
+  int? _repeatRangeEnd;
+  bool get hasAyahRepeatRange => _repeatRangeSurah != null;
+  int? get repeatRangeStart => _repeatRangeStart;
+  int? get repeatRangeEnd => _repeatRangeEnd;
+
+  /// Pure validation for an ayah repeat range (single surah).
+  static bool isValidAyahRange(int surah, int start, int end) {
+    if (surah < 1 || surah > 114) return false;
+    if (start < 1 || end < start) return false;
+    return end <= allSurahs[surah - 1].totalAyahs;
+  }
+
   AudioPlayer get player => _player;
   Qari get selectedQari => _selectedQari;
   bool get isPlaying => _isPlaying;
@@ -203,6 +220,7 @@ class AudioRecitationService extends ChangeNotifier {
 
   AudioRecitationService() {
     _restoreSelectedQari();
+    _initAudioSession();
     _player.playerStateStream.listen(_onPlayerState);
     // Website-style highlight fill: 0..1 progress of the current ayah.
     _player.positionStream.listen((pos) {
@@ -213,6 +231,36 @@ class AudioRecitationService extends ChangeNotifier {
           : (pos.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
       _ayahProgressController.add(p);
     });
+  }
+
+  /// Configures the platform audio session: pauses on interruptions
+  /// (phone calls) and headset unplug, resuming afterwards only if audio
+  /// was playing before. Never throws — failures leave audio working.
+  bool _playInterrupted = false;
+
+  Future<void> _initAudioSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.speech());
+      session.interruptionEventStream.listen((event) {
+        if (event.begin) {
+          if (_isPlaying) {
+            _playInterrupted = true;
+            pause();
+          }
+        } else {
+          if (_playInterrupted) {
+            _playInterrupted = false;
+            resume();
+          }
+        }
+      });
+      session.becomingNoisyEventStream.listen((_) {
+        if (_isPlaying) pause();
+      });
+    } catch (e) {
+      debugPrint('[AudioRecitation] audio session unavailable: $e');
+    }
   }
 
   final _ayahProgressController = StreamController<double>.broadcast();
@@ -263,9 +311,17 @@ class AudioRecitationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Advances to the next ayah (wrapping across surahs). Stops ayah mode at
-  /// the end of the Quran (114:6).
+  /// Advances to the next ayah (wrapping across surahs). When an ayah
+  /// repeat range is set, loops back to its start after its end instead.
+  /// Stops ayah mode at the end of the Quran (114:6).
   Future<void> _advanceAyah() async {
+    if (_repeatRangeSurah != null &&
+        _currentSurah == _repeatRangeSurah &&
+        _currentAyah >= (_repeatRangeEnd ?? 0)) {
+      await playAyah(
+          surah: _repeatRangeSurah!, ayah: _repeatRangeStart ?? 1);
+      return;
+    }
     final next = _nextAyah();
     if (next == null) {
       _ayahMode = false;
@@ -295,6 +351,30 @@ class AudioRecitationService extends ChangeNotifier {
     final prev = prevAyahBefore(_currentSurah, _currentAyah);
     if (prev == null) return;
     await playAyah(surah: prev.$1, ayah: prev.$2);
+  }
+
+  /// Starts repeating ayahs [startAyah]..[endAyah] of [surah] in a loop,
+  /// beginning playback at [startAyah]. Returns false when the range is
+  /// invalid (validated by [isValidAyahRange]).
+  Future<bool> setAyahRepeatRange({
+    required int surah,
+    required int startAyah,
+    required int endAyah,
+  }) async {
+    if (!isValidAyahRange(surah, startAyah, endAyah)) return false;
+    _repeatRangeSurah = surah;
+    _repeatRangeStart = startAyah;
+    _repeatRangeEnd = endAyah;
+    notifyListeners();
+    return playAyah(surah: surah, ayah: startAyah);
+  }
+
+  /// Clears any active ayah repeat range (playback continues normally).
+  void clearAyahRepeatRange() {
+    _repeatRangeSurah = null;
+    _repeatRangeStart = null;
+    _repeatRangeEnd = null;
+    notifyListeners();
   }
 
   void setSelectedQari(Qari qari) {
@@ -386,6 +466,9 @@ class AudioRecitationService extends ChangeNotifier {
 
   Future<void> stop() async {
     _ayahMode = false;
+    _repeatRangeSurah = null;
+    _repeatRangeStart = null;
+    _repeatRangeEnd = null;
     await _player.stop();
     notifyListeners();
   }

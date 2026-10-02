@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import '../data/quran_data.dart';
+import '../data/juz_data.dart';
 import '../data/verse_index.dart';
 import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
@@ -162,6 +164,28 @@ class _MushafScreenState extends State<MushafScreen> {
         duration: Duration(seconds: 4),
       ),
     );
+  }
+
+  /// Shares the current page reference via the Android share sheet.
+  /// Never includes private notes.
+  Future<void> _shareCurrentPage() async {
+    var ref = 'Page $_currentPage';
+    try {
+      final index = await _firstVerseIndex;
+      final firstVerse = index[_currentPage];
+      if (firstVerse != null) {
+        final parts = firstVerse.split(':');
+        final s = (int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 1)
+            .clamp(1, 114);
+        final name = allSurahs[s - 1].nameEn;
+        var juz = 1;
+        for (final j in juzList) {
+          if (_currentPage >= j.startPage) juz = j.number;
+        }
+        ref = 'Page $_currentPage • Surah $name • Juz $juz';
+      }
+    } catch (_) {}
+    await Share.share('$ref — Nur Al-Quran');
   }
 
   /// Handles a tap on the page image: hit-tests the ayah segments and
@@ -745,6 +769,38 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  /// Lightweight page-turn reading mode: the same PageView as slide mode,
+  /// but each page gets a subtle 3D flip driven by the drag offset.
+  /// Purposefully modest (no heavy curl shader) so it stays smooth on
+  /// mid-range devices; slide mode remains the fallback.
+  Widget _buildTurnView(BuildContext context) {
+    return PageView.builder(
+      controller: _pageController,
+      reverse: true, // RTL for Mushaf reading
+      itemCount: totalPagesInMushaf,
+      onPageChanged: _onPageChanged,
+      itemBuilder: (context, index) => AnimatedBuilder(
+        animation: _pageController,
+        builder: (context, child) {
+          double t = 0.0;
+          if (_pageController.position.haveDimensions) {
+            t = (_pageController.page! - index).clamp(-1.0, 1.0);
+          }
+          // Gentle flip: rotate around the vertical axis with perspective,
+          // slightly shrinking the page mid-turn.
+          final angle = -t * 0.55;
+          final scale = 1.0 - 0.07 * t.abs();
+          return Transform(
+            transform: Matrix4.identity()..setEntry(3, 2, 0.002)..rotateY(angle),
+            alignment: Alignment.center,
+            child: Transform.scale(scale: scale, child: child),
+          );
+        },
+        child: _buildPageItem(context, index + 1),
+      ),
+    );
+  }
+
   Widget _buildScrollView(BuildContext context) {
     final itemHeight = _scrollItemHeight(context);
     _scrollController ??= ScrollController(
@@ -845,6 +901,7 @@ class _MushafScreenState extends State<MushafScreen> {
     final cs = Theme.of(context).colorScheme;
     final isBookmarked = prefs.bookmarks.contains(_currentPage);
     final isScroll = prefs.readingMode == 'scroll';
+    final isTurn = prefs.readingMode == 'turn';
 
     // Reset the scroll controller when leaving scroll mode so it re-syncs
     // to the current page next time.
@@ -906,6 +963,22 @@ class _MushafScreenState extends State<MushafScreen> {
             tooltip: 'Jump to Page',
             onPressed: _showJumpToPageDialog,
           ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert,
+                color: cs.onSurface.withValues(alpha: 0.7)),
+            tooltip: 'More',
+            color: cs.surface,
+            onSelected: (value) {
+              if (value == 'share') _shareCurrentPage();
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'share',
+                child: Text('Share page',
+                    style: TextStyle(color: cs.onSurface)),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(
@@ -918,6 +991,8 @@ class _MushafScreenState extends State<MushafScreen> {
                 // PageView with Reverse direction for Quranic Right-to-Left Reading
                 if (isScroll)
                   _buildScrollView(context)
+                else if (isTurn)
+                  _buildTurnView(context)
                 else
                   PageView.builder(
                     controller: _pageController,

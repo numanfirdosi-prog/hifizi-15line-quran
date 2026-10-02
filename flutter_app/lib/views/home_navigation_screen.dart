@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
 import '../services/azan_alarm_service.dart';
+import '../services/deep_link_service.dart';
 import 'dashboard_screen.dart';
 import 'mushaf_screen.dart';
 import 'surahs_screen.dart';
@@ -22,6 +23,10 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    DeepLinkService.pendingPage.addListener(_onDeepLinkPage);
+    DeepLinkService.onInvalidLink = _onInvalidDeepLink;
+    // A cold-start deep link may already be waiting.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLinkPage());
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = Provider.of<PreferencesService>(context, listen: false);
       _mushafTargetPage = prefs.lastReadPage;
@@ -87,6 +92,30 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       _mushafTargetPage = page;
       _currentIndex = 1; // Switch to Mushaf tab
     });
+  }
+
+  /// Handles `quranapp://page/<n>` deep links (validated 1..611).
+  void _onDeepLinkPage() {
+    final page = DeepLinkService.pendingPage.value;
+    if (page == null || !mounted) return;
+    DeepLinkService.pendingPage.value = null;
+    _jumpToMushafPage(page);
+  }
+
+  void _onInvalidDeepLink() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invalid page link')),
+    );
+  }
+
+  @override
+  void dispose() {
+    DeepLinkService.pendingPage.removeListener(_onDeepLinkPage);
+    if (DeepLinkService.onInvalidLink == _onInvalidDeepLink) {
+      DeepLinkService.onInvalidLink = null;
+    }
+    super.dispose();
   }
 
   void _selectTab(int index) {
