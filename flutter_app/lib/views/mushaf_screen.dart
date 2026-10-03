@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:share_plus/share_plus.dart';
 import '../data/quran_data.dart';
 import '../data/juz_data.dart';
 import '../data/verse_index.dart';
@@ -164,28 +163,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  /// Shares the current page reference via the Android share sheet.
-  /// Never includes private notes.
-  Future<void> _shareCurrentPage() async {
-    var ref = 'Page $_currentPage';
-    try {
-      final index = await _firstVerseIndex;
-      final firstVerse = index[_currentPage];
-      if (firstVerse != null) {
-        final parts = firstVerse.split(':');
-        final s = (int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? 1)
-            .clamp(1, 114);
-        final name = allSurahs[s - 1].nameEn;
-        var juz = 1;
-        for (final j in juzList) {
-          if (_currentPage >= j.startPage) juz = j.number;
-        }
-        ref = 'Page $_currentPage • Surah $name • Juz $juz';
-      }
-    } catch (_) {}
-    await Share.share('$ref — Nur Al-Quran');
-  }
-
   /// Handles a tap on the page image: hit-tests the ayah segments and
   /// starts ayah-by-ayah audio for the tapped ayah.
   Future<void> _onPageTap(
@@ -197,7 +174,8 @@ class _MushafScreenState extends State<MushafScreen> {
     final fy = (local.dy / box.size.height).clamp(0.0, 1.0);
     final segsMap = await _segmentsFuture;
     if (!mounted) return;
-    final hit = hitTestAyah(segsMap[pageNum] ?? const <AyahSeg>[], fx, fy, pageNum);
+    final hit =
+        hitTestAyah(segsMap[pageNum] ?? const <AyahSeg>[], fx, fy, pageNum);
     if (hit == null) return;
     final ok = await _audio.playAyah(surah: hit.surah, ayah: hit.ayah);
     if (!ok && mounted) {
@@ -260,27 +238,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  /// Small 📜 button at the bottom-right of the page image.
-  Widget _buildDrawMenuButton(int pageNum) {
-    return Positioned(
-      right: 8,
-      bottom: 8,
-      child: Material(
-        color: Colors.black.withValues(alpha: 0.55),
-        shape: const CircleBorder(),
-        elevation: 2,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () => _showDrawingMenu(pageNum),
-          child: const Padding(
-            padding: EdgeInsets.all(7),
-            child: Text('📜', style: TextStyle(fontSize: 20)),
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Chip shown while a drawing tool is active: tool name + X to exit.
   Widget _buildDrawingModeChip() {
     return Consumer<PageDrawingService>(
@@ -320,8 +277,7 @@ class _MushafScreenState extends State<MushafScreen> {
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close,
-                        color: Colors.white, size: 16),
+                    child: Icon(Icons.close, color: Colors.white, size: 16),
                   ),
                 ),
               ),
@@ -446,13 +402,13 @@ class _MushafScreenState extends State<MushafScreen> {
                 Navigator.pop(sheetCtx);
                 _showToolSheet();
               }),
-              _drawingMenuItem(
-                  sheetCtx, Icons.note_add, cs.primary, 'Notes', () {
+              _drawingMenuItem(sheetCtx, Icons.note_add, cs.primary, 'Notes',
+                  () {
                 Navigator.pop(sheetCtx);
                 _showPageNoteDialog(pageNum);
               }),
-              _drawingMenuItem(sheetCtx, Icons.delete_outline, cs.primary,
-                  'Clear', () {
+              _drawingMenuItem(
+                  sheetCtx, Icons.delete_outline, cs.primary, 'Clear', () {
                 Navigator.pop(sheetCtx);
                 _confirmClearPage(pageNum);
               }),
@@ -476,8 +432,7 @@ class _MushafScreenState extends State<MushafScreen> {
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 6),
-            Text(label,
-                style: TextStyle(color: cs.onSurface, fontSize: 13)),
+            Text(label, style: TextStyle(color: cs.onSurface, fontSize: 13)),
           ],
         ),
       ),
@@ -496,8 +451,7 @@ class _MushafScreenState extends State<MushafScreen> {
       ),
       builder: (sheetCtx) => SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -610,9 +564,7 @@ class _MushafScreenState extends State<MushafScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected
-                ? cs.primary
-                : cs.onSurface.withValues(alpha: 0.25),
+            color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.25),
             width: selected ? 2 : 1,
           ),
           color: selected ? cs.primary.withValues(alpha: 0.12) : null,
@@ -648,16 +600,15 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surface,
-        title: Text('Page $pageNum note',
-            style: TextStyle(color: cs.onSurface)),
+        title:
+            Text('Page $pageNum note', style: TextStyle(color: cs.onSurface)),
         content: TextField(
           controller: controller,
           maxLines: 4,
           style: TextStyle(color: cs.onSurface),
           decoration: InputDecoration(
             hintText: 'Write a note for this page…',
-            hintStyle:
-                TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+            hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
             border: const OutlineInputBorder(),
           ),
         ),
@@ -665,8 +616,7 @@ class _MushafScreenState extends State<MushafScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel',
-                style:
-                    TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
+                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -700,8 +650,8 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surface,
-        title: Text('Clear page markings?',
-            style: TextStyle(color: cs.onSurface)),
+        title:
+            Text('Clear page markings?', style: TextStyle(color: cs.onSurface)),
         content: Text(
           'This removes all drawings and the note for page $pageNum.',
           style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8)),
@@ -710,8 +660,7 @@ class _MushafScreenState extends State<MushafScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel',
-                style:
-                    TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
+                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -730,75 +679,6 @@ class _MushafScreenState extends State<MushafScreen> {
         ],
       ),
     );
-  }
-
-  void _showJumpToPageDialog() {
-    final cs = Theme.of(context).colorScheme;
-    final textController = TextEditingController(text: _currentPage.toString());
-    final prefs = Provider.of<PreferencesService>(context, listen: false);
-    // N5: dispose the controller when the dialog closes.
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surface,
-        title:  Text('ورقہ / صفحہ منتخب کریں',
-            style: TextStyle(color: cs.onSurface, fontFamily: 'serif')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Page Number (1 to 611):',
-              style: TextStyle(color: Color(0xFFE2E8F0)),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: textController,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              style: TextStyle(color: cs.onSurface, fontSize: 18),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: cs.secondary,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                hintText: 'Enter page 1-611',
-                hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.54)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child:
-                Text('Cancel', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-            ),
-            onPressed: () {
-              final p = int.tryParse(textController.text.trim());
-              if (p != null && p >= 1 && p <= totalPagesInMushaf) {
-                Navigator.pop(ctx);
-                if (prefs.readingMode == 'scroll') {
-                  final itemHeight = _scrollItemHeight(context);
-                  _scrollController?.animateTo(
-                    (p - 1) * itemHeight,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                } else {
-                  _pageController.jumpToPage(p - 1);
-                }
-              }
-            },
-            child: const Text('Go to Page'),
-          ),
-        ],
-      ),
-    ).then((_) => textController.dispose());
   }
 
   String _speedLabel(double v) =>
@@ -894,109 +774,109 @@ class _MushafScreenState extends State<MushafScreen> {
           child: Stack(
             children: [
               ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
-                  BlendMode.darken,
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: mushafPageImageUrl(pageNum),
-                  fit: BoxFit.contain,
-              // M7: pages are cached on disk — the Mushaf keeps working offline.
-              progressIndicatorBuilder: (context, url, progress) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFF0F3A2C)),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Loading Page $pageNum...',
-                        style: const TextStyle(
-                            color: Color(0xFF0F3A2C),
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
+                    BlendMode.darken,
                   ),
-                );
-              },
-              errorWidget: (context, url, error) {
-                return Container(
-                  padding: const EdgeInsets.all(24),
-                  color: const Color(0xFFFAF7EE),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.menu_book,
-                            size: 64, color: Color(0xFF0F3A2C)),
-                        const SizedBox(height: 16),
-                        Text(
-                          'صفحہ $pageNum',
-                          style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F3A2C)),
+                  child: CachedNetworkImage(
+                    imageUrl: mushafPageImageUrl(pageNum),
+                    fit: BoxFit.contain,
+                    // M7: pages are cached on disk — the Mushaf keeps working offline.
+                    progressIndicatorBuilder: (context, url, progress) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF0F3A2C)),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Loading Page $pageNum...',
+                              style: const TextStyle(
+                                  color: Color(0xFF0F3A2C),
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          '15-Line Offline Mushaf Page',
-                          style: TextStyle(color: Colors.black54),
+                      );
+                    },
+                    errorWidget: (context, url, error) {
+                      return Container(
+                        padding: const EdgeInsets.all(24),
+                        color: const Color(0xFFFAF7EE),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.menu_book,
+                                  size: 64, color: Color(0xFF0F3A2C)),
+                              const SizedBox(height: 16),
+                              Text(
+                                'صفحہ $pageNum',
+                                style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F3A2C)),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                '15-Line Offline Mushaf Page',
+                                style: TextStyle(color: Colors.black54),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            )),
-            // Currently playing ayah highlight (ayah-by-ayah audio mode).
-            _buildAyahHighlights(pageNum),
-            // Freehand page drawings (pen/brush/highlighter/rectangle).
-            // Paint sits below the gesture layer.
-            _buildDrawingPaint(pageNum),
-            // Page gesture layer: ayah tap-to-play normally, drawing
-            // gestures while a drawing tool is active. LAST among the
-            // full-page layers so it sits above the paint.
-            // Translucent: taps pass through visually but are still caught.
-            Positioned.fill(
-              child: Builder(
-                builder: (tapCtx) => Consumer<PageDrawingService>(
-                  builder: (context, draw, _) {
-                    if (draw.selectedTool == null) {
+                      );
+                    },
+                  )),
+              // Currently playing ayah highlight (ayah-by-ayah audio mode).
+              _buildAyahHighlights(pageNum),
+              // Freehand page drawings (pen/brush/highlighter/rectangle).
+              // Paint sits below the gesture layer.
+              _buildDrawingPaint(pageNum),
+              // Page gesture layer: ayah tap-to-play normally, drawing
+              // gestures while a drawing tool is active. LAST among the
+              // full-page layers so it sits above the paint.
+              // Translucent: taps pass through visually but are still caught.
+              Positioned.fill(
+                child: Builder(
+                  builder: (tapCtx) => Consumer<PageDrawingService>(
+                    builder: (context, draw, _) {
+                      if (draw.selectedTool == null) {
+                        return GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                          child: Container(color: Colors.transparent),
+                        );
+                      }
                       return GestureDetector(
                         behavior: HitTestBehavior.translucent,
-                        onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                        onPanStart: (d) =>
+                            _onDrawStart(tapCtx, d, pageNum, draw),
+                        onPanUpdate: (d) =>
+                            _onDrawUpdate(tapCtx, d, pageNum, draw),
+                        onPanEnd: (_) => _onDrawEnd(pageNum, draw),
+                        onTapUp: draw.selectedTool == 'eraser'
+                            ? (d) => _onEraseAt(
+                                tapCtx, d.globalPosition, pageNum, draw)
+                            : null,
                         child: Container(color: Colors.transparent),
                       );
-                    }
-                    return GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onPanStart: (d) =>
-                          _onDrawStart(tapCtx, d, pageNum, draw),
-                      onPanUpdate: (d) =>
-                          _onDrawUpdate(tapCtx, d, pageNum, draw),
-                      onPanEnd: (_) => _onDrawEnd(pageNum, draw),
-                      onTapUp: draw.selectedTool == 'eraser'
-                          ? (d) => _onEraseAt(tapCtx, d.globalPosition,
-                              pageNum, draw)
-                          : null,
-                      child: Container(color: Colors.transparent),
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
-            ),
-            // 📜 drawing menu button (above the gesture layer).
-            _buildDrawMenuButton(pageNum),
-            // Drawing-mode indicator + exit chip.
-            _buildDrawingModeChip(),
-          ],
+              // Drawing-mode indicator + exit chip.
+              // (The 📜 per-page button was replaced by the screen-level
+              // floating note button, bottom-left like the reference design.)
+              _buildDrawingModeChip(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   /// Website-exact ayah highlight (visible only while ayah-by-ayah audio is
@@ -1027,8 +907,7 @@ class _MushafScreenState extends State<MushafScreen> {
             final h = constraints.maxHeight;
             // Website: 15px band on the (max 580px wide -> ~870px tall) wrapper.
             final bandH = h * 0.0172;
-            final isDark =
-                Theme.of(context).brightness == Brightness.dark;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             // Website gold: light rgba(212,175,55,0.45), dark rgba(240,205,95,0.50).
             final gold = isDark
                 ? const Color.fromRGBO(240, 205, 95, 0.50)
@@ -1037,13 +916,10 @@ class _MushafScreenState extends State<MushafScreen> {
               stream: audio.ayahProgressStream,
               initialData: 0.0,
               builder: (context, progSnap) {
-                final progress =
-                    (progSnap.data ?? 0.0).clamp(0.0, 1.0);
+                final progress = (progSnap.data ?? 0.0).clamp(0.0, 1.0);
                 // Website progress distribution: segments fill in line order,
                 // weighted by width (min 5), each filling right-to-left.
-                final weights = ayahSegs
-                    .map((s) => max(5.0, s.width))
-                    .toList();
+                final weights = ayahSegs.map((s) => max(5.0, s.width)).toList();
                 final total = weights.fold(0.0, (a, b) => a + b);
                 double acc = 0;
                 return IgnorePointer(
@@ -1061,8 +937,8 @@ class _MushafScreenState extends State<MushafScreen> {
                           } else if (progress <= startFrac) {
                             segProg = 0.0;
                           } else {
-                            segProg = (progress - startFrac) /
-                                (endFrac - startFrac);
+                            segProg =
+                                (progress - startFrac) / (endFrac - startFrac);
                           }
                           final r = rectForSeg(seg, pageNum);
                           final rw = r.width * w;
@@ -1099,7 +975,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-
   /// Per-page widget reused by both reading modes. In scroll mode the page
   /// is non-interactive (no pinch zoom) so the list can scroll.
   Widget _buildPageItem(BuildContext context, int pageNum,
@@ -1134,8 +1009,7 @@ class _MushafScreenState extends State<MushafScreen> {
     return PageView.builder(
       controller: _pageController,
       reverse: true, // RTL for Mushaf reading
-      physics:
-          drawingActive ? const NeverScrollableScrollPhysics() : null,
+      physics: drawingActive ? const NeverScrollableScrollPhysics() : null,
       itemCount: totalPagesInMushaf,
       onPageChanged: _onPageChanged,
       itemBuilder: (context, index) => AnimatedBuilder(
@@ -1150,7 +1024,9 @@ class _MushafScreenState extends State<MushafScreen> {
           final angle = -t * 0.55;
           final scale = 1.0 - 0.07 * t.abs();
           return Transform(
-            transform: Matrix4.identity()..setEntry(3, 2, 0.002)..rotateY(angle),
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.002)
+              ..rotateY(angle),
             alignment: Alignment.center,
             child: Transform.scale(scale: scale, child: child),
           );
@@ -1179,8 +1055,7 @@ class _MushafScreenState extends State<MushafScreen> {
       },
       child: ListView.builder(
         controller: _scrollController,
-        physics:
-            drawingActive ? const NeverScrollableScrollPhysics() : null,
+        physics: drawingActive ? const NeverScrollableScrollPhysics() : null,
         itemCount: totalPagesInMushaf,
         itemBuilder: (context, index) =>
             _buildPageItem(context, index + 1, interactive: false),
@@ -1209,236 +1084,212 @@ class _MushafScreenState extends State<MushafScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        // (AppBar background from theme)
-        elevation: 2,
-        title: Row(
-          children: [
-            Text(
-              'صفحہ $_currentPage',
-              style:  TextStyle(
-                color: cs.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '/ $totalPagesInMushaf',
-              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 14),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              audio.isPlaying ? Icons.pause : Icons.play_arrow,
-              color: cs.onSurface.withValues(alpha: 0.7),
-            ),
-            tooltip: 'Play / Pause Surah Recitation',
-            onPressed: _onPlayPausePressed,
-          ),
-          IconButton(
-            icon: Icon(
-              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: isBookmarked ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
-            ),
-            onPressed: () => prefs.toggleBookmark(_currentPage),
-          ),
-          IconButton(
-            icon: Icon(Icons.swap_horiz, color: cs.onSurface.withValues(alpha: 0.7)),
-            tooltip: 'Jump to Page',
-            onPressed: _showJumpToPageDialog,
-          ),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert,
-                color: cs.onSurface.withValues(alpha: 0.7)),
-            tooltip: 'More',
-            color: cs.surface,
-            onSelected: (value) {
-              if (value == 'share') _shareCurrentPage();
-            },
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
-                value: 'share',
-                child: Text('Share page',
-                    style: TextStyle(color: cs.onSurface)),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
+      // Full-screen reader: no AppBar — the Quran page fills the screen
+      // like the reference design. System back button navigates back.
+      body: Stack(
         children: [
-          Expanded(
-            child: Stack(
-              children: [
-                // PageView with Reverse direction for Quranic Right-to-Left Reading
-                if (isScroll)
-                  _buildScrollView(context)
-                else if (isTurn)
-                  _buildTurnView(context)
-                else
-                  PageView.builder(
-                    controller: _pageController,
-                    reverse: true, // RTL for Mushaf reading
-                    physics: drawingActive
-                        ? const NeverScrollableScrollPhysics()
-                        : null,
-                    itemCount: totalPagesInMushaf,
-                    onPageChanged: _onPageChanged,
-                    itemBuilder: (context, index) =>
-                        _buildPageItem(context, index + 1),
-                  ),
+          // PageView with Reverse direction for Quranic Right-to-Left Reading
+          if (isScroll)
+            _buildScrollView(context)
+          else if (isTurn)
+            _buildTurnView(context)
+          else
+            PageView.builder(
+              controller: _pageController,
+              reverse: true, // RTL for Mushaf reading
+              physics:
+                  drawingActive ? const NeverScrollableScrollPhysics() : null,
+              itemCount: totalPagesInMushaf,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) =>
+                  _buildPageItem(context, index + 1),
+            ),
 
-                // Persistent reader control bar: Speed / Play / Repeat / Menu
-                // (image-1 style; always visible at the bottom of the page).
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      border: Border(
-                        top: BorderSide(
-                          color: cs.primary.withValues(alpha: 0.25),
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // Speed
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: _cycleSpeed,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _speedLabel(prefs.playbackSpeed),
-                                  style: TextStyle(
-                                    color: cs.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  'Speed',
-                                  style: TextStyle(
-                                    color: cs.onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Play / Pause (big circular button)
-                        GestureDetector(
-                          onTap: _onPlayPausePressed,
-                          child: Container(
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color: cs.primary, width: 2),
-                            ),
-                            child: Icon(
-                              audio.isPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                              color: cs.onSurface,
-                              size: 32,
-                            ),
-                          ),
-                        ),
-                        // Repeat (badge shows active mode)
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: _cycleRepeat,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    Icon(
-                                      Icons.repeat,
-                                      color: cs.onSurface.withValues(
-                                          alpha: 0.75),
-                                      size: 24,
-                                    ),
-                                    if (prefs.repeatMode != 0)
-                                      Positioned(
-                                        right: -8,
-                                        top: -6,
-                                        child: Container(
-                                          padding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 5,
-                                                  vertical: 1),
-                                          decoration: BoxDecoration(
-                                            color: cs.primary,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            _repeatLabels[
-                                                    prefs.repeatMode] ??
-                                                '',
-                                            style: TextStyle(
-                                              color: cs.onPrimary,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                Text(
-                                  'Repeat',
-                                  style: TextStyle(
-                                    color: cs.onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // 3-dot menu -> reader settings sheet
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () => _showReaderSettings(context),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            child: Icon(
-                              Icons.more_vert,
-                              color: cs.onSurface.withValues(alpha: 0.75),
-                              size: 26,
-                            ),
-                          ),
-                        ),
-                      ],
+          // Floating bookmark (save) button, top-right like the
+          // reference design. Hidden while a drawing tool is active
+          // (the drawing-mode chip occupies that corner instead).
+          if (!drawingActive)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 12,
+              child: Material(
+                color: cs.surface.withValues(alpha: 0.85),
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => prefs.toggleBookmark(_currentPage),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: isBookmarked
+                          ? cs.primary
+                          : cs.onSurface.withValues(alpha: 0.7),
+                      size: 24,
                     ),
                   ),
                 ),
-              ],
+              ),
+            ),
+
+          // Floating note button, bottom-left like the reference
+          // design. Opens the page drawing/notes menu.
+          Positioned(
+            left: 12,
+            bottom: 92,
+            child: Material(
+              color: const Color(0xFFE8F5E9),
+              shape: const CircleBorder(),
+              elevation: 3,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => _showDrawingMenu(_currentPage),
+                child: const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(
+                    Icons.edit_note,
+                    color: Color(0xFF2E7D32),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Persistent reader control bar: Speed / Play / Repeat / Menu
+          // (image-1 style; always visible at the bottom of the page).
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: cs.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  // Speed
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _cycleSpeed,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _speedLabel(prefs.playbackSpeed),
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Speed',
+                            style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.6),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Play / Pause (big circular button)
+                  GestureDetector(
+                    onTap: _onPlayPausePressed,
+                    child: Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: cs.primary, width: 2),
+                      ),
+                      child: Icon(
+                        audio.isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: cs.onSurface,
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                  // Repeat (badge shows active mode)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _cycleRepeat,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.repeat,
+                                color: cs.onSurface.withValues(alpha: 0.75),
+                                size: 24,
+                              ),
+                              if (prefs.repeatMode != 0)
+                                Positioned(
+                                  right: -8,
+                                  top: -6,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: cs.primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _repeatLabels[prefs.repeatMode] ?? '',
+                                      style: TextStyle(
+                                        color: cs.onPrimary,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          Text(
+                            'Repeat',
+                            style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.6),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // 3-dot menu -> reader settings sheet
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _showReaderSettings(context),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Icon(
+                        Icons.more_vert,
+                        color: cs.onSurface.withValues(alpha: 0.75),
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -1485,8 +1336,8 @@ class _PageDrawingPainter extends CustomPainter {
             .map((p) => Offset(p.dx * size.width, p.dy * size.height))
             .toList();
         if (pts.length == 1) {
-          canvas.drawCircle(
-              pts.first, paint.strokeWidth / 2, paint..style = PaintingStyle.fill);
+          canvas.drawCircle(pts.first, paint.strokeWidth / 2,
+              paint..style = PaintingStyle.fill);
         } else if (pts.length > 1) {
           canvas.drawPoints(PointMode.polygon, pts, paint);
         }

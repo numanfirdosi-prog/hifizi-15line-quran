@@ -66,37 +66,30 @@ class _ReaderSettingsSheet extends StatelessWidget {
                 style: TextStyle(color: cs.onSurface, fontSize: 15)),
             subtitle: Text(_themes[prefs.themeName] ?? prefs.themeName,
                 style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.6),
-                    fontSize: 13)),
+                    color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
             trailing: Icon(Icons.chevron_right,
                 color: cs.onSurface.withValues(alpha: 0.5)),
             onTap: () => _showThemeDialog(context),
           ),
-          Divider(
-              height: 1,
-              color: cs.onSurface.withValues(alpha: 0.12)),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Qari (Reciter)
           ListTile(
             title: Text('Qari (Reciter)',
                 style: TextStyle(color: cs.onSurface, fontSize: 15)),
             subtitle: Text(audio.selectedQari.name,
                 style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.6),
-                    fontSize: 13)),
+                    color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
             trailing: Icon(Icons.chevron_right,
                 color: cs.onSurface.withValues(alpha: 0.5)),
             onTap: () => _showQariDialog(context),
           ),
-          Divider(
-              height: 1,
-              color: cs.onSurface.withValues(alpha: 0.12)),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Ayah (Range)
           ListTile(
             title: Text('Ayah (Range)',
                 style: TextStyle(color: cs.onSurface, fontSize: 15)),
             subtitle: Text(
-              audio.repeatRangeLabel ??
-                  'Select range of ayat for playback',
+              audio.repeatRangeLabel ?? 'Select range of ayat for playback',
               style: TextStyle(
                   color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13),
             ),
@@ -104,9 +97,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
                 color: cs.onSurface.withValues(alpha: 0.5)),
             onTap: () => _showAyahRangeDialog(context),
           ),
-          Divider(
-              height: 1,
-              color: cs.onSurface.withValues(alpha: 0.12)),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Audio Mode
           SwitchListTile(
             title: Text('Audio Mode',
@@ -120,9 +111,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
             activeColor: cs.primary,
             onChanged: (v) => prefs.setAudioHighlightEnabled(v),
           ),
-          Divider(
-              height: 1,
-              color: cs.onSurface.withValues(alpha: 0.12)),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Background Playback
           SwitchListTile(
             title: Text('Background Playback',
@@ -142,23 +131,20 @@ class _ReaderSettingsSheet extends StatelessWidget {
   }
 
   void _showThemeDialog(BuildContext context) {
-    final prefs =
-        Provider.of<PreferencesService>(context, listen: false);
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
     final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (dctx) => AlertDialog(
         backgroundColor: cs.surface,
-        title: Text('Display Mode',
-            style: TextStyle(color: cs.onSurface)),
+        title: Text('Display Mode', style: TextStyle(color: cs.onSurface)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _themes.entries
               .map(
                 (e) => RadioListTile<String>(
                   title: Text(e.value,
-                      style:
-                          TextStyle(color: cs.onSurface, fontSize: 14)),
+                      style: TextStyle(color: cs.onSurface, fontSize: 14)),
                   value: e.key,
                   groupValue: prefs.themeName,
                   activeColor: cs.primary,
@@ -177,15 +163,13 @@ class _ReaderSettingsSheet extends StatelessWidget {
   }
 
   void _showQariDialog(BuildContext context) {
-    final audio =
-        Provider.of<AudioRecitationService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
     final cs = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (dctx) => AlertDialog(
         backgroundColor: cs.surface,
-        title:
-            Text('Qari (Reciter)', style: TextStyle(color: cs.onSurface)),
+        title: Text('Qari (Reciter)', style: TextStyle(color: cs.onSurface)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -204,8 +188,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
                             fontSize: 12))
                     : null,
                 value: q.id,
-                groupValue:
-                    selected ? q.id : '__none__',
+                groupValue: selected ? q.id : '__none__',
                 activeColor: cs.primary,
                 onChanged: (_) async {
                   await audio.setQari(q);
@@ -220,8 +203,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
   }
 
   void _showAyahRangeDialog(BuildContext context) {
-    final audio =
-        Provider.of<AudioRecitationService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
     final cs = Theme.of(context).colorScheme;
     int surah = audio.currentSurah;
     final startCtrl = TextEditingController();
@@ -231,8 +213,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setState) => AlertDialog(
           backgroundColor: cs.surface,
-          title: Text('Ayah (Range)',
-              style: TextStyle(color: cs.onSurface)),
+          title: Text('Ayah (Range)', style: TextStyle(color: cs.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,8 +276,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
                 audio.clearAyahRepeatRange();
                 Navigator.of(dctx).pop();
               },
-              child:
-                  Text('Clear', style: TextStyle(color: cs.primary)),
+              child: Text('Clear', style: TextStyle(color: cs.primary)),
             ),
             FilledButton(
               onPressed: () async {
@@ -304,8 +284,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
                 final end = int.tryParse(endCtrl.text.trim());
                 if (start == null || end == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Ayah numbers likhein')),
+                    const SnackBar(content: Text('Ayah numbers likhein')),
                   );
                   return;
                 }
@@ -313,8 +292,7 @@ class _ReaderSettingsSheet extends StatelessWidget {
                     surah: surah, startAyah: start, endAyah: end);
                 if (!ok && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Ghalat range hai')),
+                    const SnackBar(content: Text('Ghalat range hai')),
                   );
                   return;
                 }

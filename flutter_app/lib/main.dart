@@ -158,10 +158,8 @@ class _NurAlQuranAppState extends State<NurAlQuranApp>
     // as the app leaves the foreground.
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      final prefs =
-          Provider.of<PreferencesService>(context, listen: false);
-      final audio =
-          Provider.of<AudioRecitationService>(context, listen: false);
+      final prefs = Provider.of<PreferencesService>(context, listen: false);
+      final audio = Provider.of<AudioRecitationService>(context, listen: false);
       if (!prefs.backgroundPlaybackEnabled && audio.isPlaying) {
         audio.pause();
       }
