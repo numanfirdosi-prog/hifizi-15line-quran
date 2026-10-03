@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui' show PointMode;
 
@@ -6,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:just_audio/just_audio.dart';
 import '../data/quran_data.dart';
-import '../data/juz_data.dart';
 import '../data/verse_index.dart';
 import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
@@ -29,6 +29,41 @@ class _MushafScreenState extends State<MushafScreen> {
   final TransformationController _transformController =
       TransformationController();
   ScrollController? _scrollController;
+  // Per-page image retry counters: bumping the counter rebuilds the
+  // CachedNetworkImage with a fresh key to retry a stuck/failed load.
+  final Map<int, int> _imgRetry = {};
+  // Pages whose image has fully loaded (used by the load-timeout).
+  final Set<int> _loadedPages = {};
+  // Per-page load timeout timers: if a page image hangs for 30s without
+  // loading or erroring, force a retry with a fresh key.
+  final Map<int, Timer> _loadTimers = {};
+
+  /// Starts (or restarts) the 30s load-timeout timer for [pageNum].
+  void _armLoadTimeout(int pageNum) {
+    _loadTimers[pageNum]?.cancel();
+    if (_loadedPages.contains(pageNum)) return;
+    _loadTimers[pageNum] = Timer(const Duration(seconds: 30), () {
+      if (!mounted || _loadedPages.contains(pageNum)) return;
+      setState(() {
+        _imgRetry[pageNum] = (_imgRetry[pageNum] ?? 0) + 1;
+      });
+      // Re-arm in case the retry also hangs.
+      _armLoadTimeout(pageNum);
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final t in _loadTimers.values) {
+      t.cancel();
+    }
+    _loadTimers.clear();
+    _audio.removeListener(_followAyah);
+    _pageController.dispose();
+    _scrollController?.dispose();
+    _transformController.dispose();
+    super.dispose();
+  }
 
   // Cached page -> first 's:v' index (loaded once, used for audio + markRead).
   late final Future<Map<int, String>> _firstVerseIndex;
@@ -69,15 +104,6 @@ class _MushafScreenState extends State<MushafScreen> {
     _audio = Provider.of<AudioRecitationService>(context, listen: false);
     _audio.addListener(_followAyah);
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTapHint());
-  }
-
-  @override
-  void dispose() {
-    _audio.removeListener(_followAyah);
-    _pageController.dispose();
-    _scrollController?.dispose();
-    _transformController.dispose();
-    super.dispose();
   }
 
   void _setCurrentPage(int page) {
@@ -785,10 +811,27 @@ class _MushafScreenState extends State<MushafScreen> {
                       BlendMode.darken,
                     ),
                     child: CachedNetworkImage(
+                      key: ValueKey(
+                          'mushaf-page-$pageNum-${_imgRetry[pageNum] ?? 0}'),
                       imageUrl: mushafPageImageUrl(pageNum),
                       fit: BoxFit.contain,
                       // M7: pages are cached on disk — the Mushaf keeps working offline.
+                      imageBuilder: (context, imageProvider) {
+                        // Mark loaded + cancel the hang-timeout timer.
+                        _loadedPages.add(pageNum);
+                        _loadTimers[pageNum]?.cancel();
+                        _loadTimers.remove(pageNum);
+                        return Image(
+                          image: imageProvider,
+                          fit: BoxFit.contain,
+                        );
+                      },
                       progressIndicatorBuilder: (context, url, progress) {
+                        // Arm the 30s hang-timeout while loading.
+                        _armLoadTimeout(pageNum);
+                        final pct = progress.progress != null
+                            ? (progress.progress! * 100).round()
+                            : null;
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -799,7 +842,9 @@ class _MushafScreenState extends State<MushafScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Loading Page $pageNum...',
+                                pct != null
+                                    ? 'Loading Page $pageNum... $pct%'
+                                    : 'Loading Page $pageNum...',
                                 style: const TextStyle(
                                     color: Color(0xFF0F3A2C),
                                     fontWeight: FontWeight.bold),
@@ -809,6 +854,10 @@ class _MushafScreenState extends State<MushafScreen> {
                         );
                       },
                       errorWidget: (context, url, error) {
+                        // Cancel the hang-timeout; the retry button below
+                        // handles re-attempts.
+                        _loadTimers[pageNum]?.cancel();
+                        _loadTimers.remove(pageNum);
                         return Container(
                           padding: const EdgeInsets.all(24),
                           color: const Color(0xFFFAF7EE),
@@ -816,7 +865,7 @@ class _MushafScreenState extends State<MushafScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.menu_book,
+                                const Icon(Icons.cloud_off,
                                     size: 64, color: Color(0xFF0F3A2C)),
                                 const SizedBox(height: 16),
                                 Text(
@@ -828,8 +877,18 @@ class _MushafScreenState extends State<MushafScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
-                                  '15-Line Offline Mushaf Page',
+                                  'Page load nahi ho saka — internet check karein',
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.black54),
+                                ),
+                                const SizedBox(height: 16),
+                                FilledButton.icon(
+                                  onPressed: () => setState(() {
+                                    _imgRetry[pageNum] =
+                                        (_imgRetry[pageNum] ?? 0) + 1;
+                                  }),
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Dobara try karein'),
                                 ),
                               ],
                             ),
