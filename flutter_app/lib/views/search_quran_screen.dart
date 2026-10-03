@@ -20,12 +20,14 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
   final TextEditingController _controller = TextEditingController();
   late final Future<List<dynamic>> _loadFuture;
   List<QuranTextEntry> _results = [];
+  Map<String, String> _urdu = {};
   bool _searched = false;
 
   @override
   void initState() {
     super.initState();
-    _loadFuture = Future.wait([loadQuranText(), loadVersePageIndex()]);
+    _loadFuture =
+        Future.wait([loadQuranText(), loadVersePageIndex(), loadUrduKanzulIman()]);
   }
 
   @override
@@ -39,6 +41,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
     if (q.isEmpty) return;
     final data = await _loadFuture;
     final entries = data[0] as List<QuranTextEntry>;
+    _urdu = data[2] as Map<String, String>;
     final normQ = normalizeArabic(q);
     final lowerQ = q.toLowerCase();
     final results = <QuranTextEntry>[];
@@ -201,6 +204,30 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                     color: cs.onSurfaceVariant,
                                   ),
                                 ),
+                                if ((_urdu['${e.s}:${e.v}'] ?? '').isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    _urdu['${e.s}:${e.v}']!,
+                                    textDirection: TextDirection.rtl,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: arabicStyle(
+                                      prefs.scriptStyle,
+                                      fontSize: 16,
+                                      color: cs.onSurface.withValues(alpha: 0.85),
+                                      scale: prefs.ayahScale,
+                                    ),
+                                  ),
+                                  Text(
+                                    'ترجمہ: کنزالایمان (احمد رضا خان)',
+                                    textDirection: TextDirection.rtl,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [

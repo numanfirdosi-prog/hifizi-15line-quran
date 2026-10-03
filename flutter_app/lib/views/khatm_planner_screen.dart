@@ -101,6 +101,13 @@ class KhatmPlannerScreen extends StatelessWidget {
                 final juz = juzList[i];
                 final (startPage, endPage) = khatmDayPages(day);
                 final isDone = done.contains(day);
+                final totalPages = endPage - startPage + 1;
+                var readCount = 0;
+                for (var p = startPage; p <= endPage; p++) {
+                  if (prefs.readPages.contains(p)) readCount++;
+                }
+                final readPct =
+                    totalPages > 0 ? readCount / totalPages : 0.0;
                 return InkWell(
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => prefs.toggleKhatmDay(day),
@@ -161,6 +168,33 @@ class KhatmPlannerScreen extends StatelessWidget {
                             fontSize: 16,
                             color: cs.primary,
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(3),
+                                child: LinearProgressIndicator(
+                                  value: readPct,
+                                  minHeight: 5,
+                                  backgroundColor: cs.onSurface
+                                      .withValues(alpha: 0.12),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      cs.primary),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${(readPct * 100).round()}%',
+                              style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.6),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                         const Spacer(),
                         Row(

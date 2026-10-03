@@ -84,6 +84,19 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  /// Pushes a screen that can jump to a mushaf page: the pushed route is
+  /// popped first so the mushaf tab switch underneath becomes visible.
+  void _pushJumpable(
+      BuildContext context, Widget Function(void Function(int)) build) {
+    _push(
+      context,
+      build((page) {
+        Navigator.of(context).pop();
+        onOpenPage(page);
+      }),
+    );
+  }
+
   void _openSettings(BuildContext context) {
     _push(
       context,
@@ -536,13 +549,13 @@ class DashboardScreen extends StatelessWidget {
         _QuickItem(
             'All 114 Surahs', Icons.menu_book_outlined, () => onSelectTab(2)),
         _QuickItem('Juz Index', Icons.format_list_numbered,
-            () => _push(context, JuzIndexScreen(onOpenPage: onOpenPage))),
+            () => _pushJumpable(context, (open) => JuzIndexScreen(onOpenPage: open))),
         _QuickItem('Khatm Planner', Icons.calendar_month_outlined,
-            () => _push(context, KhatmPlannerScreen(onOpenPage: onOpenPage))),
+            () => _pushJumpable(context, (open) => KhatmPlannerScreen(onOpenPage: open))),
         _QuickItem('Bookmarks & Saved', Icons.bookmark_outline,
-            () => _push(context, BookmarksScreen(onOpenPage: onOpenPage))),
+            () => _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open))),
         _QuickItem('Search Quran', Icons.search,
-            () => _push(context, SearchQuranScreen(onOpenPage: onOpenPage))),
+            () => _pushJumpable(context, (open) => SearchQuranScreen(onOpenPage: open))),
         _QuickItem('Audio Recitations', Icons.headphones_outlined,
             () => _push(context, AudioStudioScreen())),
         _QuickItem(
@@ -550,7 +563,7 @@ class DashboardScreen extends StatelessWidget {
         _QuickItem('Qiblah Compass', Icons.explore_outlined,
             () => _push(context, const QiblahScreen())),
         _QuickItem('Ramzan & Duas', Icons.nightlight_round,
-            () => _push(context, RamzanDuasScreen(onOpenPage: onOpenPage))),
+            () => _pushJumpable(context, (open) => RamzanDuasScreen(onOpenPage: open))),
         _QuickItem('Preferences', Icons.settings_outlined,
             () => _openSettings(context)),
         _QuickItem('Questions & FAQ', Icons.help_outline,
@@ -745,7 +758,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () =>
-                    _push(context, BookmarksScreen(onOpenPage: onOpenPage)),
+                    _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
                 child: Text(
                   'View All',
                   style: TextStyle(color: cs.primary),

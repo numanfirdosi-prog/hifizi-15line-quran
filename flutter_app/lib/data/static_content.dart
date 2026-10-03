@@ -48,12 +48,38 @@ const List<Faq> faqs = [
   ),
 ];
 
-const String aboutText =
+const String aboutIntro =
     'Nur-ul-Quran — 15-line South-Asian Hifzi mushaf ka digital tajurba. '
-    'Tamam 611 pages authentic Hifzi layout me, 114 surahs ka mukammal index, 30 ajza, '
-    'talash (search), 12 qaris ki audio recitations, bookmarks, aur reader study tools. '
-    'Iske ilawa namaz ke auqaat azan ke saath, Qiblah compass, Ramzan duas aur daily Ayah of the Day. '
-    'Version 1.0.1.';
+    'Tamam 611 pages authentic Hifzi layout me, jaisa aap printed mushaf me parhte hain. '
+    'Ye app tilawat, hifz aur samajhne ke liye banayi gayi hai — bila zaroorat ke features ke baghair, '
+    'saaf aur pursukoon reading experience ke saath.';
+
+const String aboutFeatures =
+    '• 611-page 15-line Hifzi mushaf (page-turn aur scroll dono modes)\n'
+    '• 114 surahs ka mukammal index, 30 ajza, aur full-text search (Arabic + English)\n'
+    '• Har ayah par Urdu tarjuma — Kanzul Iman (Imam Ahmad Raza Khan)\n'
+    '• 12 qaris ki audio recitations — surah suniye ya ayah-by-ayah, online ya download karke offline\n'
+    '• Ayah par tap karke tilawat, musalsal ayah-by-ayah playback aur repeat\n'
+    '• Namaz ke auqaat (GPS se), azan alarms, Qiblah compass\n'
+    '• Khatm planner (30 din), bookmarks, reading progress, backup & restore\n'
+    '• Ramzan duas, daily Ayah of the Day, aur kai themes (Night, Emerald, Parchment)';
+
+const String aboutSources =
+    '• Mushaf pages: 15-line Hifzi layout images\n'
+    '• Quran text: Tanzil (Uthmani script)\n'
+    '• Urdu tarjuma: Kanzul Iman — Imam Ahmad Raza Khan Barelvi (Tanzil)\n'
+    '• English tarjuma: Saheeh International\n'
+    '• Audio: mp3quran.net (surah recitations), everyayah.com (ayah recitations)\n'
+    '• Namaz timings: on-device astronomical calculation';
+
+const String aboutLicenses =
+    'Ye app Flutter (BSD 3-Clause) se banayi gayi hai. Darj zail open-source packages istemal hue hain: '
+    'just_audio, audio_service, audio_session, provider, shared_preferences, path_provider, '
+    'google_fonts, share_plus, url_launcher, cached_network_image, timezone, android_alarm_manager_plus, '
+    'geolocator, flutter_compass, speech_to_text, app_links, flutter_local_notifications.\n\n'
+    'Fonts: Gulzar aur Amiri Quran (SIL Open Font License 1.1) app me bundled hain.\n\n'
+    'Quran ka mutan (text) aur tarajim taleemi maqsad ke liye shaamil kiye gaye hain.';
+
 
 const String privacyText =
     'Nur-ul-Quran 100% on-device app hai. Koi account nahi, koi tracking ya analytics nahi. '

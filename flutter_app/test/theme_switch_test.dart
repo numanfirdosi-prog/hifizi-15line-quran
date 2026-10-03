@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:nur_al_quran/main.dart' show buildTheme;
 import 'package:nur_al_quran/services/audio_recitation_service.dart';
+import 'package:nur_al_quran/services/page_drawing_service.dart';
 import 'package:nur_al_quran/services/preferences_service.dart';
 import 'package:nur_al_quran/views/home_navigation_screen.dart';
 
@@ -32,6 +33,8 @@ void main() {
           ChangeNotifierProvider<PreferencesService>.value(value: prefs),
           ChangeNotifierProvider<AudioRecitationService>(
               create: (_) => AudioRecitationService()),
+          ChangeNotifierProvider<PageDrawingService>(
+              create: (_) => PageDrawingService()),
         ],
         child: Consumer<PreferencesService>(
           builder: (context, p, _) => MaterialApp(

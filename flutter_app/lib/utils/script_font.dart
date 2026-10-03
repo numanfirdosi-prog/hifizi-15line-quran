@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Maps a script-style preference to the Arabic font family to use.
+/// Maps a script-style preference to the bundled Arabic font family.
+/// Both fonts are bundled in assets/fonts (OFL licensed) so the style
+/// renders identically on every device, online or offline.
 String arabicFontFamily(String scriptStyle) =>
     scriptStyle == 'uthmani' ? 'Amiri Quran' : 'Gulzar';
 
@@ -14,8 +15,8 @@ TextStyle arabicStyle(
   FontWeight fontWeight = FontWeight.normal,
   double? height,
 }) {
-  return GoogleFonts.getFont(
-    arabicFontFamily(scriptStyle),
+  return TextStyle(
+    fontFamily: arabicFontFamily(scriptStyle),
     fontSize: fontSize * scale,
     color: color,
     fontWeight: fontWeight,

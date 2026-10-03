@@ -26,6 +26,19 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
+  /// Pushes a screen that can jump to a mushaf page: the pushed route is
+  /// popped first so the mushaf tab switch underneath becomes visible.
+  void _pushJumpable(
+      BuildContext context, Widget Function(void Function(int)) build) {
+    _push(
+      context,
+      build((page) {
+        Navigator.of(context).pop();
+        onOpenPage(page);
+      }),
+    );
+  }
+
   void _openSettings(BuildContext context) {
     _push(
       context,
@@ -95,6 +108,13 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(height: 8),
           _tile(
             context,
+            icon: Icons.format_list_bulleted,
+            title: 'Surahs',
+            subtitle: 'سورتیں',
+            onTap: () => onSelectTab(2),
+          ),
+          _tile(
+            context,
             icon: Icons.headphones_outlined,
             title: 'Audio Studio',
             subtitle: 'آڈیو اسٹوڈیو',
@@ -105,7 +125,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.format_list_numbered,
             title: 'Juz Index',
             subtitle: 'پارہ انڈیکس',
-            onTap: () => _push(context, JuzIndexScreen(onOpenPage: onOpenPage)),
+            onTap: () => _pushJumpable(context, (open) => JuzIndexScreen(onOpenPage: open)),
           ),
           _tile(
             context,
@@ -113,7 +133,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Khatm Planner',
             subtitle: 'تیس دن کا ختم شیڈول',
             onTap: () =>
-                _push(context, KhatmPlannerScreen(onOpenPage: onOpenPage)),
+                _pushJumpable(context, (open) => KhatmPlannerScreen(onOpenPage: open)),
           ),
           _tile(
             context,
@@ -121,7 +141,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Search Quran',
             subtitle: 'قرآن تلاش کریں',
             onTap: () =>
-                _push(context, SearchQuranScreen(onOpenPage: onOpenPage)),
+                _pushJumpable(context, (open) => SearchQuranScreen(onOpenPage: open)),
           ),
           _tile(
             context,
@@ -129,7 +149,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Bookmarks & Saved',
             subtitle: 'نشانات اور محفوظ آیات',
             onTap: () =>
-                _push(context, BookmarksScreen(onOpenPage: onOpenPage)),
+                _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
           ),
           _tile(
             context,
@@ -137,7 +157,7 @@ class MoreScreen extends StatelessWidget {
             title: 'Ramzan & Duas',
             subtitle: 'رمضان اور دعائیں',
             onTap: () =>
-                _push(context, RamzanDuasScreen(onOpenPage: onOpenPage)),
+                _pushJumpable(context, (open) => RamzanDuasScreen(onOpenPage: open)),
           ),
           _tile(
             context,

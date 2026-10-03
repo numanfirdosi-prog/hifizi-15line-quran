@@ -89,6 +89,24 @@ class QuranTextEntry {
       );
 }
 
+/// Loads the Urdu (Kanzul Iman, Ahmad Raza Khan) translation, keyed "s:v".
+/// Returns an empty map if the asset is missing.
+Future<Map<String, String>> loadUrduKanzulIman() async {
+  try {
+    final raw =
+        await rootBundle.loadString('assets/data/quran_urdu_kanzuliman.json');
+    final list = jsonDecode(raw) as List<dynamic>;
+    final map = <String, String>{};
+    for (final e in list) {
+      final m = e as Map<String, dynamic>;
+      map['${m['s']}:${m['v']}'] = m['ur'] as String;
+    }
+    return map;
+  } catch (_) {
+    return {};
+  }
+}
+
 /// Loads the full Quran text (list of {s,v,ar,en}) from the bundled asset.
 Future<List<QuranTextEntry>> loadQuranText() async {
   final raw = await rootBundle.loadString('assets/data/quran_text.json');

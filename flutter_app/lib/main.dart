@@ -4,6 +4,7 @@ import 'package:timezone/data/latest.dart' as tzdata;
 import 'services/preferences_service.dart';
 import 'services/audio_recitation_service.dart';
 import 'services/qari_download_service.dart';
+import 'services/page_drawing_service.dart';
 import 'services/nur_audio_handler.dart';
 import 'services/deep_link_service.dart';
 import 'views/splash_screen.dart';
@@ -104,6 +105,10 @@ void main() async {
   // deep-link handler can attach to the same instance.
   final audioService = AudioRecitationService();
 
+  // Page drawing service: loads persisted highlighter/pen strokes.
+  final pageDrawingService = PageDrawingService();
+  await pageDrawingService.init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -113,6 +118,8 @@ void main() async {
             value: audioService),
         ChangeNotifierProvider<QariDownloadService>(
             create: (_) => QariDownloadService()),
+        ChangeNotifierProvider<PageDrawingService>.value(
+            value: pageDrawingService),
       ],
       child: const NurAlQuranApp(),
     ),

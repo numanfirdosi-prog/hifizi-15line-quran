@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +12,7 @@ import '../data/verse_index.dart';
 import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
+import '../services/page_drawing_service.dart';
 import '../utils/page_image_url.dart';
 
 class MushafScreen extends StatefulWidget {
@@ -39,6 +41,11 @@ class _MushafScreenState extends State<MushafScreen> {
   late final Future<Map<String, int>> _versePageIndexFuture;
   late final AudioRecitationService _audio;
   bool _followingAyah = false;
+
+  // Page drawing (pen/brush/highlighter/rectangle/eraser): the stroke
+  // currently being drawn (not yet persisted) and its page.
+  DrawingStroke? _inProgressStroke;
+  int? _inProgressPage;
 
   static const List<double> _speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
   static const List<int> _repeatModes = [0, 1, 3, 5, -1];
@@ -83,6 +90,7 @@ class _MushafScreenState extends State<MushafScreen> {
     });
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     prefs.setLastReadPage(pageNum);
+    prefs.addReadPage(pageNum);
     _markPageRead(pageNum, prefs);
   }
 
@@ -200,6 +208,529 @@ class _MushafScreenState extends State<MushafScreen> {
         ),
       );
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Page drawing tools (📜 menu): pen / brush / highlighter / rectangle /
+  // eraser. Strokes are stored as fractions of the image box so they
+  // scale with any screen size.
+  // ------------------------------------------------------------------
+
+  static Color _parseHexColor(String hex) {
+    var h = hex.replaceAll('#', '');
+    if (h.length == 6) h = 'FF$h';
+    return Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
+  }
+
+  String _toolLabel(String tool) {
+    switch (tool) {
+      case 'rectangle':
+        return 'Rectangle';
+      case 'pen':
+        return 'Pen';
+      case 'highlighter':
+        return 'Highlighter';
+      case 'brush':
+        return 'Brush';
+      case 'eraser':
+        return 'Eraser';
+      default:
+        return tool;
+    }
+  }
+
+  /// Paint layer for persisted + in-progress drawing strokes.
+  Widget _buildDrawingPaint(int pageNum) {
+    return Positioned.fill(
+      child: Consumer<PageDrawingService>(
+        builder: (context, draw, _) {
+          final strokes = draw.strokesFor(pageNum);
+          final inProgress =
+              (_inProgressPage == pageNum) ? _inProgressStroke : null;
+          if (strokes.isEmpty && inProgress == null) {
+            return const SizedBox.shrink();
+          }
+          return CustomPaint(
+            painter: _PageDrawingPainter([
+              ...strokes,
+              if (inProgress != null) inProgress,
+            ]),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Small 📜 button at the bottom-right of the page image.
+  Widget _buildDrawMenuButton(int pageNum) {
+    return Positioned(
+      right: 8,
+      bottom: 8,
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => _showDrawingMenu(pageNum),
+          child: const Padding(
+            padding: EdgeInsets.all(7),
+            child: Text('📜', style: TextStyle(fontSize: 20)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Chip shown while a drawing tool is active: tool name + X to exit.
+  Widget _buildDrawingModeChip() {
+    return Consumer<PageDrawingService>(
+      builder: (context, draw, _) {
+        final tool = draw.selectedTool;
+        if (tool == null) return const SizedBox.shrink();
+        return Positioned(
+          top: 8,
+          right: 8,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  _toolLabel(tool),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Material(
+                color: Colors.black.withValues(alpha: 0.6),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    _cancelInProgress();
+                    draw.exitDrawing();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.close,
+                        color: Colors.white, size: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _cancelInProgress() {
+    if (_inProgressStroke != null || _inProgressPage != null) {
+      setState(() {
+        _inProgressStroke = null;
+        _inProgressPage = null;
+      });
+    }
+  }
+
+  /// Converts a global pointer position to fraction coordinates (0..1)
+  /// of the page image box.
+  Offset _toFraction(BuildContext tapCtx, Offset globalPosition) {
+    final box = tapCtx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize || box.size.width <= 0) {
+      return const Offset(-1, -1);
+    }
+    final local = box.globalToLocal(globalPosition);
+    return Offset(
+      (local.dx / box.size.width).clamp(0.0, 1.0),
+      (local.dy / box.size.height).clamp(0.0, 1.0),
+    );
+  }
+
+  void _onDrawStart(BuildContext tapCtx, DragStartDetails d, int pageNum,
+      PageDrawingService draw) {
+    final tool = draw.selectedTool;
+    if (tool == null) return;
+    if (tool == 'eraser') {
+      _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
+      return;
+    }
+    final f = _toFraction(tapCtx, d.globalPosition);
+    if (f.dx < 0) return;
+    setState(() {
+      _inProgressPage = pageNum;
+      _inProgressStroke = DrawingStroke(
+        tool: tool,
+        colorHex: draw.selectedColorHex,
+        width: drawingWidthForTool(tool),
+        points: tool == 'rectangle' ? const [] : [f],
+        rect: tool == 'rectangle' ? Rect.fromPoints(f, f) : Rect.zero,
+      );
+    });
+  }
+
+  void _onDrawUpdate(BuildContext tapCtx, DragUpdateDetails d, int pageNum,
+      PageDrawingService draw) {
+    final tool = draw.selectedTool;
+    if (tool == null) return;
+    if (tool == 'eraser') {
+      _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
+      return;
+    }
+    final cur = _inProgressStroke;
+    if (cur == null || _inProgressPage != pageNum || cur.tool != tool) return;
+    final f = _toFraction(tapCtx, d.globalPosition);
+    if (f.dx < 0) return;
+    setState(() {
+      if (tool == 'rectangle') {
+        _inProgressStroke =
+            cur.copyWith(rect: Rect.fromPoints(cur.rect.topLeft, f));
+      } else {
+        _inProgressStroke = cur.copyWith(points: [...cur.points, f]);
+      }
+    });
+  }
+
+  Future<void> _onDrawEnd(int pageNum, PageDrawingService draw) async {
+    final s = _inProgressStroke;
+    final p = _inProgressPage;
+    _inProgressStroke = null;
+    _inProgressPage = null;
+    if (s == null || p != pageNum) {
+      if (mounted) setState(() {});
+      return;
+    }
+    await draw.addStroke(pageNum, s);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _onEraseAt(BuildContext tapCtx, Offset globalPosition,
+      int pageNum, PageDrawingService draw) async {
+    final f = _toFraction(tapCtx, globalPosition);
+    if (f.dx < 0) return;
+    final removed = await draw.removeStrokeAt(pageNum, f, 0.025);
+    if (removed && mounted) setState(() {});
+  }
+
+  /// Bottom sheet 1: Color | Highlighter | Notes | Clear.
+  void _showDrawingMenu(int pageNum) {
+    final cs = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _drawingMenuItem(
+                  sheetCtx, Icons.palette, const Color(0xFFE53935), 'Color',
+                  () {
+                Navigator.pop(sheetCtx);
+                _showColorRow();
+              }),
+              _drawingMenuItem(
+                  sheetCtx, Icons.highlight, cs.primary, 'Highlighter', () {
+                Navigator.pop(sheetCtx);
+                _showToolSheet();
+              }),
+              _drawingMenuItem(
+                  sheetCtx, Icons.note_add, cs.primary, 'Notes', () {
+                Navigator.pop(sheetCtx);
+                _showPageNoteDialog(pageNum);
+              }),
+              _drawingMenuItem(sheetCtx, Icons.delete_outline, cs.primary,
+                  'Clear', () {
+                Navigator.pop(sheetCtx);
+                _confirmClearPage(pageNum);
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _drawingMenuItem(BuildContext sheetCtx, IconData icon, Color color,
+      String label, VoidCallback onTap) {
+    final cs = Theme.of(sheetCtx).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 6),
+            Text(label,
+                style: TextStyle(color: cs.onSurface, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Color picker row (6 colors); picking one opens the Drawing Tools sheet.
+  void _showColorRow() {
+    final cs = Theme.of(context).colorScheme;
+    final draw = Provider.of<PageDrawingService>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              for (final hex in PageDrawingService.paletteHexes)
+                InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    draw.setColor(hex);
+                    Navigator.pop(sheetCtx);
+                    _showToolSheet();
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: _parseHexColor(hex),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: draw.selectedColorHex == hex
+                            ? cs.primary
+                            : Colors.black26,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Bottom sheet 2: the 5 drawing tools (3 + 2 grid like the reference).
+  void _showToolSheet() {
+    final cs = Theme.of(context).colorScheme;
+    final draw = Provider.of<PageDrawingService>(context, listen: false);
+    final tools = <List<dynamic>>[
+      ['rectangle', Icons.crop_square, 'Rectangle'],
+      ['pen', Icons.edit, 'Pen'],
+      ['highlighter', Icons.highlight, 'Highlighter'],
+      ['brush', Icons.brush, 'Brush'],
+      ['eraser', Icons.cleaning_services, 'Eraser'],
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('Drawing Tools',
+                        style: TextStyle(
+                            color: cs.onSurface,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: cs.onSurface),
+                    onPressed: () => Navigator.pop(sheetCtx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final t in tools)
+                    _toolButton(
+                      sheetCtx,
+                      t[0] as String,
+                      t[1] as IconData,
+                      t[2] as String,
+                      () {
+                        _cancelInProgress();
+                        draw.setTool(t[0] as String);
+                        Navigator.pop(sheetCtx);
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toolButton(BuildContext sheetCtx, String id, IconData icon,
+      String label, VoidCallback onTap) {
+    final cs = Theme.of(sheetCtx).colorScheme;
+    final draw = Provider.of<PageDrawingService>(sheetCtx, listen: false);
+    final selected = draw.selectedTool == id;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        width: 96,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? cs.primary
+                : cs.onSurface.withValues(alpha: 0.25),
+            width: selected ? 2 : 1,
+          ),
+          color: selected ? cs.primary.withValues(alpha: 0.12) : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                color: selected
+                    ? cs.primary
+                    : cs.onSurface.withValues(alpha: 0.75),
+                size: 30),
+            const SizedBox(height: 6),
+            Text(label,
+                style: TextStyle(
+                    color: selected ? cs.primary : cs.onSurface,
+                    fontSize: 13,
+                    fontWeight:
+                        selected ? FontWeight.bold : FontWeight.normal)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Page note dialog (uses the existing pageNotes storage).
+  void _showPageNoteDialog(int pageNum) {
+    final cs = Theme.of(context).colorScheme;
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final controller =
+        TextEditingController(text: prefs.pageNotes['$pageNum'] ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cs.surface,
+        title: Text('Page $pageNum note',
+            style: TextStyle(color: cs.onSurface)),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          style: TextStyle(color: cs.onSurface),
+          decoration: InputDecoration(
+            hintText: 'Write a note for this page…',
+            hintStyle:
+                TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style:
+                    TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+            ),
+            onPressed: () async {
+              await prefs.setPageNote(pageNum, controller.text.trim());
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    ).then((_) => controller.dispose());
+  }
+
+  /// Clears both drawings and the note for this page (with confirm).
+  void _confirmClearPage(int pageNum) {
+    final cs = Theme.of(context).colorScheme;
+    final draw = Provider.of<PageDrawingService>(context, listen: false);
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final hasNote = (prefs.pageNotes['$pageNum'] ?? '').isNotEmpty;
+    if (!draw.hasDrawings(pageNum) && !hasNote) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nothing to clear on this page')),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cs.surface,
+        title: Text('Clear page markings?',
+            style: TextStyle(color: cs.onSurface)),
+        content: Text(
+          'This removes all drawings and the note for page $pageNum.',
+          style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style:
+                    TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              _cancelInProgress();
+              draw.exitDrawing();
+              await draw.clearPage(pageNum);
+              await prefs.setPageNote(pageNum, null);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showJumpToPageDialog() {
@@ -409,17 +940,45 @@ class _MushafScreenState extends State<MushafScreen> {
             ),
             // Currently playing ayah highlight (ayah-by-ayah audio mode).
             _buildAyahHighlights(pageNum),
-            // Tap-to-ayah detector: LAST so it sits above the overlays.
+            // Freehand page drawings (pen/brush/highlighter/rectangle).
+            // Paint sits below the gesture layer.
+            _buildDrawingPaint(pageNum),
+            // Page gesture layer: ayah tap-to-play normally, drawing
+            // gestures while a drawing tool is active. LAST among the
+            // full-page layers so it sits above the paint.
             // Translucent: taps pass through visually but are still caught.
             Positioned.fill(
               child: Builder(
-                builder: (tapCtx) => GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
-                  child: Container(color: Colors.transparent),
+                builder: (tapCtx) => Consumer<PageDrawingService>(
+                  builder: (context, draw, _) {
+                    if (draw.selectedTool == null) {
+                      return GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                        child: Container(color: Colors.transparent),
+                      );
+                    }
+                    return GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onPanStart: (d) =>
+                          _onDrawStart(tapCtx, d, pageNum, draw),
+                      onPanUpdate: (d) =>
+                          _onDrawUpdate(tapCtx, d, pageNum, draw),
+                      onPanEnd: (_) => _onDrawEnd(pageNum, draw),
+                      onTapUp: draw.selectedTool == 'eraser'
+                          ? (d) => _onEraseAt(tapCtx, d.globalPosition,
+                              pageNum, draw)
+                          : null,
+                      child: Container(color: Colors.transparent),
+                    );
+                  },
                 ),
               ),
             ),
+            // 📜 drawing menu button (above the gesture layer).
+            _buildDrawMenuButton(pageNum),
+            // Drawing-mode indicator + exit chip.
+            _buildDrawingModeChip(),
           ],
         ),
       ),
@@ -690,10 +1249,16 @@ class _MushafScreenState extends State<MushafScreen> {
     if (!interactive) {
       return AspectRatio(aspectRatio: 0.6908, child: pageImage);
     }
+    // While a drawing tool is active, pinch/pan zoom is disabled so draw
+    // gestures are not stolen by the InteractiveViewer.
+    final drawingActive =
+        Provider.of<PageDrawingService>(context).isDrawingMode;
     return InteractiveViewer(
       transformationController: _transformController,
       minScale: 1.0,
       maxScale: 3.5,
+      panEnabled: !drawingActive,
+      scaleEnabled: !drawingActive,
       child: pageImage,
     );
   }
@@ -703,9 +1268,15 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Purposefully modest (no heavy curl shader) so it stays smooth on
   /// mid-range devices; slide mode remains the fallback.
   Widget _buildTurnView(BuildContext context) {
+    // Page swipes are disabled while drawing so strokes are not
+    // interrupted by page changes.
+    final drawingActive =
+        Provider.of<PageDrawingService>(context).isDrawingMode;
     return PageView.builder(
       controller: _pageController,
       reverse: true, // RTL for Mushaf reading
+      physics:
+          drawingActive ? const NeverScrollableScrollPhysics() : null,
       itemCount: totalPagesInMushaf,
       onPageChanged: _onPageChanged,
       itemBuilder: (context, index) => AnimatedBuilder(
@@ -732,6 +1303,9 @@ class _MushafScreenState extends State<MushafScreen> {
 
   Widget _buildScrollView(BuildContext context) {
     final itemHeight = _scrollItemHeight(context);
+    // Scrolling is disabled while drawing so strokes are not interrupted.
+    final drawingActive =
+        Provider.of<PageDrawingService>(context).isDrawingMode;
     _scrollController ??= ScrollController(
       initialScrollOffset: (_currentPage - 1) * itemHeight,
     );
@@ -746,6 +1320,8 @@ class _MushafScreenState extends State<MushafScreen> {
       },
       child: ListView.builder(
         controller: _scrollController,
+        physics:
+            drawingActive ? const NeverScrollableScrollPhysics() : null,
         itemCount: totalPagesInMushaf,
         itemBuilder: (context, index) =>
             _buildPageItem(context, index + 1, interactive: false),
@@ -757,6 +1333,9 @@ class _MushafScreenState extends State<MushafScreen> {
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
     final audio = Provider.of<AudioRecitationService>(context);
+    // Page swipes are disabled while a drawing tool is active.
+    final drawingActive =
+        Provider.of<PageDrawingService>(context).isDrawingMode;
     final cs = Theme.of(context).colorScheme;
     final isBookmarked = prefs.bookmarks.contains(_currentPage);
     final isScroll = prefs.readingMode == 'scroll';
@@ -844,6 +1423,9 @@ class _MushafScreenState extends State<MushafScreen> {
                   PageView.builder(
                     controller: _pageController,
                     reverse: true, // RTL for Mushaf reading
+                    physics: drawingActive
+                        ? const NeverScrollableScrollPhysics()
+                        : null,
                     itemCount: totalPagesInMushaf,
                     onPageChanged: _onPageChanged,
                     itemBuilder: (context, index) =>
@@ -1036,4 +1618,55 @@ class _MushafScreenState extends State<MushafScreen> {
       ),
     );
   }
+}
+
+/// Paints persisted + in-progress freehand drawing strokes inside the page
+/// image box. Coordinates are fractions (0..1) of the box.
+class _PageDrawingPainter extends CustomPainter {
+  final List<DrawingStroke> strokes;
+  _PageDrawingPainter(this.strokes);
+
+  static Color _colorOf(String hex, bool translucent) {
+    var h = hex.replaceAll('#', '');
+    if (h.length == 6) h = 'FF$h';
+    final c = Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
+    return translucent ? c.withValues(alpha: 0.45) : c;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final s in strokes) {
+      final paint = Paint()
+        ..color = _colorOf(s.colorHex, s.tool == 'highlighter')
+        ..strokeWidth = max(1.5, s.width * size.width)
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+      if (s.tool == 'rectangle') {
+        final r = s.rect;
+        canvas.drawRect(
+          Rect.fromLTRB(
+            r.left * size.width,
+            r.top * size.height,
+            r.right * size.width,
+            r.bottom * size.height,
+          ),
+          paint,
+        );
+      } else {
+        final pts = s.points
+            .map((p) => Offset(p.dx * size.width, p.dy * size.height))
+            .toList();
+        if (pts.length == 1) {
+          canvas.drawCircle(
+              pts.first, paint.strokeWidth / 2, paint..style = PaintingStyle.fill);
+        } else if (pts.length > 1) {
+          canvas.drawPoints(PointMode.polygon, pts, paint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PageDrawingPainter oldDelegate) => true;
 }

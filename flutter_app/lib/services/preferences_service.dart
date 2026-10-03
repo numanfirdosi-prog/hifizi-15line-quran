@@ -31,6 +31,7 @@ class PreferencesService extends ChangeNotifier {
   Map<String, String> _pageTint = {}; // page -> color hex
   bool _ayahTapHintShown = false;
   List<int> _khatmDays = []; // completed khatm day numbers (1..30)
+  Set<int> _readPages = {}; // mushaf pages the user has opened (1..611)
   bool _onboardingDone = false;
   bool _autoBackup = false;
   String _lastAutoBackup = '';
@@ -147,6 +148,14 @@ class PreferencesService extends ChangeNotifier {
           .map((e) => int.tryParse(e) ?? 0)
           .where((d) => d >= 1 && d <= 30)
           .toList();
+    }
+
+    final readPagesList = _prefs.getStringList('nur_read_pages');
+    if (readPagesList != null) {
+      _readPages = readPagesList
+          .map((e) => int.tryParse(e) ?? 0)
+          .where((p) => p >= 1 && p <= 611)
+          .toSet();
     }
 
     final alarmsJson = _prefs.getString('nur_prayer_alarms');
@@ -296,6 +305,19 @@ class PreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Mushaf pages the user has opened (1..611), for per-Juz read %.
+  Set<int> get readPages => _readPages;
+
+  /// Records that the user opened mushaf [page] (for per-Juz read %).
+  Future<void> addReadPage(int page) async {
+    if (page < 1 || page > 611) return;
+    if (_readPages.add(page)) {
+      await _prefs.setStringList(
+          'nur_read_pages', _readPages.map((e) => e.toString()).toList());
+      notifyListeners();
+    }
+  }
+
   /// Toggles a Khatm Planner day (1..30) as completed.
   Future<void> toggleKhatmDay(int day) async {
     if (_khatmDays.contains(day)) {
@@ -360,6 +382,7 @@ class PreferencesService extends ChangeNotifier {
     _savedAyahs = [];
     _pageNotes = {};
     _pageTint = {};
+    _readPages = {};
     _lastReadPage = 2;
     _lastReadSurah = 1;
     _lastReadAyah = 1;
@@ -368,6 +391,7 @@ class PreferencesService extends ChangeNotifier {
     await _prefs.remove('nur_saved_ayahs');
     await _prefs.remove('nur_page_notes');
     await _prefs.remove('nur_page_tint');
+    await _prefs.remove('nur_read_pages');
     await _prefs.remove('nur_last_read_page');
     await _prefs.remove('nur_last_read_surah');
     await _prefs.remove('nur_last_read_ayah');
@@ -399,8 +423,10 @@ class PreferencesService extends ChangeNotifier {
       'savedAyahs': _savedAyahs,
       'pageNotes': _pageNotes,
       'pageTint': _pageTint,
+      'pageDrawings': _prefs.getString('nur_page_drawings') ?? '{}',
       'ayahTapHintShown': _ayahTapHintShown,
       'khatmDays': _khatmDays,
+      'readPages': _readPages.toList(),
       'onboardingDone': _onboardingDone,
       'autoBackup': _autoBackup,
       'lastAutoBackup': _lastAutoBackup,
@@ -561,6 +587,12 @@ class PreferencesService extends ChangeNotifier {
             pageTint.map((k, v) => MapEntry(k.toString(), v.toString()));
         await _prefs.setString('nur_page_tint', jsonEncode(_pageTint));
       }
+      // Page drawings (freehand highlighter/pen strokes). Old backups
+      // without this key import fine — nothing is overwritten.
+      final pageDrawings = m['pageDrawings'];
+      if (pageDrawings is String && pageDrawings.isNotEmpty) {
+        await _prefs.setString('nur_page_drawings', pageDrawings);
+      }
 
       final ayahTapHintShown = asBool(m['ayahTapHintShown']);
       if (ayahTapHintShown != null) {
@@ -577,6 +609,17 @@ class PreferencesService extends ChangeNotifier {
             .toList();
         await _prefs.setStringList(
             'nur_khatm_days', _khatmDays.map((e) => e.toString()).toList());
+      }
+
+      final readPages = m['readPages'];
+      if (readPages is List) {
+        _readPages = readPages
+            .map((e) =>
+                e is num ? e.toInt() : (int.tryParse(e.toString()) ?? 0))
+            .where((p) => p >= 1 && p <= 611)
+            .toSet();
+        await _prefs.setStringList(
+            'nur_read_pages', _readPages.map((e) => e.toString()).toList());
       }
 
       final onboardingDone = asBool(m['onboardingDone']);
@@ -636,6 +679,7 @@ class PreferencesService extends ChangeNotifier {
     _pageTint = {};
     _ayahTapHintShown = false;
     _khatmDays = [];
+    _readPages = {};
     _onboardingDone = false;
     _autoBackup = false;
     _lastAutoBackup = '';

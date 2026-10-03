@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
 import '../services/azan_alarm_service.dart';
+import '../services/page_drawing_service.dart';
 import '../services/preferences_service.dart';
 import 'ayah_player_sheet.dart';
 
@@ -182,6 +183,8 @@ class BookmarksScreen extends StatelessWidget {
         // Imported prefs (city / asr method / alarm toggles) must reach the
         // alarm scheduler now, not only on the next app launch.
         await _rescheduleAlarms(prefs);
+        // Imported page drawings must reach the drawing service too.
+        await Provider.of<PageDrawingService>(context, listen: false).reload();
       }
     }
   }

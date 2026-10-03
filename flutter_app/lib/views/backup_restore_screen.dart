@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../services/auto_backup_service.dart';
 import '../services/azan_alarm_service.dart';
+import '../services/page_drawing_service.dart';
 import '../services/preferences_service.dart';
 
 /// Export / import a JSON backup of all preferences, plus automatic weekly
@@ -347,6 +348,9 @@ class _ImportFieldState extends State<_ImportField> {
                 azanSoundEnabled: prefs.azanSoundEnabled,
                 lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
               );
+              // Imported page drawings must reach the drawing service too.
+              await Provider.of<PageDrawingService>(context, listen: false)
+                  .reload();
             }
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
