@@ -751,11 +751,11 @@ class _MushafScreenState extends State<MushafScreen> {
       MediaQuery.of(context).size.width / 0.6908;
 
   /// The page image (with night tint overlay), without the InteractiveViewer
-  /// wrapper. Full-screen reader: the page is edge-to-edge and top-aligned
-  /// just below the status bar — no card margins, rounded corners or shadow —
-  /// so it fills the screen like a real mushaf. The image box keeps the exact
-  /// page-image aspect (7428x10753 -> 0.6908) so ayah tap coordinates map
-  /// 1:1 to the image.
+  /// wrapper. The reader is decorated top and bottom: an ornamental header
+  /// with the surah name above the page and a star medallion with the page
+  /// number below, over a subtle Islamic pattern — so the screen never looks
+  /// empty. The image box keeps the exact page-image aspect (7428x10753 ->
+  /// 0.6908) so ayah tap coordinates map 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
     // Night theme: gently darken the white page so it doesn't strain the
     // eyes. Only the page image is filtered, not the highlight/drawing
@@ -767,12 +767,16 @@ class _MushafScreenState extends State<MushafScreen> {
         // Seamless page background: on tall screens the area around the page
         // blends with the page instead of looking like an empty gap.
         color: nightDim ? const Color(0xFFC3C1BA) : const Color(0xFFFAF7EE),
-        child: Align(
-          alignment: Alignment.center,
-          child: AspectRatio(
-            aspectRatio: 0.6908,
-            child: Stack(
-              children: [
+        child: CustomPaint(
+          painter: _OrnamentPatternPainter(nightDim: nightDim),
+          child: Column(
+            children: [
+              _buildTopOrnament(pageNum, nightDim),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 0.6908,
+                  child: Stack(
+                    children: [
                 Positioned.fill(
                   child: ColorFiltered(
                     colorFilter: ColorFilter.mode(
@@ -835,7 +839,91 @@ class _MushafScreenState extends State<MushafScreen> {
             ),
           ),
         ),
+        _buildBottomOrnament(pageNum, nightDim),
+      ],
+    ),
+  ),
+  ),
+);
+  }
+
+  /// Ornamental header above the page: the surah name in Arabic between
+  /// gold dividers, so the top empty area looks designed, not blank.
+  Widget _buildTopOrnament(int pageNum, bool nightDim) {
+    const green = Color(0xFF0F3A2C);
+    const gold = Color(0xFFC9A227);
+    return FutureBuilder<Map<int, String>>(
+      future: _firstVerseIndex,
+      builder: (context, snap) {
+        var label = 'القرآن الكريم';
+        final fv = snap.data?[pageNum];
+        if (fv != null) {
+          final s = int.tryParse(fv.split(':').first);
+          if (s != null && s >= 1 && s <= 114) {
+            label = 'سورة ${allSurahs[s - 1].nameAr}';
+          }
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 6, left: 18, right: 18),
+          child: Row(
+            children: [
+              Expanded(child: _goldDivider(gold)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Noto Sans Arabic',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: nightDim ? Colors.white : green,
+                  ),
+                ),
+              ),
+              Expanded(child: _goldDivider(gold)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Ornamental footer below the page: the page number inside an 8-point
+  /// star medallion between gold dividers.
+  Widget _buildBottomOrnament(int pageNum, bool nightDim) {
+    const gold = Color(0xFFC9A227);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 14, left: 18, right: 18),
+      child: Row(
+        children: [
+          Expanded(child: _goldDivider(gold)),
+          const SizedBox(width: 14),
+          _PageMedallion(pageNum: pageNum),
+          const SizedBox(width: 14),
+          Expanded(child: _goldDivider(gold)),
+        ],
       ),
+    );
+  }
+
+  /// Thin gold divider line with a small diamond in the middle.
+  Widget _goldDivider(Color gold) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(height: 1.5, color: gold.withValues(alpha: 0.55)),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7),
+          child: Transform.rotate(
+            angle: 3.14159 / 4,
+            child: Container(width: 7, height: 7, color: gold),
+          ),
+        ),
+        Expanded(
+          child: Container(height: 1.5, color: gold.withValues(alpha: 0.55)),
+        ),
+      ],
     );
   }
 
@@ -1441,4 +1529,104 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
       ),
     );
   }
+}
+
+/// Page-number medallion: an 8-pointed Islamic star in gold with a dark
+/// green inner star, the page number centered in white.
+class _PageMedallion extends StatelessWidget {
+  final int pageNum;
+  const _PageMedallion({required this.pageNum});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: CustomPaint(
+        painter: _StarPainter(const Color(0xFFC9A227)),
+        child: CustomPaint(
+          painter: _StarPainter(const Color(0xFF0F3A2C), scale: 0.8),
+          child: Center(
+            child: Text(
+              '$pageNum',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Paints an 8-pointed star (two overlapping squares) centered in the box.
+class _StarPainter extends CustomPainter {
+  final Color color;
+  final double scale;
+  _StarPainter(this.color, {this.scale = 1.0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = (size.width / 2) * scale;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    for (int k = 0; k < 2; k++) {
+      final path = Path();
+      final rot = k * 3.14159 / 4 - 3.14159 / 2;
+      for (int i = 0; i < 4; i++) {
+        final a = rot + i * 3.14159 / 2;
+        final x = cx + r * cos(a);
+        final y = cy + r * sin(a);
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      path.close();
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StarPainter old) =>
+      old.color != color || old.scale != scale;
+}
+
+/// Subtle Islamic diamond lattice painted behind the page ornaments.
+class _OrnamentPatternPainter extends CustomPainter {
+  final bool nightDim;
+  _OrnamentPatternPainter({required this.nightDim});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = (nightDim ? Colors.black : const Color(0xFFC9A227))
+          .withValues(alpha: 0.06)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    const step = 58.0;
+    const r = 9.0;
+    for (double y = step / 2; y < size.height; y += step) {
+      for (double x = step / 2; x < size.width; x += step) {
+        final path = Path()
+          ..moveTo(x, y - r)
+          ..lineTo(x + r, y)
+          ..lineTo(x, y + r)
+          ..lineTo(x - r, y)
+          ..close();
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrnamentPatternPainter old) =>
+      old.nightDim != nightDim;
 }
