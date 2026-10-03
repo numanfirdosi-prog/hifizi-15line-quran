@@ -209,20 +209,19 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                   Text(
                                     _urdu['${e.s}:${e.v}']!,
                                     textDirection: TextDirection.rtl,
-                                    maxLines: 3,
+                                    maxLines: 4,
                                     overflow: TextOverflow.ellipsis,
-                                    style: arabicStyle(
-                                      prefs.scriptStyle,
+                                    style: urduStyle(
                                       fontSize: 16,
-                                      color: cs.onSurface.withValues(alpha: 0.85),
+                                      color: cs.onSurface.withValues(alpha: 0.9),
                                       scale: prefs.ayahScale,
                                     ),
                                   ),
                                   Text(
                                     'ترجمہ: کنزالایمان (احمد رضا خان)',
                                     textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      fontSize: 11,
+                                    style: urduStyle(
+                                      fontSize: 12,
                                       color: cs.primary,
                                       fontWeight: FontWeight.w600,
                                     ),

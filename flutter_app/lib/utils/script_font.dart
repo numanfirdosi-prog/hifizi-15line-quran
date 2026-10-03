@@ -18,6 +18,25 @@ String arabicFontFamily(String scriptStyle) =>
 String normalizeArabicDisplay(String text) =>
     text.replaceAll('\u06E1', '\u0652');
 
+/// Dedicated Urdu text style using the bundled Noto Nastaliq Urdu font
+/// (OFL licensed). Use for Urdu translations and Urdu UI text — never for
+/// Quranic Arabic (use [arabicStyle] for that). Nastaliq needs generous
+/// line height so glyphs are never clipped.
+TextStyle urduStyle({
+  double fontSize = 16,
+  Color color = Colors.white,
+  double scale = 1.0,
+  FontWeight fontWeight = FontWeight.normal,
+}) {
+  return TextStyle(
+    fontFamily: 'Noto Nastaliq Urdu',
+    fontSize: fontSize * scale,
+    color: color,
+    fontWeight: fontWeight,
+    height: 2.2,
+  );
+}
+
 /// Arabic text style for the given script style, scaled by [scale].
 TextStyle arabicStyle(
   String scriptStyle, {

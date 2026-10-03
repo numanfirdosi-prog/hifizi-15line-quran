@@ -26,4 +26,15 @@ void main() {
       expect(normalizeArabicDisplay(''), '');
     });
   });
+
+  group('urduStyle', () {
+    test('uses the dedicated Urdu font family', () {
+      expect(urduStyle().fontFamily, 'Noto Nastaliq Urdu');
+    });
+
+    test('urdu font differs from arabic font families', () {
+      expect(urduStyle().fontFamily, isNot(arabicFontFamily('nastaliq')));
+      expect(urduStyle().fontFamily, isNot(arabicFontFamily('uthmani')));
+    });
+  });
 }
