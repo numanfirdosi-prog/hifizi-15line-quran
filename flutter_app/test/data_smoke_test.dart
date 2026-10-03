@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -56,6 +57,22 @@ void main() {
       expect(juzForPage(22), 1);
       expect(juzForPage(23), 2);
       expect(juzForPage(611), 30);
+    });
+
+    test('urdu kanzuliman has no known typos', () {
+      // Reads the bundled JSON directly (rootBundle needs a widget test).
+      final file = File('assets/data/quran_urdu_kanzuliman.json');
+      final List<dynamic> data =
+          jsonDecode(file.readAsStringSync()) as List<dynamic>;
+      expect(data.length, 6236);
+      String ur(int s, int v) => (data.firstWhere(
+            (e) => (e as Map<String, dynamic>)['s'] == s && e['v'] == v,
+          ) as Map<String, dynamic>)['ur'] as String;
+      // 3:191: "کرت ہیں" typo -> "کرتے ہیں"
+      expect(ur(3, 191).contains('یاد کرتے ہیں'), isTrue);
+      expect(ur(3, 191).contains('کرت ہیں'), isFalse);
+      // 28:44: "جانت" typo -> "جانب" (Arabic: بِجَانِبِ)
+      expect(ur(28, 44).contains('طور کی جانب'), isTrue);
     });
   });
 }
