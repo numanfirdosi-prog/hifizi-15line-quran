@@ -24,14 +24,17 @@ class VoiceSearchService {
     }
   }
 
-  Future<void> startListening({
+  /// Starts listening and reports the recognized words through [onResult].
+  /// Returns true when listening actually started, false when speech
+  /// recognition is unavailable (the caller should reset its UI state).
+  Future<bool> startListening({
     required Function(String spokenText, List<Surah> matchedSurahs) onResult,
     String localeId =
         'hi_IN', // Default to Hindi, also supports 'ur_PK', 'en_US'
   }) async {
     if (!_isAvailable) {
       final ok = await init();
-      if (!ok) return;
+      if (!ok) return false;
     }
 
     await _speech.listen(
@@ -44,6 +47,7 @@ class VoiceSearchService {
         onResult(words, matches);
       },
     );
+    return _speech.isListening;
   }
 
   Future<void> stopListening() async {

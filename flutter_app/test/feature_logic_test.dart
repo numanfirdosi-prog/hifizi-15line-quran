@@ -94,21 +94,34 @@ void main() {
       }
       expect(find.text('Start your journey'), findsOneWidget);
       expect(find.text('Ayah of the Day'), findsOneWidget);
+      // Scroll to the Surahs quick-jump card. A single fixed drag offset
+      // is fragile (webfont loading changes content heights between
+      // runs), so keep dragging until the card is built and visible.
       final listView = find.byType(ListView).first;
-      // Scroll a little: the new Surahs quick-jump card sits just below
-      // the Ayah-of-the-Day card.
-      await tester.drag(listView, const Offset(0, -500));
-      await tester.pump();
+      for (var i = 0;
+          i < 12 && find.text('114 Surahs').evaluate().isEmpty;
+          i++) {
+        await tester.drag(listView, const Offset(0, -500));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
       expect(find.text('114 Surahs'), findsOneWidget);
       expect(find.text('Jump to any surah'), findsOneWidget);
       expect(find.text('Browse All'), findsOneWidget);
       // Scroll further to Quick Access.
-      await tester.drag(listView, const Offset(0, -800));
-      await tester.pump();
+      for (var i = 0;
+          i < 12 && find.text('Quick Access').evaluate().isEmpty;
+          i++) {
+        await tester.drag(listView, const Offset(0, -500));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
       expect(find.text('Quick Access'), findsOneWidget);
       // Back to the top for the Open-the-Quran button.
-      await tester.drag(listView, const Offset(0, 2400));
-      await tester.pump();
+      for (var i = 0;
+          i < 12 && find.text('Open the Quran').evaluate().isEmpty;
+          i++) {
+        await tester.drag(listView, const Offset(0, 500));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
       await tester.tap(find.text('Open the Quran'));
       await tester.pump();
       expect(openedPage, 1);
@@ -134,11 +147,17 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(seconds: 1));
       }
+      // Scroll the autocomplete field into view (fixed drag offsets are
+      // fragile: webfont loading changes content heights between runs).
       final listView = find.byType(ListView).first;
-      await tester.drag(listView, const Offset(0, -500));
-      await tester.pump();
-      // Type into the autocomplete field; options appear in an overlay.
+      for (var i = 0;
+          i < 12 && find.byType(TextField).evaluate().isEmpty;
+          i++) {
+        await tester.drag(listView, const Offset(0, -500));
+        await tester.pump(const Duration(milliseconds: 300));
+      }
       final field = find.byType(TextField).first;
+      // Type into the autocomplete field; options appear in an overlay.
       await tester.tap(field);
       await tester.pump();
       await tester.enterText(field, 'Ya-Sin');

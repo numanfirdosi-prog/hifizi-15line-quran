@@ -512,12 +512,14 @@ class SettingsScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Reading Goal / روزانہ ہدف',
-                    style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
+                  Flexible(
+                    child: Text(
+                      'Reading Goal / روزانہ ہدف',
+                      style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15),
+                    ),
                   ),
                   Row(
                     children: [
@@ -566,12 +568,14 @@ class SettingsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'علامات / محفوظ شدہ صفحات (Bookmarks)',
-                        style: TextStyle(
-                            color: cs.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15),
+                      Flexible(
+                        child: Text(
+                          'علامات / محفوظ شدہ صفحات (Bookmarks)',
+                          style: TextStyle(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        ),
                       ),
                       Text('${prefs.bookmarks.length} saved',
                           style: TextStyle(
@@ -634,7 +638,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Version 1.0.0 (Flutter Standalone Edition)',
+                  'Version 1.0.11',
                   style: TextStyle(color: cs.primary, fontSize: 11),
                 ),
               ],

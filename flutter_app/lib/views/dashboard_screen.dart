@@ -9,7 +9,6 @@ import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
 import '../models/surah.dart';
-import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 import 'ayah_player_sheet.dart';
@@ -483,11 +482,15 @@ class DashboardScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width - 64,
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      itemCount: options.length,
-                      itemBuilder: (context, index) {
+                    child: ConstrainedBox(
+                      // Cap the dropdown height so many matches scroll
+                      // inside instead of overflowing the screen.
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (context, index) {
                         final s = options.elementAt(index);
                         return ListTile(
                           dense: true,
@@ -513,6 +516,7 @@ class DashboardScreen extends StatelessWidget {
                           onTap: () => onSelected(s),
                         );
                       },
+                      ),
                     ),
                   ),
                 ),

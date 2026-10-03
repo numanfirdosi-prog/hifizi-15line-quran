@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:share_plus/share_plus.dart';
 import '../data/quran_data.dart';
 import '../data/juz_data.dart';
@@ -299,6 +300,17 @@ class _MushafScreenState extends State<MushafScreen> {
       await audio.pause();
       return;
     }
+    // Resume a paused track where it left off instead of restarting the
+    // surah from the beginning. A paused player reports ready with its
+    // source still loaded; a stopped/finished one does not, and falls
+    // through to a fresh start below.
+    final player = audio.player;
+    if (!player.playing &&
+        player.processingState == ProcessingState.ready &&
+        player.audioSource != null) {
+      await audio.resume();
+      return;
+    }
     final index = await _firstVerseIndex;
     if (!mounted) return;
     final firstVerse = index[_currentPage];
@@ -311,8 +323,12 @@ class _MushafScreenState extends State<MushafScreen> {
     await audio.playSurah(surahNumber: surah);
   }
 
+  /// Height of one page item in scroll mode. The item is an
+  /// AspectRatio(0.6908) at full list width (see _buildPageItem), so the
+  /// scroll math must use the full width — not width minus margins —
+  /// or jump targets drift further off with every page.
   double _scrollItemHeight(BuildContext context) =>
-      (MediaQuery.of(context).size.width - 8) / 0.6908;
+      MediaQuery.of(context).size.width / 0.6908;
 
   /// The page image Container + CachedNetworkImage (with tint overlay),
   /// without the InteractiveViewer wrapper. The image box keeps the exact

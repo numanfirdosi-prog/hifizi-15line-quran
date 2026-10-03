@@ -29,7 +29,12 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLinkPage());
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final prefs = Provider.of<PreferencesService>(context, listen: false);
-      _mushafTargetPage = prefs.lastReadPage;
+      // Restore the last-read page into the Mushaf tab (setState: without
+      // it the tab would stay stuck on the field-initializer page 2).
+      final lastPage = prefs.lastReadPage;
+      if (lastPage != _mushafTargetPage && mounted) {
+        setState(() => _mushafTargetPage = lastPage);
+      }
 
       // M8: On Android 12+, exact alarms need a dedicated permission. If the
       // user has the lockscreen alarm ON but the permission is missing, ask

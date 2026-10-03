@@ -35,6 +35,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
   @override
   void dispose() {
+    // Never leave the mic listening after the screen is gone.
+    _voiceService.stopListening();
     _searchController.dispose();
     super.dispose();
   }
@@ -66,6 +68,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
   Future<void> _toggleVoiceSearch() async {
     if (_isListening) {
       await _voiceService.stopListening();
+      if (!mounted) return;
       setState(() {
         _isListening = false;
       });
@@ -77,9 +80,10 @@ class _SurahsScreenState extends State<SurahsScreen> {
       _voiceFeedback = 'Listening in Hindi / English / Urdu...';
     });
 
-    await _voiceService.startListening(
+    final started = await _voiceService.startListening(
       localeId: 'hi_IN',
       onResult: (spokenText, matchedSurahs) {
+        if (!mounted) return;
         setState(() {
           _searchController.text = spokenText;
           _query = spokenText;
@@ -88,6 +92,15 @@ class _SurahsScreenState extends State<SurahsScreen> {
         });
       },
     );
+    if (!mounted) return;
+    if (!started) {
+      // Speech recognition unavailable (e.g. permission denied): reset the
+      // mic UI instead of leaving it stuck on "Listening...".
+      setState(() {
+        _isListening = false;
+        _voiceFeedback = 'Voice search unavailable on this device.';
+      });
+    }
   }
 
   /// Surah intro bottom sheet: names, meaning, revelation type, verse
@@ -526,16 +539,21 @@ class _SurahsScreenState extends State<SurahsScreen> {
                               ),
                             ),
 
-                            // Arabic Name
-                            Text(
-                              surah.nameAr,
-                              style: arabicStyle(prefs.scriptStyle,
-                                  fontSize: 20, color: cs.primary),
+                            // Arabic Name (flexible: long names must not push the
+                            // trailing buttons off-screen on narrow phones)
+                            Flexible(
+                              child: Text(
+                                surah.nameAr,
+                                overflow: TextOverflow.ellipsis,
+                                style: arabicStyle(prefs.scriptStyle,
+                                    fontSize: 20, color: cs.primary),
+                              ),
                             ),
                             const SizedBox(width: 4),
 
                             // Surah intro (tafsir-style commentary)
                             IconButton(
+                              visualDensity: VisualDensity.compact,
                               icon: Icon(Icons.info_outline,
                                   color: cs.primary.withValues(alpha: 0.8),
                                   size: 20),
@@ -546,6 +564,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
                             // Bookmark toggle
                             IconButton(
+                              visualDensity: VisualDensity.compact,
                               icon: Icon(
                                 isBookmarked
                                     ? Icons.bookmark
@@ -563,6 +582,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
                             // Read Button (opens Mushaf)
                             IconButton(
+                              visualDensity: VisualDensity.compact,
                               icon: Icon(Icons.menu_book, color: cs.primary, size: 22),
                               tooltip: 'Read (p. ${surah.startPage})',
                               onPressed: () =>
@@ -571,6 +591,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
                             // Audio Recite Button
                             IconButton(
+                              visualDensity: VisualDensity.compact,
                               icon: Icon(
                                 isCurrentlyPlaying
                                     ? Icons.pause_circle_filled

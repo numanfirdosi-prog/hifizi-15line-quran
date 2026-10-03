@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../services/auto_backup_service.dart';
+import '../services/azan_alarm_service.dart';
 import '../services/preferences_service.dart';
 
 /// Export / import a JSON backup of all preferences, plus automatic weekly
@@ -193,6 +194,18 @@ class BackupRestoreScreen extends StatelessWidget {
     );
   }
 
+  /// Re-applies city / asr method / alarm prefs to the alarm scheduler
+  /// after an import or a full reset rewrites them.
+  Future<void> _rescheduleAlarms(PreferencesService prefs) {
+    return AzanAlarmService().scheduleDailyPrayerAlarms(
+      location: prefs.selectedCity,
+      asrMode: prefs.asrMethod,
+      enabledAlarms: prefs.prayerAlarms,
+      azanSoundEnabled: prefs.azanSoundEnabled,
+      lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
+    );
+  }
+
   Future<void> _showExportDialog(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final json =
@@ -278,6 +291,8 @@ class BackupRestoreScreen extends StatelessWidget {
     );
     if (confirmed == true) {
       await prefs.resetAll();
+      // Defaults (city / asr method / alarms) were restored: re-apply them.
+      await _rescheduleAlarms(prefs);
       messenger.showSnackBar(
         const SnackBar(content: Text('All data has been reset')),
       );
@@ -322,6 +337,17 @@ class _ImportFieldState extends State<_ImportField> {
             final prefs =
                 Provider.of<PreferencesService>(context, listen: false);
             final ok = await prefs.importJson(_controller.text.trim());
+            if (ok) {
+              // Imported prefs (city / asr method / alarm toggles) must reach
+              // the alarm scheduler now, not only on the next app launch.
+              await AzanAlarmService().scheduleDailyPrayerAlarms(
+                location: prefs.selectedCity,
+                asrMode: prefs.asrMethod,
+                enabledAlarms: prefs.prayerAlarms,
+                azanSoundEnabled: prefs.azanSoundEnabled,
+                lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
+              );
+            }
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(ok ? 'Imported' : 'Invalid backup')),

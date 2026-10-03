@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/juz_data.dart';
-import '../data/quran_data.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 

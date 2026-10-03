@@ -404,6 +404,12 @@ class AudioRecitationService extends ChangeNotifier {
 
   Future<void> playSurah({required int surahNumber}) async {
     _ayahMode = false;
+    // A whole-surah playback is a fresh session: drop any ayah repeat
+    // range left over from earlier, or _advanceAyah would later loop back
+    // into the stale range when an ayah of that surah is played.
+    _repeatRangeSurah = null;
+    _repeatRangeStart = null;
+    _repeatRangeEnd = null;
     _currentSurah = surahNumber;
     _currentAyah = 1;
     _completedPlays = 0;

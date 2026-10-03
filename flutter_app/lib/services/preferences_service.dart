@@ -399,6 +399,11 @@ class PreferencesService extends ChangeNotifier {
       'savedAyahs': _savedAyahs,
       'pageNotes': _pageNotes,
       'pageTint': _pageTint,
+      'ayahTapHintShown': _ayahTapHintShown,
+      'khatmDays': _khatmDays,
+      'onboardingDone': _onboardingDone,
+      'autoBackup': _autoBackup,
+      'lastAutoBackup': _lastAutoBackup,
     });
   }
 
@@ -557,6 +562,41 @@ class PreferencesService extends ChangeNotifier {
         await _prefs.setString('nur_page_tint', jsonEncode(_pageTint));
       }
 
+      final ayahTapHintShown = asBool(m['ayahTapHintShown']);
+      if (ayahTapHintShown != null) {
+        _ayahTapHintShown = ayahTapHintShown;
+        await _prefs.setBool('nur_ayah_tap_hint_shown', ayahTapHintShown);
+      }
+
+      final khatmDays = m['khatmDays'];
+      if (khatmDays is List) {
+        _khatmDays = khatmDays
+            .map((e) =>
+                e is num ? e.toInt() : (int.tryParse(e.toString()) ?? 0))
+            .where((d) => d >= 1 && d <= 30)
+            .toList();
+        await _prefs.setStringList(
+            'nur_khatm_days', _khatmDays.map((e) => e.toString()).toList());
+      }
+
+      final onboardingDone = asBool(m['onboardingDone']);
+      if (onboardingDone != null) {
+        _onboardingDone = onboardingDone;
+        await _prefs.setBool('nur_onboarding_done', onboardingDone);
+      }
+
+      final autoBackup = asBool(m['autoBackup']);
+      if (autoBackup != null) {
+        _autoBackup = autoBackup;
+        await _prefs.setBool('nur_auto_backup', autoBackup);
+      }
+
+      final lastAutoBackup = asString(m['lastAutoBackup']);
+      if (lastAutoBackup != null) {
+        _lastAutoBackup = lastAutoBackup;
+        await _prefs.setString('nur_last_auto_backup', lastAutoBackup);
+      }
+
       notifyListeners();
       return true;
     } catch (_) {
@@ -594,6 +634,11 @@ class PreferencesService extends ChangeNotifier {
     _savedAyahs = [];
     _pageNotes = {};
     _pageTint = {};
+    _ayahTapHintShown = false;
+    _khatmDays = [];
+    _onboardingDone = false;
+    _autoBackup = false;
+    _lastAutoBackup = '';
     notifyListeners();
   }
 }

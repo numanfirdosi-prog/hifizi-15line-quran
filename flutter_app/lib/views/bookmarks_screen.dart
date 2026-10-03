@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../services/azan_alarm_service.dart';
 import '../services/preferences_service.dart';
 import 'ayah_player_sheet.dart';
 
@@ -66,6 +67,18 @@ class BookmarksScreen extends StatelessWidget {
   // ------------------------------------------------------------------
   // Export / Import / Clear-all toolbar actions
   // ------------------------------------------------------------------
+
+  /// Re-applies city / asr method / alarm prefs to the alarm scheduler
+  /// (same helper shape as SettingsScreen._reschedule).
+  Future<void> _rescheduleAlarms(PreferencesService prefs) {
+    return AzanAlarmService().scheduleDailyPrayerAlarms(
+      location: prefs.selectedCity,
+      asrMode: prefs.asrMethod,
+      enabledAlarms: prefs.prayerAlarms,
+      azanSoundEnabled: prefs.azanSoundEnabled,
+      lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
+    );
+  }
 
   Future<void> _showExportDialog(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -160,10 +173,16 @@ class BookmarksScreen extends StatelessWidget {
         ],
       ),
     );
+    controller.dispose();
     if (ok != null) {
       messenger.showSnackBar(
         SnackBar(content: Text(ok! ? 'Imported' : 'Invalid backup')),
       );
+      if (ok!) {
+        // Imported prefs (city / asr method / alarm toggles) must reach the
+        // alarm scheduler now, not only on the next app launch.
+        await _rescheduleAlarms(prefs);
+      }
     }
   }
 

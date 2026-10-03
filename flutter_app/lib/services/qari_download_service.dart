@@ -74,6 +74,13 @@ class QariDownloadService extends ChangeNotifier {
   HttpClient? _httpClient;
   bool _cancelRequested = false;
 
+  /// Monotonic run id: every [startDownload] call takes the next value, so
+  /// a newer call supersedes any older run still stuck in [_buildQueue] or
+  /// [_runQueue]. Without this, starting qari B while qari A was still
+  /// building its queue (or mid-file) could leave two queue loops running
+  /// at once, racing over [_cancelRequested], [_activeId] and [_httpClient].
+  int _runSeq = 0;
+
   /// Current progress snapshot for [qariId] (idle when never touched).
   QariPackProgress progressOf(String qariId) =>
       _progress[qariId] ?? const QariPackProgress();
@@ -120,13 +127,18 @@ class QariDownloadService extends ChangeNotifier {
   Future<void> startDownload(Qari qari) async {
     if (_activeId == qari.id || _starting.contains(qari.id)) return;
     _starting.add(qari.id);
+    // This run supersedes any older one still in flight (see [_runSeq]).
+    final mySeq = ++_runSeq;
+    bool isSuperseded() => mySeq != _runSeq;
     try {
       if (_activeId != null && _activeId != qari.id) {
         await pauseDownload(_activeId!);
       }
+      if (isSuperseded()) return;
       _qaris[qari.id] = qari;
 
       final jobs = await _buildQueue(qari);
+      if (isSuperseded()) return;
       final alreadyDone = QariAudioStorage.totalPackFiles - jobs.length;
       if (jobs.isEmpty) {
         // Everything is already on disk.
@@ -144,7 +156,7 @@ class QariDownloadService extends ChangeNotifier {
       _activeId = qari.id;
       _set(qari.id,
           QariPackProgress(state: QariPackState.downloading, done: alreadyDone));
-      await _runQueue(qari.id, jobs);
+      await _runQueue(qari.id, jobs, mySeq);
 
       final current = progressOf(qari.id);
       if (_cancelRequested) {
@@ -177,8 +189,12 @@ class QariDownloadService extends ChangeNotifier {
           current.copyWith(state: QariPackState.error, errorMessage: '$e'));
     } finally {
       _starting.remove(qari.id);
-      if (_activeId == qari.id) _activeId = null;
-      _httpClient = null;
+      // Only a non-superseded run may clear the shared handles; a newer
+      // run has already taken them over.
+      if (!isSuperseded()) {
+        if (_activeId == qari.id) _activeId = null;
+        _httpClient = null;
+      }
     }
   }
 
@@ -243,13 +259,14 @@ class QariDownloadService extends ChangeNotifier {
   /// disk. A failed or cancelled file's partial output is deleted so a
   /// later resume re-downloads it cleanly. Failed files are counted and
   /// skipped — they never abort the pack. Stops promptly when
-  /// [_cancelRequested] is set.
-  Future<void> _runQueue(String qariId, List<_DownloadJob> jobs) async {
+  /// [_cancelRequested] is set or when [runSeq] no longer matches [_runSeq]
+  /// (a newer [startDownload] superseded this run).
+  Future<void> _runQueue(String qariId, List<_DownloadJob> jobs, int runSeq) async {
     final client = HttpClient();
     _httpClient = client;
     try {
       for (final job in jobs) {
-        if (_cancelRequested) break;
+        if (_cancelRequested || runSeq != _runSeq) break;
         final file = File(job.path);
         try {
           final request = await client.getUrl(Uri.parse(job.url));
@@ -265,7 +282,7 @@ class QariDownloadService extends ChangeNotifier {
           try {
             if (await file.exists()) await file.delete();
           } catch (_) {}
-          if (_cancelRequested) break;
+          if (_cancelRequested || runSeq != _runSeq) break;
           final p = progressOf(qariId);
           _set(qariId, p.copyWith(errorCount: p.errorCount + 1));
           debugPrint('[QariDownload] failed ${job.url}: $e');
