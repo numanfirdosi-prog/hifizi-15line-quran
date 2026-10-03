@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/qari_audio_storage.dart';
 import '../services/qari_download_service.dart';
-import '../utils/page_image_url.dart';
+import '../services/page_image_service.dart';
 
 /// Pre-downloads mushaf page images into the image cache so they work
 /// offline. Audio quick-set buttons stream only: the player caches audio in
@@ -36,10 +36,10 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
       _downloadingPages = true;
       _downloadedPages = 0;
     });
-    final cache = DefaultCacheManager();
     for (var i = 1; i <= _totalPages; i++) {
       try {
-        await cache.downloadFile(mushafPageImageUrl(i));
+        // Resilient multi-CDN download; also warms the reader's disk cache.
+        await PageImageService.fetchPageImage(i);
       } catch (_) {}
       if (!mounted) return;
       setState(() => _downloadedPages = i);

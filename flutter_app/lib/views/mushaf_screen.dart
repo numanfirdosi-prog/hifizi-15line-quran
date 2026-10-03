@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:just_audio/just_audio.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
@@ -12,7 +12,7 @@ import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/page_drawing_service.dart';
-import '../utils/page_image_url.dart';
+import '../services/page_image_service.dart';
 import 'reader_settings_sheet.dart';
 
 class MushafScreen extends StatefulWidget {
@@ -30,34 +30,13 @@ class _MushafScreenState extends State<MushafScreen> {
       TransformationController();
   ScrollController? _scrollController;
   // Per-page image retry counters: bumping the counter rebuilds the
-  // CachedNetworkImage with a fresh key to retry a stuck/failed load.
+  // page image loader with a fresh key to retry a failed load.
   final Map<int, int> _imgRetry = {};
-  // Pages whose image has fully loaded (used by the load-timeout).
+  // Pages whose image has fully loaded.
   final Set<int> _loadedPages = {};
-  // Per-page load timeout timers: if a page image hangs for 30s without
-  // loading or erroring, force a retry with a fresh key.
-  final Map<int, Timer> _loadTimers = {};
-
-  /// Starts (or restarts) the 30s load-timeout timer for [pageNum].
-  void _armLoadTimeout(int pageNum) {
-    _loadTimers[pageNum]?.cancel();
-    if (_loadedPages.contains(pageNum)) return;
-    _loadTimers[pageNum] = Timer(const Duration(seconds: 30), () {
-      if (!mounted || _loadedPages.contains(pageNum)) return;
-      setState(() {
-        _imgRetry[pageNum] = (_imgRetry[pageNum] ?? 0) + 1;
-      });
-      // Re-arm in case the retry also hangs.
-      _armLoadTimeout(pageNum);
-    });
-  }
 
   @override
   void dispose() {
-    for (final t in _loadTimers.values) {
-      t.cancel();
-    }
-    _loadTimers.clear();
     _audio.removeListener(_followAyah);
     _pageController.dispose();
     _scrollController?.dispose();
@@ -771,8 +750,10 @@ class _MushafScreenState extends State<MushafScreen> {
   double _scrollItemHeight(BuildContext context) =>
       MediaQuery.of(context).size.width / 0.6908;
 
-  /// The page image Container + CachedNetworkImage (with tint overlay),
-  /// without the InteractiveViewer wrapper. The image box keeps the exact
+  /// The page image (with night tint overlay), without the InteractiveViewer
+  /// wrapper. Full-screen reader: the page is edge-to-edge and top-aligned
+  /// just below the status bar — no card margins, rounded corners or shadow —
+  /// so it fills the screen like a real mushaf. The image box keeps the exact
   /// page-image aspect (7428x10753 -> 0.6908) so ayah tap coordinates map
   /// 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
@@ -780,122 +761,35 @@ class _MushafScreenState extends State<MushafScreen> {
     // eyes. Only the page image is filtered, not the highlight/drawing
     // overlays painted above it.
     final nightDim = Theme.of(context).brightness == Brightness.dark;
-    // Full-screen reader: the page is top-aligned (just below the status
-    // bar) and fills the available width, like the reference design —
-    // no more large empty gap above the page.
     return SafeArea(
       bottom: false,
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFAF7EE),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black45,
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
+      child: Container(
+        // Seamless page background: on tall screens the area below the page
+        // blends with the page instead of looking like an empty gap.
+        color: nightDim ? const Color(0xFFC3C1BA) : const Color(0xFFFAF7EE),
+        child: Align(
+          alignment: Alignment.topCenter,
           child: AspectRatio(
             aspectRatio: 0.6908,
             child: Stack(
               children: [
-                ColorFiltered(
+                Positioned.fill(
+                  child: ColorFiltered(
                     colorFilter: ColorFilter.mode(
                       Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
                       BlendMode.darken,
                     ),
-                    child: CachedNetworkImage(
+                    child: _ResilientPageImage(
                       key: ValueKey(
                           'mushaf-page-$pageNum-${_imgRetry[pageNum] ?? 0}'),
-                      imageUrl: mushafPageImageUrl(pageNum),
-                      fit: BoxFit.contain,
-                      // M7: pages are cached on disk — the Mushaf keeps working offline.
-                      imageBuilder: (context, imageProvider) {
-                        // Mark loaded + cancel the hang-timeout timer.
-                        _loadedPages.add(pageNum);
-                        _loadTimers[pageNum]?.cancel();
-                        _loadTimers.remove(pageNum);
-                        return Image(
-                          image: imageProvider,
-                          fit: BoxFit.contain,
-                        );
-                      },
-                      progressIndicatorBuilder: (context, url, progress) {
-                        // Arm the 30s hang-timeout while loading.
-                        _armLoadTimeout(pageNum);
-                        final pct = progress.progress != null
-                            ? (progress.progress! * 100).round()
-                            : null;
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF0F3A2C)),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                pct != null
-                                    ? 'Loading Page $pageNum... $pct%'
-                                    : 'Loading Page $pageNum...',
-                                style: const TextStyle(
-                                    color: Color(0xFF0F3A2C),
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      errorWidget: (context, url, error) {
-                        // Cancel the hang-timeout; the retry button below
-                        // handles re-attempts.
-                        _loadTimers[pageNum]?.cancel();
-                        _loadTimers.remove(pageNum);
-                        return Container(
-                          padding: const EdgeInsets.all(24),
-                          color: const Color(0xFFFAF7EE),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.cloud_off,
-                                    size: 64, color: Color(0xFF0F3A2C)),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'صفحہ $pageNum',
-                                  style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0F3A2C)),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Page load nahi ho saka — internet check karein',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.black54),
-                                ),
-                                const SizedBox(height: 16),
-                                FilledButton.icon(
-                                  onPressed: () => setState(() {
-                                    _imgRetry[pageNum] =
-                                        (_imgRetry[pageNum] ?? 0) + 1;
-                                  }),
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Dobara try karein'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    )),
+                      pageNum: pageNum,
+                      onLoaded: () => _loadedPages.add(pageNum),
+                      onRetry: () => setState(() {
+                        _imgRetry[pageNum] = (_imgRetry[pageNum] ?? 0) + 1;
+                      }),
+                    ),
+                  ),
+                ),
                 // Currently playing ayah highlight (ayah-by-ayah audio mode).
                 _buildAyahHighlights(pageNum),
                 // Freehand page drawings (pen/brush/highlighter/rectangle).
@@ -1413,4 +1307,138 @@ class _PageDrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PageDrawingPainter oldDelegate) => true;
+}
+
+/// Page image with resilient multi-CDN loading.
+///
+/// Uses [PageImageService] which tries several CDNs in order (each with a
+/// timeout), so a hanging/blocked host no longer freezes the reader on
+/// "Loading..." forever. Shows download progress, the image on success,
+/// or an error card with a retry button when every source fails.
+class _ResilientPageImage extends StatefulWidget {
+  final int pageNum;
+  final VoidCallback onLoaded;
+  final VoidCallback onRetry;
+
+  const _ResilientPageImage({
+    super.key,
+    required this.pageNum,
+    required this.onLoaded,
+    required this.onRetry,
+  });
+
+  @override
+  State<_ResilientPageImage> createState() => _ResilientPageImageState();
+}
+
+class _ResilientPageImageState extends State<_ResilientPageImage> {
+  late Future<Uint8List> _future;
+  int _received = 0;
+  int? _total;
+  bool _notified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startLoad();
+  }
+
+  void _startLoad() {
+    _received = 0;
+    _total = null;
+    _notified = false;
+    _future = PageImageService.fetchPageImage(
+      widget.pageNum,
+      onProgress: (r, t) {
+        if (mounted) {
+          setState(() {
+            _received = r;
+            _total = t;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Uint8List>(
+      future: _future,
+      builder: (context, snap) {
+        if (snap.hasData) {
+          if (!_notified) {
+            _notified = true;
+            WidgetsBinding.instance
+                .addPostFrameCallback((_) => widget.onLoaded());
+          }
+          return Image.memory(snap.data!, fit: BoxFit.contain);
+        }
+        if (snap.hasError) return _errorView();
+        return _loadingView();
+      },
+    );
+  }
+
+  Widget _loadingView() {
+    final pct = (_total != null && _total! > 0)
+        ? (_received / _total! * 100).round().clamp(0, 100)
+        : null;
+    return Container(
+      color: const Color(0xFFFAF7EE),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(Color(0xFF0F3A2C)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              pct != null
+                  ? 'Loading Page ${widget.pageNum}... $pct%'
+                  : 'Loading Page ${widget.pageNum}...',
+              style: const TextStyle(
+                  color: Color(0xFF0F3A2C), fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorView() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      color: const Color(0xFFFAF7EE),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.cloud_off, size: 64, color: Color(0xFF0F3A2C)),
+            const SizedBox(height: 16),
+            Text(
+              'صفحہ ${widget.pageNum}',
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F3A2C)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Page load nahi ho saka — internet check karein',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: widget.onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Dobara try karein'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
