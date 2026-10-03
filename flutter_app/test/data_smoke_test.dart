@@ -75,4 +75,243 @@ void main() {
       expect(ur(28, 44).contains('طور کی جانب'), isTrue);
     });
   });
+    test('urdu kanzuliman: full-audit typos stay fixed', () {
+      final file = File('assets/data/quran_urdu_kanzuliman.json');
+      final List<dynamic> data =
+          jsonDecode(file.readAsStringSync()) as List<dynamic>;
+      expect(data.length, 6236);
+      final words = <String>{};
+      final bigrams = <String>{};
+      final trigrams = <String>{};
+      const punct = '،؛؟!.()«»"\u061C';
+      String strip(String t) {
+        var s = t;
+        while (s.isNotEmpty && punct.contains(s[s.length - 1])) {
+          s = s.substring(0, s.length - 1);
+        }
+        while (s.isNotEmpty && punct.contains(s[0])) { s = s.substring(1); }
+        return s;
+      }
+      for (final e in data) {
+        final tokens = ((e as Map<String, dynamic>)['ur'] as String).split(' ');
+        for (final t in tokens) { words.add(strip(t)); }
+        for (var i = 0; i + 1 < tokens.length; i++) {
+          bigrams.add('${tokens[i]} ${tokens[i + 1]}');
+        }
+        for (var i = 0; i + 2 < tokens.length; i++) {
+          trigrams.add('${tokens[i]} ${tokens[i + 1]} ${tokens[i + 2]}');
+        }
+      }
+      // None of the audited split-typo fragments may reappear.
+      const splitTypos = <String>[
+        'ہر گز',
+        'لا ؤ',
+        'فورا ً',
+        'نصاری ٰ',
+        'موسی ٰ',
+        'نا چار',
+        'دن یا',
+        'دوز خی',
+        'علا قہ',
+        'زلز لہ',
+        'کا فروں',
+        'چھوڑ تا',
+        'جا ہل',
+        'نو ر',
+        'بڑا ئی',
+        'اتا رے',
+        'بتا تا',
+        'ما نگا',
+        'بند ر',
+        'صا ف',
+        'ا تاری',
+        'فریا د',
+        'مخا لفت',
+        'با ز',
+        'کا ر',
+        'ہوجا تا',
+        'برسا یا',
+        'کنا رے',
+        'قا فلہ',
+        'تھو ڑا',
+        'کا فر',
+        'پو را',
+        'تھو ڑے',
+        'ر ہے',
+        'با ر',
+        'پا ؤ',
+        'ہزا ر',
+        'ر ہو',
+        'کمزو ر',
+        'چا ہتے',
+        'چا ر',
+        'نما ز',
+        'سنا تا',
+        'اتا ری',
+        'بگا ڑ',
+        'چا ہا',
+        'بنا ؤ',
+        'ہو تی',
+        'فرما تا',
+        'بنا یا',
+        'کہا وت',
+        'جا نچ',
+        'خو ف',
+        'پہنچا تا',
+        'ظا لموں',
+        'پا تا',
+        'صا لح',
+        'لگا تار',
+        'چا ہیں',
+        'جا ؤ',
+        'کا موں',
+        'با پ',
+        'چا ل',
+        'نکا لنا',
+        'دروا زوں',
+        'جا تا',
+        'گر ج',
+        'برُ ا',
+        'د یں',
+        'یا د',
+        'حضو ر',
+        'ر وح',
+        'معز ز',
+        'کفا یت',
+        'بر ا',
+        'قیا مت',
+        'دو ست',
+        'پا ئی',
+        'ساما ن',
+        'ان ہی',
+        'سلوی ٰ',
+        'د لائی',
+        'جھٹلا ئیں',
+        'ہا رون',
+        'دو نوں',
+        'تمھا رے',
+        'نا شکر',
+        'فر ما',
+        'ز یادتی',
+        'ڈرا ئے',
+        'تما م',
+        'دوڑ تا',
+        'پو جتے',
+        'زیا دہ',
+        'بنا تا',
+        'نا شکرا',
+        'انگو روں',
+        'روز ِ',
+        'غا لب',
+        'کڑ ک',
+        'ک سے',
+        'بھا گنے',
+        'عیسی ٰ',
+        'نشا نیاں',
+        'جھگڑ تے',
+        'دیکھ ا',
+        'کو شش',
+        'عنقر یب',
+        'لو ط',
+        'حسا ب',
+        'بتا نے',
+        'چا ہو',
+        'مسلما نوں',
+        'کو تک',
+        'قنا ویز',
+        'جا ئیں،',
+        'ڈرا نے',
+        'کڑ وڑا',
+        'بر تنے',
+        'بز د لی',
+        'قر آ ن',
+        'ا ور',
+        'او ر',
+        'م یں',
+        'کا ن',
+        'ا نہیں',
+        'طر ف',
+        'کو ئی',
+        'ایما ن',
+        'و الا',
+        'وا لا',
+        'پا س',
+        'کر و',
+        'وا لوں',
+        'کا م',
+        'ضرو ر',
+        'کہ ا',
+        'با ت',
+        'ہما رے',
+        'ہو ا',
+        'فر ماؤ',
+        'فرما ؤ',
+        'تمہا را',
+        'فرما یا',
+        'لا ئے',
+        'جا نتا',
+        'پرہیزگا روں',
+        'کتا ب',
+        'سزا وار',
+        'درد ناک',
+        'پرہیز گاروں',
+        'تا بع',
+        'آ نے',
+        'نکا لا',
+        'پکڑ تا',
+        'جان نے',
+        'بڑھا پا',
+        'کہ نا',
+        'جما دے',
+        'حیا ئی',
+        'اُ س',
+        'بتا دے',
+        'ا بھی',
+        'د یکھا',
+        'خو بیوں',
+        'سرا ہے',
+        'جھٹلا نے',
+        'جا نا',
+      ];
+      for (final frag in splitTypos) {
+        final n = frag.split(' ').length;
+        final set = n == 2 ? bigrams : trigrams;
+        expect(set.contains(frag), isFalse, reason: 'typo: $frag');
+      }
+      // None of the audited jammed-word typos may reappear.
+      const jammedTypos = <String>[
+        'اللہکے',
+        'انکا',
+        'اسمیں',
+        'انکے',
+        'انکی',
+        'اسکی',
+        'پھرتمہیں',
+        'اسکے',
+        'اسکا',
+        'بعداس',
+        'ہرچیز',
+        'لوگے',
+        'کروگے',
+        'پھروگے',
+        'ہوگے',
+        'آلیا',
+        'اسحق',
+      ];
+      for (final frag in jammedTypos) {
+        expect(words.contains(frag), isFalse, reason: 'typo: $frag');
+      }
+      // Spot-check key fixed verses read correctly.
+      String ur(int s, int v) => (data.firstWhere(
+            (e) => (e as Map<String, dynamic>)['s'] == s && e['v'] == v,
+          ) as Map<String, dynamic>)['ur'] as String;
+      expect(ur(2, 206).contains('گناہ'), isTrue);
+      expect(ur(6, 135).contains('آخرت'), isTrue);
+      expect(ur(11, 24).contains('کیا تم دھیان نہیں'), isTrue);
+      expect(ur(28, 44).contains('طور کی جانب'), isTrue);
+      expect(ur(64, 14).contains('بیبیاں'), isTrue);
+      expect(ur(3, 191).contains('یاد کرتے ہیں'), isTrue);
+      expect(ur(8, 44).contains('کافر'), isTrue);
+      expect(ur(11, 14).contains('اللہ کے علم'), isTrue);
+    });
 }
