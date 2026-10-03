@@ -764,11 +764,11 @@ class _MushafScreenState extends State<MushafScreen> {
     return SafeArea(
       bottom: false,
       child: Container(
-        // Seamless page background: on tall screens the area below the page
+        // Seamless page background: on tall screens the area around the page
         // blends with the page instead of looking like an empty gap.
         color: nightDim ? const Color(0xFFC3C1BA) : const Color(0xFFFAF7EE),
         child: Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.center,
           child: AspectRatio(
             aspectRatio: 0.6908,
             child: Stack(
