@@ -93,7 +93,7 @@ class KhatmPlannerScreen extends StatelessWidget {
                 crossAxisCount: 2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
-                childAspectRatio: 1.35,
+                childAspectRatio: 1.05,
               ),
               itemCount: 30,
               itemBuilder: (context, i) {
@@ -212,10 +212,10 @@ class KhatmPlannerScreen extends StatelessWidget {
                               onPressed: () => onOpenPage(startPage),
                               style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
-                                minimumSize: const Size(88, 40),
+                                    horizontal: 16, vertical: 8),
+                                minimumSize: const Size(76, 36),
                                 textStyle: const TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
