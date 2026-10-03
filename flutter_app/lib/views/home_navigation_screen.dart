@@ -185,63 +185,72 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
           index: _currentIndex,
           children: screens,
         ),
-        bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          backgroundColor: cs.surface,
-          indicatorColor: cs.primary.withValues(alpha: 0.2),
-          labelTextStyle:
-              MaterialStateProperty.resolveWith<TextStyle>((states) {
-            if (states.contains(MaterialState.selected)) {
-              return TextStyle(
-                  color: cs.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11);
-            }
-            return TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 11);
-          }),
-          iconTheme: MaterialStateProperty.resolveWith<IconThemeData>((states) {
-            if (states.contains(MaterialState.selected)) {
-              return IconThemeData(color: cs.primary, size: 24);
-            }
-            return IconThemeData(color: cs.onSurface.withValues(alpha: 0.6), size: 22);
-          }),
-        ),
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (idx) {
-            setState(() {
-              _currentIndex = idx;
-            });
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'ہوم',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.menu_book_outlined),
-              selectedIcon: Icon(Icons.menu_book),
-              label: 'مصحف',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.format_list_bulleted_outlined),
-              selectedIcon: Icon(Icons.format_list_bulleted),
-              label: 'سورتیں',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.access_time_outlined),
-              selectedIcon: Icon(Icons.access_time_filled),
-              label: 'نماز و اذان',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view),
-              label: 'مزید',
-            ),
-          ],
-        ),
-      ),
+        // The bottom tab bar stays on Home/Surahs/Prayer/More, but is
+        // hidden on the Mushaf reader tab so the Quran page gets the
+        // full screen. System back returns to Home.
+        bottomNavigationBar: _currentIndex == 1
+            ? null
+            : NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  backgroundColor: cs.surface,
+                  indicatorColor: cs.primary.withValues(alpha: 0.2),
+                  labelTextStyle:
+                      MaterialStateProperty.resolveWith<TextStyle>((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11);
+                    }
+                    return TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        fontSize: 11);
+                  }),
+                  iconTheme: MaterialStateProperty.resolveWith<IconThemeData>(
+                      (states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return IconThemeData(color: cs.primary, size: 24);
+                    }
+                    return IconThemeData(
+                        color: cs.onSurface.withValues(alpha: 0.6), size: 22);
+                  }),
+                ),
+                child: NavigationBar(
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (idx) {
+                    setState(() {
+                      _currentIndex = idx;
+                    });
+                  },
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: 'ہوم',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.menu_book_outlined),
+                      selectedIcon: Icon(Icons.menu_book),
+                      label: 'مصحف',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.format_list_bulleted_outlined),
+                      selectedIcon: Icon(Icons.format_list_bulleted),
+                      label: 'سورتیں',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.access_time_outlined),
+                      selectedIcon: Icon(Icons.access_time_filled),
+                      label: 'نماز و اذان',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.grid_view_outlined),
+                      selectedIcon: Icon(Icons.grid_view),
+                      label: 'مزید',
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
