@@ -21,11 +21,13 @@ class PreferencesService extends ChangeNotifier {
   String _lastReadAt = '';
   int _dailyTargetPages = 4;
   String _themeName = 'night'; // night | emerald | parchment
-  String _scriptStyle = 'nastaliq'; // nastaliq | uthmani
+  String _scriptStyle = 'sans'; // sans | uthmani
   double _ayahScale = 1.0;
   String _readingMode = 'slide'; // slide | scroll | turn
   int _repeatMode = 0; // 0=off, 1/3/5, -1=infinite
   double _playbackSpeed = 1.0;
+  bool _audioHighlightEnabled = true; // highlight ayahs during audio
+  bool _backgroundPlaybackEnabled = true; // keep audio in background
   List<String> _savedAyahs = []; // 's:v'
   Map<String, String> _pageNotes = {}; // page -> note
   Map<String, String> _pageTint = {}; // page -> color hex
@@ -69,6 +71,8 @@ class PreferencesService extends ChangeNotifier {
   bool get ayahTapHintShown => _ayahTapHintShown;
   bool get onboardingDone => _onboardingDone;
   bool get autoBackup => _autoBackup;
+  bool get audioHighlightEnabled => _audioHighlightEnabled;
+  bool get backgroundPlaybackEnabled => _backgroundPlaybackEnabled;
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
@@ -85,7 +89,12 @@ class PreferencesService extends ChangeNotifier {
     _lastReadAt = _prefs.getString('nur_last_read_at') ?? '';
     _dailyTargetPages = _prefs.getInt('nur_daily_target_pages') ?? 4;
     _themeName = _prefs.getString('nur_theme_name') ?? 'night';
-    _scriptStyle = _prefs.getString('nur_script_style') ?? 'nastaliq';
+    _scriptStyle = _prefs.getString('nur_script_style') ?? 'sans';
+    // Migrate the retired 'nastaliq' (Gulzar) style to Noto Sans Arabic.
+    if (_scriptStyle == 'nastaliq') {
+      _scriptStyle = 'sans';
+      await _prefs.setString('nur_script_style', 'sans');
+    }
     _ayahScale = _prefs.getDouble('nur_ayah_scale') ?? 1.0;
     _readingMode = _prefs.getString('nur_reading_mode') ?? 'slide';
     _repeatMode = _prefs.getInt('nur_repeat_mode') ?? 0;
@@ -93,6 +102,9 @@ class PreferencesService extends ChangeNotifier {
     _ayahTapHintShown = _prefs.getBool('nur_ayah_tap_hint_shown') ?? false;
     _onboardingDone = _prefs.getBool('nur_onboarding_done') ?? false;
     _autoBackup = _prefs.getBool('nur_auto_backup') ?? false;
+    _audioHighlightEnabled = _prefs.getBool('nur_audio_highlight') ?? true;
+    _backgroundPlaybackEnabled =
+        _prefs.getBool('nur_background_playback') ?? true;
     _lastAutoBackup = _prefs.getString('nur_last_auto_backup') ?? '';
 
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
@@ -252,6 +264,8 @@ class PreferencesService extends ChangeNotifier {
   }
 
   Future<void> setScriptStyle(String style) async {
+    // Only 'sans' (Noto Sans Arabic) and 'uthmani' (Amiri Quran) are offered.
+    if (style != 'sans' && style != 'uthmani') return;
     _scriptStyle = style;
     await _prefs.setString('nur_script_style', style);
     notifyListeners();
@@ -296,6 +310,18 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setAutoBackup(bool enabled) async {
     _autoBackup = enabled;
     await _prefs.setBool('nur_auto_backup', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setAudioHighlightEnabled(bool enabled) async {
+    _audioHighlightEnabled = enabled;
+    await _prefs.setBool('nur_audio_highlight', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setBackgroundPlaybackEnabled(bool enabled) async {
+    _backgroundPlaybackEnabled = enabled;
+    await _prefs.setBool('nur_background_playback', enabled);
     notifyListeners();
   }
 
@@ -429,6 +455,8 @@ class PreferencesService extends ChangeNotifier {
       'readPages': _readPages.toList(),
       'onboardingDone': _onboardingDone,
       'autoBackup': _autoBackup,
+      'audioHighlightEnabled': _audioHighlightEnabled,
+      'backgroundPlaybackEnabled': _backgroundPlaybackEnabled,
       'lastAutoBackup': _lastAutoBackup,
     });
   }
@@ -633,6 +661,16 @@ class PreferencesService extends ChangeNotifier {
         _autoBackup = autoBackup;
         await _prefs.setBool('nur_auto_backup', autoBackup);
       }
+      final audioHighlight = asBool(m['audioHighlightEnabled']);
+      if (audioHighlight != null) {
+        _audioHighlightEnabled = audioHighlight;
+        await _prefs.setBool('nur_audio_highlight', audioHighlight);
+      }
+      final bgPlayback = asBool(m['backgroundPlaybackEnabled']);
+      if (bgPlayback != null) {
+        _backgroundPlaybackEnabled = bgPlayback;
+        await _prefs.setBool('nur_background_playback', bgPlayback);
+      }
 
       final lastAutoBackup = asString(m['lastAutoBackup']);
       if (lastAutoBackup != null) {
@@ -669,7 +707,7 @@ class PreferencesService extends ChangeNotifier {
     _lastReadAt = '';
     _dailyTargetPages = 4;
     _themeName = 'night';
-    _scriptStyle = 'nastaliq';
+    _scriptStyle = 'sans';
     _ayahScale = 1.0;
     _readingMode = 'slide';
     _repeatMode = 0;
@@ -682,6 +720,8 @@ class PreferencesService extends ChangeNotifier {
     _readPages = {};
     _onboardingDone = false;
     _autoBackup = false;
+    _audioHighlightEnabled = true;
+    _backgroundPlaybackEnabled = true;
     _lastAutoBackup = '';
     notifyListeners();
   }

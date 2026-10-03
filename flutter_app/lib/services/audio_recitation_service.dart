@@ -206,6 +206,16 @@ class AudioRecitationService extends ChangeNotifier {
   int? get repeatRangeStart => _repeatRangeStart;
   int? get repeatRangeEnd => _repeatRangeEnd;
 
+  /// Human-readable label for the active ayah repeat range, e.g.
+  /// "Surah 2: 255–260". Null when no range is set.
+  String? get repeatRangeLabel {
+    final s = _repeatRangeSurah;
+    final a = _repeatRangeStart;
+    final b = _repeatRangeEnd;
+    if (s == null || a == null || b == null) return null;
+    return 'Surah $s: $a–$b (loop)';
+  }
+
   /// Pure validation for an ayah repeat range (single surah).
   static bool isValidAyahRange(int surah, int start, int end) {
     if (surah < 1 || surah > 114) return false;

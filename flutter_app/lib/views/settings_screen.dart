@@ -291,10 +291,10 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _scriptCard(
                         context,
-                        style: 'nastaliq',
-                        label: 'Indo-Pak Nastaliq',
-                        selected: prefs.scriptStyle == 'nastaliq',
-                        onTap: () => prefs.setScriptStyle('nastaliq'),
+                        style: 'sans',
+                        label: 'Noto Sans Arabic',
+                        selected: prefs.scriptStyle == 'sans',
+                        onTap: () => prefs.setScriptStyle('sans'),
                       ),
                       const SizedBox(width: 8),
                       _scriptCard(

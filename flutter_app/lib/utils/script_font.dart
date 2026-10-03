@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// Both fonts are bundled in assets/fonts (OFL licensed) so the style
 /// renders identically on every device, online or offline.
 String arabicFontFamily(String scriptStyle) =>
-    scriptStyle == 'uthmani' ? 'Amiri Quran' : 'Gulzar';
+    scriptStyle == 'uthmani' ? 'Amiri Quran' : 'Noto Sans Arabic';
 
 /// Display-layer normalization for Quranic Arabic text.
 ///

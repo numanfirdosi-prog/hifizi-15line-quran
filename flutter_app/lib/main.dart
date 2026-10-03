@@ -131,8 +131,42 @@ void main() async {
   DeepLinkService.init();
 }
 
-class NurAlQuranApp extends StatelessWidget {
+class NurAlQuranApp extends StatefulWidget {
   const NurAlQuranApp({Key? key}) : super(key: key);
+
+  @override
+  State<NurAlQuranApp> createState() => _NurAlQuranAppState();
+}
+
+class _NurAlQuranAppState extends State<NurAlQuranApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Background Playback toggle: when disabled, pause recitation as soon
+    // as the app leaves the foreground.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      final prefs =
+          Provider.of<PreferencesService>(context, listen: false);
+      final audio =
+          Provider.of<AudioRecitationService>(context, listen: false);
+      if (!prefs.backgroundPlaybackEnabled && audio.isPlaying) {
+        audio.pause();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

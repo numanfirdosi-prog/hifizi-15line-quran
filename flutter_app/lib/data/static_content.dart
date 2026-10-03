@@ -77,7 +77,7 @@ const String aboutLicenses =
     'just_audio, audio_service, audio_session, provider, shared_preferences, path_provider, '
     'google_fonts, share_plus, url_launcher, cached_network_image, timezone, android_alarm_manager_plus, '
     'geolocator, flutter_compass, speech_to_text, app_links, flutter_local_notifications.\n\n'
-    'Fonts: Gulzar aur Amiri Quran (SIL Open Font License 1.1) app me bundled hain.\n\n'
+    'Fonts: Noto Sans Arabic aur Amiri Quran (SIL Open Font License 1.1) app me bundled hain.\n\n'
     'Quran ka mutan (text) aur tarajim taleemi maqsad ke liye shaamil kiye gaye hain.';
 
 

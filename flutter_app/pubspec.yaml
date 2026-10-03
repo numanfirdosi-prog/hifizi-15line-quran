@@ -1,7 +1,7 @@
 name: nur_al_quran
 description: "Nur-ul-Quran (نور القرآن) - 15 Line Offline Hifzi Mushaf, Prayer Times with Azan, Qiblah Compass & Multi-Language Voice Search"
 publish_to: 'none'
-version: 1.0.18+19
+version: 1.0.19+20
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -61,9 +61,9 @@ flutter:
     - assets/data/
 
   fonts:
-    - family: Gulzar
+    - family: Noto Sans Arabic
       fonts:
-        - asset: assets/fonts/Gulzar-Regular.ttf
+        - asset: assets/fonts/NotoSansArabic.ttf
     - family: Amiri Quran
       fonts:
         - asset: assets/fonts/AmiriQuran-Regular.ttf

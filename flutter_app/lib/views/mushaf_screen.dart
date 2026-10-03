@@ -14,6 +14,7 @@ import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/page_drawing_service.dart';
 import '../utils/page_image_url.dart';
+import 'reader_settings_sheet.dart';
 
 class MushafScreen extends StatefulWidget {
   final int initialPage;
@@ -29,8 +30,6 @@ class _MushafScreenState extends State<MushafScreen> {
   final TransformationController _transformController =
       TransformationController();
   ScrollController? _scrollController;
-  // Ayah quick-jump pill strip (collapsible).
-  bool _showAyahPills = true;
 
   // Cached page -> first 's:v' index (loaded once, used for audio + markRead).
   late final Future<Map<int, String>> _firstVerseIndex;
@@ -823,6 +822,11 @@ class _MushafScreenState extends State<MushafScreen> {
     prefs.setRepeatMode(next);
   }
 
+  /// Opens the reader settings bottom sheet (3-dot menu).
+  void _showReaderSettings(BuildContext context) {
+    showReaderSettingsSheet(context);
+  }
+
   /// Toggles recitation of the Surah on the current page.
   Future<void> _onPlayPausePressed() async {
     final audio = Provider.of<AudioRecitationService>(context, listen: false);
@@ -1003,7 +1007,11 @@ class _MushafScreenState extends State<MushafScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final audio = Provider.of<AudioRecitationService>(context);
-        if (!audio.ayahMode) return const SizedBox.shrink();
+        final prefs = Provider.of<PreferencesService>(context);
+        // Audio Mode toggle: when off, no ayah highlighting follows audio.
+        if (!audio.ayahMode || !prefs.audioHighlightEnabled) {
+          return const SizedBox.shrink();
+        }
         return FutureBuilder<Map<int, List<AyahSeg>>>(
           future: _segmentsFuture,
           builder: (context, snap) {
@@ -1091,164 +1099,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  /// Ayah quick-jump pill strip (like the website's `.ayah-pill` bar):
-  /// distinct ayahs of the current page; tapping a pill plays that ayah
-  /// exactly like tapping it on the page image. Sits outside the
-  /// InteractiveViewer so pinch-zoom keeps working.
-  Widget _buildAyahPillStrip(BuildContext context, double bottomOffset) {
-    final cs = Theme.of(context).colorScheme;
-    if (!_showAyahPills) {
-      return Positioned(
-        left: 12,
-        bottom: bottomOffset,
-        child: Material(
-          color: cs.surface.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => setState(() => _showAyahPills = true),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.format_list_numbered,
-                      size: 16, color: cs.primary),
-                  const SizedBox(width: 4),
-                  Text('آیات',
-                      style: TextStyle(
-                          color: cs.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
-                  Icon(Icons.expand_less,
-                      size: 16, color: cs.primary),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-    return Positioned(
-      left: 12,
-      right: 12,
-      bottom: bottomOffset,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: cs.surface.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(24),
-          border:
-              Border.all(color: cs.primary.withValues(alpha: 0.3)),
-          boxShadow: const [
-            BoxShadow(color: Colors.black38, blurRadius: 8),
-          ],
-        ),
-        child: Row(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => setState(() => _showAyahPills = false),
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Icon(Icons.expand_more,
-                    size: 18, color: cs.primary),
-              ),
-            ),
-            Expanded(
-              child: FutureBuilder<Map<int, List<AyahSeg>>>(
-                future: _segmentsFuture,
-                builder: (context, snap) {
-                  final ayahs = distinctAyahs(
-                      snap.data?[_currentPage] ?? const <AyahSeg>[]);
-                  if (ayahs.isEmpty) {
-                    return Text(
-                      'No ayah data for this page',
-                      style: TextStyle(
-                        color:
-                            cs.onSurface.withValues(alpha: 0.5),
-                        fontSize: 11,
-                      ),
-                    );
-                  }
-                  return Consumer<AudioRecitationService>(
-                    builder: (context, audio, _) {
-                      return SizedBox(
-                        height: 34,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: ayahs.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 6),
-                          itemBuilder: (context, i) {
-                            final seg = ayahs[i];
-                            final isPlaying = audio.ayahMode &&
-                                audio.currentSurah == seg.surah &&
-                                audio.currentAyah == seg.ayah;
-                            final surahName =
-                                allSurahs[seg.surah - 1].nameEn;
-                            return Tooltip(
-                              message: '$surahName ${seg.surah}:${seg.ayah}',
-                              child: InkWell(
-                                borderRadius:
-                                    BorderRadius.circular(16),
-                                onTap: () async {
-                                  final ok = await _audio.playAyah(
-                                      surah: seg.surah,
-                                      ayah: seg.ayah);
-                                  if (!ok && mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Audio nahi chal saka — internet check karein'),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 7),
-                                  decoration: BoxDecoration(
-                                    color: isPlaying
-                                        ? cs.primary
-                                        : cs.primary.withValues(
-                                            alpha: 0.12),
-                                    borderRadius:
-                                        BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: cs.primary.withValues(
-                                          alpha:
-                                              isPlaying ? 1.0 : 0.4),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    '${seg.ayah}',
-                                    style: TextStyle(
-                                      color: isPlaying
-                                          ? cs.onPrimary
-                                          : cs.primary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   /// Per-page widget reused by both reading modes. In scroll mode the page
   /// is non-interactive (no pinch zoom) so the list can scroll.
@@ -1441,95 +1291,153 @@ class _MushafScreenState extends State<MushafScreen> {
                         _buildPageItem(context, index + 1),
                   ),
 
-                // Ayah quick-jump pills (bottom of the screen)
-                _buildAyahPillStrip(
-                    context, audio.isPlaying ? 80 : 16),
-
-                // Audio Recitation Bar (when active)
-                if (audio.isPlaying)
-                  Positioned(
-                    left: 12,
-                    right: 12,
-                    bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0A291E),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: cs.primary, width: 1.2),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black54, blurRadius: 10),
-                        ],
+                // Persistent reader control bar: Speed / Play / Repeat / Menu
+                // (image-1 style; always visible at the bottom of the page).
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      border: Border(
+                        top: BorderSide(
+                          color: cs.primary.withValues(alpha: 0.25),
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                           Icon(Icons.graphic_eq,
-                              color: cs.primary),
-                          const SizedBox(width: 12),
-                          Expanded(
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        // Speed
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: _cycleSpeed,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Surah ${audio.currentSurah}: ${allSurahs[audio.currentSurah - 1].nameEn}',
-                                  style:  TextStyle(
-                                      color: cs.onSurface,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13),
+                                  _speedLabel(prefs.playbackSpeed),
+                                  style: TextStyle(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 Text(
-                                  audio.selectedQari.name,
-                                  style:  TextStyle(
-                                      color: cs.primary, fontSize: 11),
+                                  'Speed',
+                                  style: TextStyle(
+                                    color: cs.onSurface
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 4),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        // Play / Pause (big circular button)
+                        GestureDetector(
+                          onTap: _onPlayPausePressed,
+                          child: Container(
+                            width: 58,
+                            height: 58,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: cs.primary, width: 2),
                             ),
-                            onPressed: _cycleSpeed,
-                            child: Text(
-                              _speedLabel(prefs.playbackSpeed),
-                              style:  TextStyle(
-                                  color: cs.primary, fontSize: 11),
-                            ),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              minimumSize: Size.zero,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 4),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: _cycleRepeat,
-                            child: Text(
-                              _repeatLabels[prefs.repeatMode] ?? 'Off',
-                              style:  TextStyle(
-                                  color: cs.primary, fontSize: 11),
+                            child: Icon(
+                              audio.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: cs.onSurface,
+                              size: 32,
                             ),
                           ),
-                          IconButton(
-                            icon:  Icon(Icons.pause_circle_filled,
-                                color: cs.primary, size: 32),
-                            onPressed: _onPlayPausePressed,
+                        ),
+                        // Repeat (badge shows active mode)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: _cycleRepeat,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Icon(
+                                      Icons.repeat,
+                                      color: cs.onSurface.withValues(
+                                          alpha: 0.75),
+                                      size: 24,
+                                    ),
+                                    if (prefs.repeatMode != 0)
+                                      Positioned(
+                                        right: -8,
+                                        top: -6,
+                                        child: Container(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 5,
+                                                  vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: cs.primary,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            _repeatLabels[
+                                                    prefs.repeatMode] ??
+                                                '',
+                                            style: TextStyle(
+                                              color: cs.onPrimary,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                Text(
+                                  'Repeat',
+                                  style: TextStyle(
+                                    color: cs.onSurface
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          IconButton(
-                            icon:  Icon(Icons.close,
-                                color: cs.onSurface.withValues(alpha: 0.54), size: 20),
-                            onPressed: () => audio.stop(),
+                        ),
+                        // 3-dot menu -> reader settings sheet
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => _showReaderSettings(context),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            child: Icon(
+                              Icons.more_vert,
+                              color: cs.onSurface.withValues(alpha: 0.75),
+                              size: 26,
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
               ],
             ),
           ),

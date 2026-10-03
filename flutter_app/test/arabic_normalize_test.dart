@@ -2,6 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nur_al_quran/utils/script_font.dart';
 
 void main() {
+  group('arabicFontFamily', () {
+    test('sans style uses Noto Sans Arabic', () {
+      expect(arabicFontFamily('sans'), 'Noto Sans Arabic');
+    });
+
+    test('uthmani style uses Amiri Quran', () {
+      expect(arabicFontFamily('uthmani'), 'Amiri Quran');
+    });
+
+    test('retired nastaliq falls back to Noto Sans Arabic', () {
+      expect(arabicFontFamily('nastaliq'), 'Noto Sans Arabic');
+    });
+  });
+
   group('normalizeArabicDisplay', () {
     test('replaces U+06E1 sukun with standard U+0652', () {
       // نَفْسًا with U+06E1 (dotless head of khah) as in the bundled data.
@@ -33,7 +47,7 @@ void main() {
     });
 
     test('urdu font differs from arabic font families', () {
-      expect(urduStyle().fontFamily, isNot(arabicFontFamily('nastaliq')));
+      expect(urduStyle().fontFamily, isNot(arabicFontFamily('sans')));
       expect(urduStyle().fontFamily, isNot(arabicFontFamily('uthmani')));
     });
   });
