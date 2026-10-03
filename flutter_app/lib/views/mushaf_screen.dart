@@ -754,125 +754,132 @@ class _MushafScreenState extends State<MushafScreen> {
     // eyes. Only the page image is filtered, not the highlight/drawing
     // overlays painted above it.
     final nightDim = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF7EE),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: AspectRatio(
-          aspectRatio: 0.6908,
-          child: Stack(
-            children: [
-              ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
-                    BlendMode.darken,
-                  ),
-                  child: CachedNetworkImage(
-                    imageUrl: mushafPageImageUrl(pageNum),
-                    fit: BoxFit.contain,
-                    // M7: pages are cached on disk — the Mushaf keeps working offline.
-                    progressIndicatorBuilder: (context, url, progress) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF0F3A2C)),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Loading Page $pageNum...',
-                              style: const TextStyle(
-                                  color: Color(0xFF0F3A2C),
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    errorWidget: (context, url, error) {
-                      return Container(
-                        padding: const EdgeInsets.all(24),
-                        color: const Color(0xFFFAF7EE),
-                        child: Center(
+    // Full-screen reader: the page is top-aligned (just below the status
+    // bar) and fills the available width, like the reference design —
+    // no more large empty gap above the page.
+    return SafeArea(
+      bottom: false,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAF7EE),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black45,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: AspectRatio(
+            aspectRatio: 0.6908,
+            child: Stack(
+              children: [
+                ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
+                      BlendMode.darken,
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: mushafPageImageUrl(pageNum),
+                      fit: BoxFit.contain,
+                      // M7: pages are cached on disk — the Mushaf keeps working offline.
+                      progressIndicatorBuilder: (context, url, progress) {
+                        return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.menu_book,
-                                  size: 64, color: Color(0xFF0F3A2C)),
-                              const SizedBox(height: 16),
-                              Text(
-                                'صفحہ $pageNum',
-                                style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F3A2C)),
+                              const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF0F3A2C)),
                               ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                '15-Line Offline Mushaf Page',
-                                style: TextStyle(color: Colors.black54),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Loading Page $pageNum...',
+                                style: const TextStyle(
+                                    color: Color(0xFF0F3A2C),
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  )),
-              // Currently playing ayah highlight (ayah-by-ayah audio mode).
-              _buildAyahHighlights(pageNum),
-              // Freehand page drawings (pen/brush/highlighter/rectangle).
-              // Paint sits below the gesture layer.
-              _buildDrawingPaint(pageNum),
-              // Page gesture layer: ayah tap-to-play normally, drawing
-              // gestures while a drawing tool is active. LAST among the
-              // full-page layers so it sits above the paint.
-              // Translucent: taps pass through visually but are still caught.
-              Positioned.fill(
-                child: Builder(
-                  builder: (tapCtx) => Consumer<PageDrawingService>(
-                    builder: (context, draw, _) {
-                      if (draw.selectedTool == null) {
+                        );
+                      },
+                      errorWidget: (context, url, error) {
+                        return Container(
+                          padding: const EdgeInsets.all(24),
+                          color: const Color(0xFFFAF7EE),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.menu_book,
+                                    size: 64, color: Color(0xFF0F3A2C)),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'صفحہ $pageNum',
+                                  style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F3A2C)),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  '15-Line Offline Mushaf Page',
+                                  style: TextStyle(color: Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    )),
+                // Currently playing ayah highlight (ayah-by-ayah audio mode).
+                _buildAyahHighlights(pageNum),
+                // Freehand page drawings (pen/brush/highlighter/rectangle).
+                // Paint sits below the gesture layer.
+                _buildDrawingPaint(pageNum),
+                // Page gesture layer: ayah tap-to-play normally, drawing
+                // gestures while a drawing tool is active. LAST among the
+                // full-page layers so it sits above the paint.
+                // Translucent: taps pass through visually but are still caught.
+                Positioned.fill(
+                  child: Builder(
+                    builder: (tapCtx) => Consumer<PageDrawingService>(
+                      builder: (context, draw, _) {
+                        if (draw.selectedTool == null) {
+                          return GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                            child: Container(color: Colors.transparent),
+                          );
+                        }
                         return GestureDetector(
                           behavior: HitTestBehavior.translucent,
-                          onTapUp: (d) => _onPageTap(tapCtx, d, pageNum),
+                          onPanStart: (d) =>
+                              _onDrawStart(tapCtx, d, pageNum, draw),
+                          onPanUpdate: (d) =>
+                              _onDrawUpdate(tapCtx, d, pageNum, draw),
+                          onPanEnd: (_) => _onDrawEnd(pageNum, draw),
+                          onTapUp: draw.selectedTool == 'eraser'
+                              ? (d) => _onEraseAt(
+                                  tapCtx, d.globalPosition, pageNum, draw)
+                              : null,
                           child: Container(color: Colors.transparent),
                         );
-                      }
-                      return GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onPanStart: (d) =>
-                            _onDrawStart(tapCtx, d, pageNum, draw),
-                        onPanUpdate: (d) =>
-                            _onDrawUpdate(tapCtx, d, pageNum, draw),
-                        onPanEnd: (_) => _onDrawEnd(pageNum, draw),
-                        onTapUp: draw.selectedTool == 'eraser'
-                            ? (d) => _onEraseAt(
-                                tapCtx, d.globalPosition, pageNum, draw)
-                            : null,
-                        child: Container(color: Colors.transparent),
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
-              ),
-              // Drawing-mode indicator + exit chip.
-              // (The 📜 per-page button was replaced by the screen-level
-              // floating note button, bottom-left like the reference design.)
-              _buildDrawingModeChip(),
-            ],
+                // Drawing-mode indicator + exit chip.
+                // (The 📜 per-page button was replaced by the screen-level
+                // floating note button, bottom-left like the reference design.)
+                _buildDrawingModeChip(),
+              ],
+            ),
           ),
         ),
       ),
