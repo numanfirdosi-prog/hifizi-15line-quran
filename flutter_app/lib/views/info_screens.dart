@@ -85,16 +85,22 @@ class AboutScreen extends StatelessWidget {
         'body': description,
       },
     );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (context.mounted) {
+    // Launch directly: canLaunchUrl gives false negatives for mailto: URIs
+    // with query parameters on some devices, so go straight to the email app.
+    bool launched = false;
+    try {
+      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      launched = false;
+    }
+    if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Email app nahi khul saki. Barah-e-karam $supportEmail par email karein.'),
           action: SnackBarAction(
             label: 'Copy',
             onPressed: () =>
-                Clipboard.setData(const ClipboardData(text: supportEmail)),
+                Clipboard.setData(ClipboardData(text: supportEmail)),
           ),
         ),
       );
@@ -147,7 +153,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Version 1.0.13',
+                    'Version 1.0.14',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: cs.onSurface.withOpacity(0.6),
                     ),
@@ -231,19 +237,101 @@ class PrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Privacy Policy')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            color: theme.colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(privacyText, style: theme.textTheme.bodyMedium),
+          _section(
+            context,
+            icon: Icons.smartphone,
+            title: '100% On-Device App',
+            body:
+                'Nur-ul-Quran me koi account nahi banta, koi tracking ya analytics nahi hai. '
+                'Aapka koi zaati data kisi server par bheja ya store nahi kiya jata.',
+          ),
+          _section(
+            context,
+            icon: Icons.location_on_outlined,
+            title: 'Location',
+            body:
+                'Aapki location sirf aapke phone par namaz ke auqaat aur Qiblah ki direction '
+                'calculate karne ke liye istemal hoti hai. Yeh kabhi kisi server ko nahi bheji jati.',
+          ),
+          _section(
+            context,
+            icon: Icons.cloud_download_outlined,
+            title: 'Internet ka Istemal',
+            body:
+                'Quran ke page images aur audio tilawat sirf tab internet se load hote hain '
+                'jab aap unhe dekhte ya sunte hain. Ek dafa load hone ke baad pages offline bhi kaam karte hain.',
+          ),
+          _section(
+            context,
+            icon: Icons.bookmark_outline,
+            title: 'Aapka Data',
+            body:
+                'Bookmarks, notes, drawings, preferences aur backups — sab kuch sirf aapke '
+                'device par mehfooz rehta hai. App uninstall karne par yeh data delete ho jata hai.',
+          ),
+          _section(
+            context,
+            icon: Icons.email_outlined,
+            title: 'Rabta',
+            body:
+                'Agar aap "Report an Issue" se email bhejte hain to sirf wahi tafseel humein milti hai '
+                'jo aap khud likhte hain. Koi khudkaar data jama nahi kiya jata.',
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sawal ho to $supportEmail par rabta karein.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurface.withValues(alpha: 0.6),
             ),
+            textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _section(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Card(
+      color: cs.surface,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: cs.primary, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(body, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

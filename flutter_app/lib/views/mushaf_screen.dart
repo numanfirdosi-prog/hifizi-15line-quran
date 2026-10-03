@@ -1099,7 +1099,7 @@ class _MushafScreenState extends State<MushafScreen> {
     final cs = Theme.of(context).colorScheme;
     if (!_showAyahPills) {
       return Positioned(
-        right: 12,
+        left: 12,
         bottom: bottomOffset,
         child: Material(
           color: cs.surface.withValues(alpha: 0.92),
@@ -1441,99 +1441,9 @@ class _MushafScreenState extends State<MushafScreen> {
                         _buildPageItem(context, index + 1),
                   ),
 
-                // Bottom Quick Page Controller Slider
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: audio.isPlaying ? 80 : 16,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: cs.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black38, blurRadius: 8),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon:  Icon(Icons.arrow_back_ios,
-                              size: 16, color: cs.onSurface.withValues(alpha: 0.7)),
-                          onPressed: () {
-                            if (_currentPage > 1) {
-                              if (isScroll) {
-                                final itemHeight = _scrollItemHeight(context);
-                                _scrollController?.animateTo(
-                                  (_currentPage - 2) * itemHeight,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              } else {
-                                _pageController.previousPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            }
-                          },
-                        ),
-                        Expanded(
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              activeTrackColor: cs.primary,
-                              inactiveTrackColor: cs.onSurface.withValues(alpha: 0.24),
-                              thumbColor: cs.primary,
-                              thumbShape: const RoundSliderThumbShape(
-                                  enabledThumbRadius: 6),
-                            ),
-                            child: Slider(
-                              value: _currentPage.toDouble(),
-                              min: 1.0,
-                              max: totalPagesInMushaf.toDouble(),
-                              onChanged: (val) {
-                                final target = val.toInt();
-                                if (isScroll) {
-                                  final itemHeight = _scrollItemHeight(context);
-                                  _scrollController
-                                      ?.jumpTo((target - 1) * itemHeight);
-                                } else {
-                                  _pageController.jumpToPage(target - 1);
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon:  Icon(Icons.arrow_forward_ios,
-                              size: 16, color: cs.onSurface.withValues(alpha: 0.7)),
-                          onPressed: () {
-                            if (_currentPage < totalPagesInMushaf) {
-                              if (isScroll) {
-                                final itemHeight = _scrollItemHeight(context);
-                                _scrollController?.animateTo(
-                                  _currentPage * itemHeight,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              } else {
-                                _pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Ayah quick-jump pills (above the page slider)
+                // Ayah quick-jump pills (bottom of the screen)
                 _buildAyahPillStrip(
-                    context, audio.isPlaying ? 150 : 86),
+                    context, audio.isPlaying ? 80 : 16),
 
                 // Audio Recitation Bar (when active)
                 if (audio.isPlaying)

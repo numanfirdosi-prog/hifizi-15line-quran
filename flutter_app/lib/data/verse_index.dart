@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
+import '../utils/script_font.dart';
+
 /// Pure helpers for the 15-line mushaf verse index and Quran text data.
 
 /// Builds 's:v' -> page number from the decoded page_ayahs_15lines.json map.
@@ -84,7 +86,7 @@ class QuranTextEntry {
   factory QuranTextEntry.fromJson(Map<String, dynamic> json) => QuranTextEntry(
         s: (json['s'] as num).toInt(),
         v: (json['v'] as num).toInt(),
-        ar: json['ar'] as String,
+        ar: normalizeArabicDisplay(json['ar'] as String),
         en: json['en'] as String,
       );
 }

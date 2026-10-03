@@ -81,12 +81,6 @@ const String aboutLicenses =
     'Quran ka mutan (text) aur tarajim taleemi maqsad ke liye shaamil kiye gaye hain.';
 
 
-const String privacyText =
-    'Nur-ul-Quran 100% on-device app hai. Koi account nahi, koi tracking ya analytics nahi. '
-    'Aapki location sirf aapke phone par namaz ke auqaat aur Qiblah direction calculate karne ke liye istemal hoti hai — '
-    'yeh kabhi kisi server ko nahi bheji jati. Quran page images aur audio sirf tab network se load hote hain jab aap unhe dekhte ya sunte hain. '
-    'Bookmarks, preferences aur backups sab aapke device par mehfooz rehte hain.';
-
 const List<String> ramadanReflections = [
   'Ramzan ka pehla din: niyyat ko khalis karo — rozah sirf bhook nahi, dil ki safai hai.',
   'Har iftar par shukr: jis rizq se rozah kholte ho, woh Allah ka inaam hai — Alhamdulillah kaho.',

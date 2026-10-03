@@ -340,7 +340,7 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            a.ar,
+            normalizeArabicDisplay(a.ar),
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
             style: arabicStyle(

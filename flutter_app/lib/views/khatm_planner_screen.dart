@@ -208,24 +208,18 @@ class KhatmPlannerScreen extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            GestureDetector(
-                              onTap: () => onOpenPage(startPage),
-                              child: Container(
+                            FilledButton(
+                              onPressed: () => onOpenPage(startPage),
+                              style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: cs.primary,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Read',
-                                  style: TextStyle(
-                                    color: cs.onPrimary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                    horizontal: 20, vertical: 10),
+                                minimumSize: const Size(88, 40),
+                                textStyle: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              child: const Text('Read'),
                             ),
                           ],
                         ),
