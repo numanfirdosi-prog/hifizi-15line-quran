@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
 import '../services/azan_alarm_service.dart';
@@ -147,12 +148,44 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       ),
     ];
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: NavigationBarTheme(
+    // Back button: on a non-home tab go back to Home; on Home ask for
+    // confirmation before closing the app.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          return;
+        }
+        final exit = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('App band karein?'),
+            content:
+                const Text('Kya aap Nur-ul-Quran app band karna chahte hain?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Nahi'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Haan'),
+              ),
+            ],
+          ),
+        );
+        if (exit == true && mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: screens,
+        ),
+        bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           backgroundColor: cs.surface,
           indicatorColor: cs.primary.withValues(alpha: 0.2),
@@ -208,6 +241,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

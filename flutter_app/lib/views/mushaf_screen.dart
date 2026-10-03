@@ -866,6 +866,10 @@ class _MushafScreenState extends State<MushafScreen> {
   /// page-image aspect (7428x10753 -> 0.6908) so ayah tap coordinates map
   /// 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
+    // Night theme: gently darken the white page so it doesn't strain the
+    // eyes. Only the page image is filtered, not the highlight/drawing
+    // overlays painted above it.
+    final nightDim = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -885,9 +889,14 @@ class _MushafScreenState extends State<MushafScreen> {
           aspectRatio: 0.6908,
           child: Stack(
             children: [
-              CachedNetworkImage(
-                imageUrl: mushafPageImageUrl(pageNum),
-                fit: BoxFit.contain,
+              ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
+                  BlendMode.darken,
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: mushafPageImageUrl(pageNum),
+                  fit: BoxFit.contain,
               // M7: pages are cached on disk — the Mushaf keeps working offline.
               progressIndicatorBuilder: (context, url, progress) {
                 return Center(
@@ -937,7 +946,7 @@ class _MushafScreenState extends State<MushafScreen> {
                   ),
                 );
               },
-            ),
+            )),
             // Currently playing ayah highlight (ayah-by-ayah audio mode).
             _buildAyahHighlights(pageNum),
             // Freehand page drawings (pen/brush/highlighter/rectangle).
