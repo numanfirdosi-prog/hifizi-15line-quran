@@ -336,8 +336,8 @@ class AudioRecitationService extends ChangeNotifier {
           keepRepeatRange: true);
       return;
     }
-    var next = _nextAyah();
-    if (next == null) {
+    var nextOpt = _nextAyah();
+    if (nextOpt == null) {
       _ayahMode = false;
       await _player.stop();
       notifyListeners();
@@ -348,6 +348,7 @@ class AudioRecitationService extends ChangeNotifier {
     // keepRepeatRange: true — this is internal auto-advance, not a new
     // user request, so an active repeat range must survive.
     var failures = 0;
+    var next = nextOpt;
     while (!(await playAyah(
         surah: next.$1, ayah: next.$2, keepRepeatRange: true))) {
       failures++;
@@ -359,8 +360,8 @@ class AudioRecitationService extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      next = nextAyahAfter(next.$1, next.$2);
-      if (next == null) {
+      final following = nextAyahAfter(next.$1, next.$2);
+      if (following == null) {
         _ayahMode = false;
         try {
           await _player.stop();
@@ -368,6 +369,7 @@ class AudioRecitationService extends ChangeNotifier {
         notifyListeners();
         return;
       }
+      next = following;
     }
   }
 
