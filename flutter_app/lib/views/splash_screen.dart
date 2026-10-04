@@ -110,6 +110,11 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => next),
       );
+      // If the app was cold-started from the azan full-screen intent, open
+      // the alarm UI now that the navigator is ready.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        AzanAlarmService.drainPendingAlarm();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {

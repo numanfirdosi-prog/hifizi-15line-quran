@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
@@ -10,7 +12,19 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 import '../models/prayer_times.dart';
 import '../models/city.dart';
+import '../views/azan_alarm_screen.dart';
 import 'prayer_calculation_service.dart';
+
+/// Global navigator key so the azan notification handler can open the
+/// full-screen alarm UI even when the callback fires outside a widget context.
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
+/// SharedPreferences flag used to tell the background audio isolate to stop
+/// the azan (set by the Stop button / notification Stop action).
+const String stopAzanFlag = 'nur_azan_stop';
+
+/// Action id for the notification's Stop button.
+const String stopAzanActionId = 'stop_azan_action';
 
 const Map<int, String> _prayerKeysById = {
   101: 'fajr',
@@ -27,6 +41,19 @@ const Map<int, String> _prayerNamesById = {
   104: 'Maghrib',
   105: 'Isha',
 };
+
+// Background alarm callback entrypoint (must be top-level static)
+@pragma('vm:entry-point')
+void azanNotificationBackgroundHandler(NotificationResponse response) async {
+  // Runs in its own background isolate when the user taps the notification
+  // Stop action while the app is in background/killed.
+  if (response.actionId == stopAzanActionId) {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      await sp.setBool(stopAzanFlag, true);
+    } catch (_) {}
+  }
+}
 
 // Background alarm callback entrypoint (must be top-level static)
 @pragma('vm:entry-point')
@@ -55,6 +82,11 @@ void azanAlarmCallback(int id) async {
   // access the UI isolate's providers, so the pref is read fresh from storage.
   final soundOn = sp?.getBool('nur_azan_sound') ?? true;
 
+  // Clear any stale stop request from a previous alarm before starting.
+  try {
+    await sp?.setBool(stopAzanFlag, false);
+  } catch (_) {}
+
   final player = AudioPlayer();
   try {
     if (soundOn) {
@@ -64,6 +96,44 @@ void azanAlarmCallback(int id) async {
         await player.setAsset('assets/audio/silence.wav');
       }
       await player.play();
+
+      // FIX: just_audio's play() completes when playback STARTS, not when it
+      // ends. Wait until the azan actually finishes — or the user hits Stop —
+      // before disposing, otherwise the audio is cut off within milliseconds.
+      final done = Completer<void>();
+      StreamSubscription<PlayerState>? stateSub;
+      stateSub = player.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed &&
+            !done.isCompleted) {
+          done.complete();
+        }
+      });
+      // Poll the stop flag so the Stop button / notification Stop action can
+      // silence the azan mid-playback (isolates can't share the player).
+      Timer? poll;
+      poll = Timer.periodic(const Duration(milliseconds: 500), (_) async {
+        if (done.isCompleted) {
+          poll?.cancel();
+          return;
+        }
+        try {
+          final p = await SharedPreferences.getInstance();
+          await p.reload();
+          if ((p.getBool(stopAzanFlag) ?? false) && !done.isCompleted) {
+            debugPrint('[AzanAlarm] Stop requested, silencing azan');
+            done.complete();
+          }
+        } catch (_) {}
+      });
+      // Safety: never block the isolate forever.
+      try {
+        await done.future.timeout(const Duration(minutes: 12));
+      } catch (_) {}
+      poll.cancel();
+      await stateSub.cancel();
+      try {
+        await player.stop();
+      } catch (_) {}
     }
   } catch (e) {
     debugPrint('[AzanAlarm] Error playing audio in background: $e');
@@ -71,14 +141,20 @@ void azanAlarmCallback(int id) async {
     await player.dispose(); // N6: no leaked AudioPlayer per alarm fire
   }
 
-  // M8: Show a high-priority lockscreen notification with the alarm, so the
-  // user sees it even if audio is delayed by Doze/battery optimization.
+  // Show the alarm notification:
+  // - Phone LOCKED  -> fullScreenIntent launches the full-screen alarm UI
+  //   (MainActivity has showWhenLocked + turnScreenOn), with a Stop button.
+  // - Phone UNLOCKED -> heads-up notification (SMS-style) with a Stop action.
+  // Audio itself is bundled (assets/audio/azan.mp3) so this works offline.
   try {
     final plugin = FlutterLocalNotificationsPlugin();
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    await plugin
-        .initialize(const InitializationSettings(android: androidSettings));
+    await plugin.initialize(
+      const InitializationSettings(android: androidSettings),
+      onDidReceiveBackgroundNotificationResponse:
+          azanNotificationBackgroundHandler,
+    );
     final androidImpl = plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     await androidImpl
@@ -93,15 +169,26 @@ void azanAlarmCallback(int id) async {
     await plugin.show(
       id,
       '$prayerName — نماز کا وقت',
-      soundOn ? 'Azan is playing' : 'Prayer time has started',
+      soundOn ? 'Azan is playing — tap STOP to silence' : 'Prayer time has started',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'azan_alarm_channel',
           'Azan Prayers & Alarms',
           importance: Importance.max,
           priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          fullScreenIntent: true,
+          actions: <AndroidNotificationAction>[
+            AndroidNotificationAction(
+              stopAzanActionId,
+              'STOP',
+              showsUserInterface: false,
+              cancelNotification: true,
+            ),
+          ],
         ),
       ),
+      payload: 'azan_alarm:$id:$prayerName',
     );
   } catch (e) {
     debugPrint('[AzanAlarm] Background notification failed: $e');
@@ -185,6 +272,10 @@ class AzanAlarmService {
 
   bool _initialized = false;
 
+  /// Payload stashed when a notification tap arrives before the navigator is
+  /// ready (cold start via full-screen intent). The splash screen drains it.
+  static String? pendingAlarmPayload;
+
   Future<void> init() async {
     if (_initialized) return;
 
@@ -209,10 +300,9 @@ class AzanAlarmService {
 
     await _notificationsPlugin.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: (details) {
-        debugPrint(
-            '[Notification] Tapped on azan notification: ${details.payload}');
-      },
+      onDidReceiveNotificationResponse: _onNotificationTap,
+      onDidReceiveBackgroundNotificationResponse:
+          azanNotificationBackgroundHandler,
     );
 
     // Create high-priority Azan notification channel on Android
@@ -234,6 +324,58 @@ class AzanAlarmService {
     }
 
     _initialized = true;
+  }
+
+  /// Foreground notification tap handler: Stop action silences the azan,
+  /// tapping the body opens the full-screen alarm UI.
+  static void _onNotificationTap(NotificationResponse details) {
+    debugPrint(
+        '[Notification] Azan tap: action=${details.actionId} payload=${details.payload}');
+    if (details.actionId == stopAzanActionId) {
+      SharedPreferences.getInstance()
+          .then((sp) => sp.setBool(stopAzanFlag, true))
+          .catchError((_) {});
+      return;
+    }
+    final payload = details.payload;
+    if (payload != null && payload.startsWith('azan_alarm:')) {
+      _openAlarmScreen(payload);
+    }
+  }
+
+  /// Opens the full-screen alarm UI for the given `azan_alarm:<id>:<name>`
+  /// payload. If the navigator isn't ready yet (cold start), stashes the
+  /// payload for the splash screen to drain.
+  static void _openAlarmScreen(String payload) {
+    try {
+      final parts = payload.split(':');
+      if (parts.length < 3) return;
+      final id = int.tryParse(parts[1]) ?? 0;
+      final name = parts.sublist(2).join(':');
+      final nav = appNavigatorKey.currentState;
+      if (nav != null) {
+        nav.push(
+          MaterialPageRoute(
+            builder: (_) => AzanAlarmScreen(prayerName: name, alarmId: id),
+            fullscreenDialog: true,
+          ),
+        );
+      } else {
+        pendingAlarmPayload = payload;
+      }
+    } catch (e) {
+      debugPrint('[AzanAlarm] openAlarmScreen failed: $e');
+    }
+  }
+
+  /// Called by the splash screen after the first frame: opens the alarm UI
+  /// if a notification tap arrived during cold start.
+  static void drainPendingAlarm() {
+    final payload = pendingAlarmPayload;
+    if (payload != null) {
+      pendingAlarmPayload = null;
+      _openAlarmScreen(payload);
+    }
   }
 
   /// Schedules today's remaining prayer alarms.

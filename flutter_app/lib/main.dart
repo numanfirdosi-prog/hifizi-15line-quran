@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
+import 'services/azan_alarm_service.dart';
 import 'services/preferences_service.dart';
 import 'services/audio_recitation_service.dart';
 import 'services/qari_download_service.dart';
@@ -175,6 +176,7 @@ class _NurAlQuranAppState extends State<NurAlQuranApp>
         return MaterialApp(
           title: 'نور القرآن (Nur-ul-Quran)',
           debugShowCheckedModeBanner: false,
+          navigatorKey: appNavigatorKey,
           theme: buildTheme(prefs.themeName),
           home: const SplashScreen(),
         );
