@@ -112,7 +112,8 @@ class _SplashScreenState extends State<SplashScreen>
       );
       // If the app was cold-started from the azan full-screen intent, open
       // the alarm UI now that the navigator is ready.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await AzanAlarmService().checkLaunchedFromAlarm();
         AzanAlarmService.drainPendingAlarm();
       });
     } catch (e) {

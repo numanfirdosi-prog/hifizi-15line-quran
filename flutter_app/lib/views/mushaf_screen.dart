@@ -99,6 +99,11 @@ class _MushafScreenState extends State<MushafScreen> {
 
   void _onPageChanged(int index) {
     _setCurrentPage(index + 1);
+    // Reset pinch zoom so the new page opens at normal scale instead of
+    // inheriting the previous page's zoom transform.
+    try {
+      _transformController.value = Matrix4.identity();
+    } catch (_) {}
   }
 
   /// Records last-read surah/ayah/page from the page's first verse.
@@ -175,8 +180,10 @@ class _MushafScreenState extends State<MushafScreen> {
     final box = tapCtx.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final local = box.globalToLocal(details.globalPosition);
-    final fx = (local.dx / box.size.width).clamp(0.0, 1.0);
-    final fy = (local.dy / box.size.height).clamp(0.0, 1.0);
+    // Map the tap to the true rendered image rect (letterbox-aware).
+    final img = _imageRect(box.size.width, box.size.height);
+    final fx = ((local.dx - img.dx) / img.w).clamp(0.0, 1.0);
+    final fy = ((local.dy - img.dy) / img.h).clamp(0.0, 1.0);
     final segsMap = await _segmentsFuture;
     if (!mounted) return;
     final hit =
@@ -310,9 +317,12 @@ class _MushafScreenState extends State<MushafScreen> {
       return const Offset(-1, -1);
     }
     final local = box.globalToLocal(globalPosition);
+    // Store drawing strokes as fractions of the true rendered image rect
+    // (letterbox-aware) so they stay glued to the text.
+    final img = _imageRect(box.size.width, box.size.height);
     return Offset(
-      (local.dx / box.size.width).clamp(0.0, 1.0),
-      (local.dy / box.size.height).clamp(0.0, 1.0),
+      ((local.dx - img.dx) / img.w).clamp(0.0, 1.0),
+      ((local.dy - img.dy) / img.h).clamp(0.0, 1.0),
     );
   }
 
@@ -744,18 +754,18 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   /// Height of one page item in scroll mode. The item is an
-  /// AspectRatio(0.6908) at full list width (see _buildPageItem), so the
+  /// AspectRatio(_kPageAspect) at full list width (see _buildPageItem), so the
   /// scroll math must use the full width — not width minus margins —
   /// or jump targets drift further off with every page.
   double _scrollItemHeight(BuildContext context) =>
-      MediaQuery.of(context).size.width / 0.6908;
+      MediaQuery.of(context).size.width / _kPageAspect;
 
   /// The page image (with night tint overlay), without the InteractiveViewer
   /// wrapper. The reader is decorated top and bottom: an ornamental header
   /// with the surah name above the page and a star medallion with the page
   /// number below, over a subtle Islamic pattern — so the screen never looks
-  /// empty. The image box keeps the exact page-image aspect (7428x10753 ->
-  /// 0.6908) so ayah tap coordinates map 1:1 to the image.
+  /// empty. The image box keeps the exact page-image aspect (_kPageAspect)
+  /// so ayah tap coordinates map 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
     // Night theme: gently darken the white page so it doesn't strain the
     // eyes. Only the page image is filtered, not the highlight/drawing
@@ -777,7 +787,7 @@ class _MushafScreenState extends State<MushafScreen> {
               _buildTopOrnament(pageNum, nightDim),
               Expanded(
                 child: AspectRatio(
-                  aspectRatio: 0.6908,
+                  aspectRatio: _kPageAspect,
                   child: Stack(
                     children: [
                 Positioned.fill(
@@ -843,6 +853,9 @@ class _MushafScreenState extends State<MushafScreen> {
           ),
         ),
         _buildBottomOrnament(pageNum, nightDim),
+        // Reserve space for the overlaying bottom control bar so the
+        // Manzil badge isn't hidden behind it.
+        SizedBox(height: 76 + MediaQuery.of(context).padding.bottom),
       ],
     ),
   ),
@@ -914,6 +927,23 @@ class _MushafScreenState extends State<MushafScreen> {
     return surah <= 49 ? 6 : 7;
   }
 
+  /// True aspect ratio of the bundled page images (720x1080).
+  static const double _kPageAspect = 2 / 3;
+
+  /// Page images are rendered with BoxFit.contain. When the overlay box
+  /// aspect differs from the image aspect, the image is letterboxed — this
+  /// returns the true rendered image rect within a boxW x boxH box, so
+  /// highlights, taps and drawings map 1:1 to the image content.
+  static ({double dx, double dy, double w, double h}) _imageRect(
+      double boxW, double boxH) {
+    if (boxW / boxH > _kPageAspect) {
+      final h = boxH, w = boxH * _kPageAspect;
+      return (dx: (boxW - w) / 2, dy: 0.0, w: w, h: h);
+    }
+    final w = boxW, h = boxW / _kPageAspect;
+    return (dx: 0.0, dy: (boxH - h) / 2, w: w, h: h);
+  }
+
   /// Website-exact ayah highlight (visible only while ayah-by-ayah audio is
   /// active): a thin gold band (15px equivalent, vertically centered on the
   /// line row, no border) that fills right-to-left with the audio progress,
@@ -940,8 +970,11 @@ class _MushafScreenState extends State<MushafScreen> {
             if (ayahSegs.isEmpty) return const SizedBox.shrink();
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
+            // The image may be letterboxed inside the box (BoxFit.contain);
+            // map highlight coordinates to the true rendered image rect.
+            final img = _imageRect(w, h);
             // Website: 15px band on the (max 580px wide -> ~870px tall) wrapper.
-            final bandH = h * 0.0172;
+            final bandH = img.h * 0.0172;
             final isDark = Theme.of(context).brightness == Brightness.dark;
             // Website gold: light rgba(212,175,55,0.45), dark rgba(240,205,95,0.50).
             final gold = isDark
@@ -976,10 +1009,12 @@ class _MushafScreenState extends State<MushafScreen> {
                                 (progress - startFrac) / (endFrac - startFrac);
                           }
                           final r = rectForSeg(seg, pageNum);
-                          final rw = r.width * w;
+                          final rw = r.width * img.w;
                           return Positioned(
-                            left: r.left * w,
-                            top: r.top * h + (r.height * h - bandH) / 2,
+                            left: img.dx + r.left * img.w,
+                            top: img.dy +
+                                r.top * img.h +
+                                (r.height * img.h - bandH) / 2,
                             width: rw,
                             height: bandH,
                             child: ClipRRect(
@@ -1016,7 +1051,7 @@ class _MushafScreenState extends State<MushafScreen> {
       {bool interactive = true}) {
     final pageImage = _buildPageImage(context, pageNum);
     if (!interactive) {
-      return AspectRatio(aspectRatio: 0.6908, child: pageImage);
+      return AspectRatio(aspectRatio: _kPageAspect, child: pageImage);
     }
     // While a drawing tool is active, pinch/pan zoom is disabled so draw
     // gestures are not stolen by the InteractiveViewer.
@@ -1352,10 +1387,15 @@ class _PageDrawingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Strokes are stored as fractions of the true image rect; map them
+    // through the letterbox-aware rect so they stay glued to the text.
+    final img = _MushafScreenState._imageRect(size.width, size.height);
+    Offset mapPt(Offset p) =>
+        Offset(img.dx + p.dx * img.w, img.dy + p.dy * img.h);
     for (final s in strokes) {
       final paint = Paint()
         ..color = _colorOf(s.colorHex, s.tool == 'highlighter')
-        ..strokeWidth = max(1.5, s.width * size.width)
+        ..strokeWidth = max(1.5, s.width * img.w)
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
@@ -1363,17 +1403,15 @@ class _PageDrawingPainter extends CustomPainter {
         final r = s.rect;
         canvas.drawRect(
           Rect.fromLTRB(
-            r.left * size.width,
-            r.top * size.height,
-            r.right * size.width,
-            r.bottom * size.height,
+            img.dx + r.left * img.w,
+            img.dy + r.top * img.h,
+            img.dx + r.right * img.w,
+            img.dy + r.bottom * img.h,
           ),
           paint,
         );
       } else {
-        final pts = s.points
-            .map((p) => Offset(p.dx * size.width, p.dy * size.height))
-            .toList();
+        final pts = s.points.map(mapPt).toList();
         if (pts.length == 1) {
           canvas.drawCircle(pts.first, paint.strokeWidth / 2,
               paint..style = PaintingStyle.fill);

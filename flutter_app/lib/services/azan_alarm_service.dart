@@ -87,6 +87,65 @@ void azanAlarmCallback(int id) async {
     await sp?.setBool(stopAzanFlag, false);
   } catch (_) {}
 
+  // 1. SHOW THE NOTIFICATION FIRST — so the full-screen alarm UI (lock
+  //    screen) / heads-up notification (unlocked) with the STOP button is
+  //    visible the moment the alarm fires, not after the azan finishes.
+  FlutterLocalNotificationsPlugin? plugin;
+  try {
+    plugin = FlutterLocalNotificationsPlugin();
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    await plugin.initialize(
+      const InitializationSettings(android: androidSettings),
+      onDidReceiveBackgroundNotificationResponse:
+          azanNotificationBackgroundHandler,
+    );
+    final androidImpl = plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await androidImpl
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+      'azan_alarm_channel',
+      'Azan Prayers & Alarms',
+      description: 'Plays Azan sound on prayer time even when phone is locked',
+      importance: Importance.max,
+      playSound: false, // audio is handled by the player below
+      enableVibration: true,
+    ));
+    await plugin.show(
+      id,
+      '$prayerName — نماز کا وقت',
+      soundOn
+          ? 'Azan is playing — tap STOP to silence'
+          : 'Prayer time has started',
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'azan_alarm_channel',
+          'Azan Prayers & Alarms',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.alarm,
+          // Only pop the full-screen alarm UI when audio actually plays;
+          // with sound off this is a silent visual reminder.
+          fullScreenIntent: soundOn,
+          actions: soundOn
+              ? const <AndroidNotificationAction>[
+                  AndroidNotificationAction(
+                    stopAzanActionId,
+                    'STOP',
+                    showsUserInterface: false,
+                    cancelNotification: true,
+                  ),
+                ]
+              : const <AndroidNotificationAction>[],
+        ),
+      ),
+      payload: 'azan_alarm:$id:$prayerName',
+    );
+  } catch (e) {
+    debugPrint('[AzanAlarm] Background notification failed: $e');
+  }
+
+  // 2. PLAY THE AZAN (bundled asset — fully offline).
   final player = AudioPlayer();
   try {
     if (soundOn) {
@@ -141,57 +200,13 @@ void azanAlarmCallback(int id) async {
     await player.dispose(); // N6: no leaked AudioPlayer per alarm fire
   }
 
-  // Show the alarm notification:
-  // - Phone LOCKED  -> fullScreenIntent launches the full-screen alarm UI
-  //   (MainActivity has showWhenLocked + turnScreenOn), with a Stop button.
-  // - Phone UNLOCKED -> heads-up notification (SMS-style) with a Stop action.
-  // Audio itself is bundled (assets/audio/azan.mp3) so this works offline.
-  try {
-    final plugin = FlutterLocalNotificationsPlugin();
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    await plugin.initialize(
-      const InitializationSettings(android: androidSettings),
-      onDidReceiveBackgroundNotificationResponse:
-          azanNotificationBackgroundHandler,
-    );
-    final androidImpl = plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    await androidImpl
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-      'azan_alarm_channel',
-      'Azan Prayers & Alarms',
-      description: 'Plays Azan sound on prayer time even when phone is locked',
-      importance: Importance.max,
-      playSound: false, // audio is handled by the player above
-      enableVibration: true,
-    ));
-    await plugin.show(
-      id,
-      '$prayerName — نماز کا وقت',
-      soundOn ? 'Azan is playing — tap STOP to silence' : 'Prayer time has started',
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'azan_alarm_channel',
-          'Azan Prayers & Alarms',
-          importance: Importance.max,
-          priority: Priority.high,
-          category: AndroidNotificationCategory.alarm,
-          fullScreenIntent: true,
-          actions: <AndroidNotificationAction>[
-            AndroidNotificationAction(
-              stopAzanActionId,
-              'STOP',
-              showsUserInterface: false,
-              cancelNotification: true,
-            ),
-          ],
-        ),
-      ),
-      payload: 'azan_alarm:$id:$prayerName',
-    );
-  } catch (e) {
-    debugPrint('[AzanAlarm] Background notification failed: $e');
+  // 3. DISMISS the notification now that the azan finished or was stopped.
+  // With sound OFF there was no audio — leave the silent reminder up until
+  // the user dismisses/taps it.
+  if (soundOn) {
+    try {
+      await plugin?.cancel(id);
+    } catch (_) {}
   }
 
   // C1: Chain the alarm — schedule this same prayer for tomorrow. oneShotAt
@@ -378,6 +393,25 @@ class AzanAlarmService {
     }
   }
 
+  /// Checks whether the app was launched from an azan alarm notification
+  /// (e.g. full-screen intent on the lock screen while the app was killed).
+  /// If so, stashes the payload so [drainPendingAlarm] can open the alarm UI.
+  Future<void> checkLaunchedFromAlarm() async {
+    try {
+      final details =
+          await _notificationsPlugin.getNotificationAppLaunchDetails();
+      final payload = details?.notificationResponse?.payload;
+      if ((details?.didNotificationLaunchApp ?? false) &&
+          payload != null &&
+          payload.startsWith('azan_alarm:')) {
+        debugPrint('[AzanAlarm] Launched from alarm notification: $payload');
+        pendingAlarmPayload = payload;
+      }
+    } catch (e) {
+      debugPrint('[AzanAlarm] getNotificationAppLaunchDetails failed: $e');
+    }
+  }
+
   /// Schedules today's remaining prayer alarms.
   ///
   /// On Android with [lockscreenAlarmEnabled] ON, exact wakeup alarms are used
@@ -436,59 +470,76 @@ class AzanAlarmService {
             location, entry, today.add(const Duration(days: 1)));
       }
 
-      final useExactAlarm = Platform.isAndroid && lockscreenAlarmEnabled;
+      // FIX: on Android 12+, oneShotAt(exact:true) throws SecurityException
+      // when the user denied "Alarms & reminders" — which would abort the
+      // whole day's schedule mid-loop. Fall back to notifications instead.
+      final useExactAlarm = Platform.isAndroid &&
+          lockscreenAlarmEnabled &&
+          await canScheduleExactAlarms();
 
       if (useExactAlarm) {
         // Exact lockscreen alarm; cancel any notification fallback for this id
         // so the user never gets a double alert.
         await _notificationsPlugin.cancel(alarmId);
-        await AndroidAlarmManager.oneShotAt(
-          prayerTime,
-          alarmId,
-          azanAlarmCallback,
-          exact: true,
-          wakeup: true,
-          rescheduleOnReboot: true,
-        );
+        try {
+          await AndroidAlarmManager.oneShotAt(
+            prayerTime,
+            alarmId,
+            azanAlarmCallback,
+            exact: true,
+            wakeup: true,
+            rescheduleOnReboot: true,
+          );
+        } catch (e) {
+          debugPrint(
+              '[AzanAlarm] oneShotAt failed for $name, using notification: $e');
+          await _scheduleNotificationFallback(
+              alarmId, name, prayerTime, azanSoundEnabled);
+        }
       } else {
         // C2/M2: notification fallback — used on iOS and when the user turns
-        // the lockscreen exact-alarm toggle OFF.
+        // the lockscreen exact-alarm toggle OFF (or denies the permission).
         if (Platform.isAndroid) {
           await AndroidAlarmManager.cancel(alarmId);
         }
-        try {
-          await _notificationsPlugin.zonedSchedule(
-            alarmId,
-            '$name — نماز کا وقت',
-            azanSoundEnabled
-                ? 'Azan time — tap to open'
-                : 'Prayer time has started',
-            tz.TZDateTime.from(prayerTime, tz.local),
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'azan_alarm_channel',
-                'Azan Prayers & Alarms',
-                importance: Importance.max,
-                priority: Priority.high,
-              ),
-              iOS: DarwinNotificationDetails(
-                presentAlert: true,
-                presentBadge: true,
-                presentSound: true,
-              ),
-            ),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-          );
-        } catch (e) {
-          debugPrint('[AzanAlarm] zonedSchedule failed for $name: $e');
-        }
+        await _scheduleNotificationFallback(
+            alarmId, name, prayerTime, azanSoundEnabled);
       }
 
       debugPrint(
           '[AzanAlarm] Scheduled $name at ${prayerTime.toIso8601String()} '
           '(exact: $useExactAlarm)');
+    }
+  }
+
+  /// Schedules a plain notification fallback for one prayer (no exact alarm).
+  Future<void> _scheduleNotificationFallback(
+      int alarmId, String name, DateTime prayerTime, bool azanSoundEnabled) async {
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        alarmId,
+        '$name — نماز کا وقت',
+        azanSoundEnabled ? 'Azan time — tap to open' : 'Prayer time has started',
+        tz.TZDateTime.from(prayerTime, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'azan_alarm_channel',
+            'Azan Prayers & Alarms',
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+    } catch (e) {
+      debugPrint('[AzanAlarm] zonedSchedule failed for $name: $e');
     }
   }
 

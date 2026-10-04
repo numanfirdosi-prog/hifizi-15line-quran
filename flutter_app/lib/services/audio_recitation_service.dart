@@ -324,23 +324,51 @@ class AudioRecitationService extends ChangeNotifier {
 
   /// Advances to the next ayah (wrapping across surahs). When an ayah
   /// repeat range is set, loops back to its start after its end instead.
-  /// Stops ayah mode at the end of the Quran (114:6).
+  /// Stops ayah mode at the end of the Quran (114:6). A single bad audio
+  /// file (404/corrupt) is skipped instead of killing the whole recitation.
   Future<void> _advanceAyah() async {
     if (_repeatRangeSurah != null &&
         _currentSurah == _repeatRangeSurah &&
         _currentAyah >= (_repeatRangeEnd ?? 0)) {
       await playAyah(
-          surah: _repeatRangeSurah!, ayah: _repeatRangeStart ?? 1);
+          surah: _repeatRangeSurah!,
+          ayah: _repeatRangeStart ?? 1,
+          keepRepeatRange: true);
       return;
     }
-    final next = _nextAyah();
+    var next = _nextAyah();
     if (next == null) {
       _ayahMode = false;
       await _player.stop();
       notifyListeners();
       return;
     }
-    await playAyah(surah: next.$1, ayah: next.$2);
+    // Skip over unloadable ayahs (max 5 in a row so a dead network doesn't
+    // spin forever); stop only when the Quran ends or all retries fail.
+    // keepRepeatRange: true — this is internal auto-advance, not a new
+    // user request, so an active repeat range must survive.
+    var failures = 0;
+    while (!(await playAyah(
+        surah: next.$1, ayah: next.$2, keepRepeatRange: true))) {
+      failures++;
+      if (failures >= 5) {
+        _ayahMode = false;
+        try {
+          await _player.stop();
+        } catch (_) {}
+        notifyListeners();
+        return;
+      }
+      next = nextAyahAfter(next.$1, next.$2);
+      if (next == null) {
+        _ayahMode = false;
+        try {
+          await _player.stop();
+        } catch (_) {}
+        notifyListeners();
+        return;
+      }
+    }
   }
 
   /// Returns (surah, ayah) of the ayah after the current one, or null at
@@ -377,7 +405,7 @@ class AudioRecitationService extends ChangeNotifier {
     _repeatRangeStart = startAyah;
     _repeatRangeEnd = endAyah;
     notifyListeners();
-    return playAyah(surah: surah, ayah: startAyah);
+    return playAyah(surah: surah, ayah: startAyah, keepRepeatRange: true);
   }
 
   /// Clears any active ayah repeat range (playback continues normally).
@@ -451,12 +479,20 @@ class AudioRecitationService extends ChangeNotifier {
   /// user stops. The current ayah is highlighted in the ayah player sheet.
   /// Plays a single ayah's audio and auto-advances ayah-by-ayah.
   /// Returns true on success, false when the audio could not be loaded
-  /// (e.g. no internet).
-  Future<bool> playAyah({required int surah, required int ayah}) async {
+  /// (e.g. no internet). When [keepRepeatRange] is false (user-initiated
+  /// playback), any stale ayah-repeat range is cleared so it can't hijack
+  /// later sessions.
+  Future<bool> playAyah(
+      {required int surah, required int ayah, bool keepRepeatRange = false}) async {
     _ayahMode = true;
     _currentSurah = surah;
     _currentAyah = ayah;
     _completedPlays = 0;
+    if (!keepRepeatRange) {
+      _repeatRangeSurah = null;
+      _repeatRangeStart = null;
+      _repeatRangeEnd = null;
+    }
 
     final audioUrl = _selectedQari.ayahUrl(surah, ayah);
 
@@ -476,6 +512,11 @@ class AudioRecitationService extends ChangeNotifier {
     } catch (e) {
       debugPrint('[AudioRecitation] playAyah error: $e');
       _ayahMode = false;
+      // The failed setAudioSource may have left stale "playing" state —
+      // reset so the bottom bar doesn't show playing over silence.
+      try {
+        await _player.stop();
+      } catch (_) {}
       notifyListeners();
       return false;
     }
