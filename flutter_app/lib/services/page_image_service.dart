@@ -2,15 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Resilient loader for the 15-line mushaf page images.
 ///
-/// Some networks block or stall `raw.githubusercontent.com` (the connection
-/// hangs: no error, no progress, infinite loading). This service tries
-/// multiple CDNs in order, with a per-URL timeout, so a hanging host is
-/// skipped instead of freezing the reader. Successful downloads are cached
-/// on disk so pages keep working offline afterwards.
+/// All 611 pages are bundled inside the APK (assets/pages/), so they load
+/// instantly with zero internet. The disk cache and multi-CDN network
+/// fallback remain as backup (e.g. if a bundled asset is ever corrupt).
 class PageImageService {
   static const _repo = 'numanfirdosi-prog/hifizi-15line-quran';
   static const _timeout = Duration(seconds: 15);
@@ -35,13 +34,25 @@ class PageImageService {
     return await f.exists() ? f : null;
   }
 
-  /// Loads the page image bytes: disk cache first, then each CDN URL with
-  /// a timeout until one succeeds. [onProgress] reports (received, total).
-  /// Throws the last error if every source fails.
+  /// Loads the page image bytes: bundled asset first (instant, offline),
+  /// then disk cache, then each CDN URL with a timeout until one succeeds.
+  /// [onProgress] reports (received, total). Throws the last error if every
+  /// source fails.
   static Future<Uint8List> fetchPageImage(
     int page, {
     void Function(int received, int? total)? onProgress,
   }) async {
+    // 1. Bundled asset — instant and fully offline.
+    try {
+      final data = await rootBundle.load('assets/pages/$page.webp');
+      final bytes = data.buffer.asUint8List();
+      onProgress?.call(bytes.length, bytes.length);
+      return bytes;
+    } catch (_) {
+      // Fall through to cache/network.
+    }
+
+    // 2. Disk cache from a previous download.
     final hit = await cachedFile(page);
     if (hit != null) {
       final bytes = await hit.readAsBytes();
@@ -49,6 +60,7 @@ class PageImageService {
       return bytes;
     }
 
+    // 3. Network with CDN fallback.
     Object? lastError;
     for (final url in pageImageUrls(page)) {
       try {
