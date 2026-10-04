@@ -761,12 +761,15 @@ class _MushafScreenState extends State<MushafScreen> {
     // eyes. Only the page image is filtered, not the highlight/drawing
     // overlays painted above it.
     final nightDim = Theme.of(context).brightness == Brightness.dark;
+    // Reference design: warm golden background with arabesque pattern.
+    final bgColor =
+        nightDim ? const Color(0xFF8A7A4A) : const Color(0xFFF3E9C8);
     return SafeArea(
       bottom: false,
       child: Container(
         // Seamless page background: on tall screens the area around the page
         // blends with the page instead of looking like an empty gap.
-        color: nightDim ? const Color(0xFFC3C1BA) : const Color(0xFFFAF7EE),
+        color: bgColor,
         child: CustomPaint(
           painter: _OrnamentPatternPainter(nightDim: nightDim),
           child: Column(
@@ -847,84 +850,68 @@ class _MushafScreenState extends State<MushafScreen> {
 );
   }
 
-  /// Ornamental header above the page: the surah name in Arabic between
-  /// gold dividers, so the top empty area looks designed, not blank.
+  /// Ornamental header above the page: Bismillah in gold calligraphy under
+  /// a thin gold top border, like the reference mushaf design.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
-    const green = Color(0xFF0F3A2C);
     const gold = Color(0xFFC9A227);
+    const deepGold = Color(0xFF9A7B1E);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Thin gold border below the status bar.
+        Container(
+          height: 3,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [deepGold, gold, deepGold],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 6),
+          child: Text(
+            'بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ',
+            style: TextStyle(
+              fontFamily: 'Amiri Quran',
+              fontSize: 30,
+              color: nightDim ? const Color(0xFFE8C766) : deepGold,
+              height: 1.6,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Ornamental footer below the page: the Manzil badge in a golden frame,
+  /// like the reference design.
+  Widget _buildBottomOrnament(int pageNum, bool nightDim) {
     return FutureBuilder<Map<int, String>>(
       future: _firstVerseIndex,
       builder: (context, snap) {
-        var label = 'القرآن الكريم';
+        var manzil = 1;
         final fv = snap.data?[pageNum];
         if (fv != null) {
           final s = int.tryParse(fv.split(':').first);
-          if (s != null && s >= 1 && s <= 114) {
-            label = 'سورة ${allSurahs[s - 1].nameAr}';
-          }
+          if (s != null) manzil = _manzilForSurah(s);
         }
         return Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 6, left: 18, right: 18),
-          child: Row(
-            children: [
-              Expanded(child: _goldDivider(gold)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'Noto Sans Arabic',
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: nightDim ? Colors.white : green,
-                  ),
-                ),
-              ),
-              Expanded(child: _goldDivider(gold)),
-            ],
-          ),
+          padding: const EdgeInsets.only(top: 8, bottom: 14),
+          child: Center(child: _ManzilBadge(manzil: manzil, nightDim: nightDim)),
         );
       },
     );
   }
 
-  /// Ornamental footer below the page: the page number inside an 8-point
-  /// star medallion between gold dividers.
-  Widget _buildBottomOrnament(int pageNum, bool nightDim) {
-    const gold = Color(0xFFC9A227);
-    return Padding(
-      padding: const EdgeInsets.only(top: 6, bottom: 14, left: 18, right: 18),
-      child: Row(
-        children: [
-          Expanded(child: _goldDivider(gold)),
-          const SizedBox(width: 14),
-          _PageMedallion(pageNum: pageNum),
-          const SizedBox(width: 14),
-          Expanded(child: _goldDivider(gold)),
-        ],
-      ),
-    );
-  }
-
-  /// Thin gold divider line with a small diamond in the middle.
-  Widget _goldDivider(Color gold) {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(height: 1.5, color: gold.withValues(alpha: 0.55)),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 7),
-          child: Transform.rotate(
-            angle: 3.14159 / 4,
-            child: Container(width: 7, height: 7, color: gold),
-          ),
-        ),
-        Expanded(
-          child: Container(height: 1.5, color: gold.withValues(alpha: 0.55)),
-        ),
-      ],
-    );
+  /// The 7 manazil of the Quran by surah number.
+  int _manzilForSurah(int surah) {
+    if (surah <= 4) return 1;
+    if (surah <= 9) return 2;
+    if (surah <= 16) return 3;
+    if (surah <= 25) return 4;
+    if (surah <= 36) return 5;
+    return surah <= 49 ? 6 : 7;
   }
 
   /// Website-exact ayah highlight (visible only while ayah-by-ayah audio is
@@ -1153,41 +1140,43 @@ class _MushafScreenState extends State<MushafScreen> {
                   _buildPageItem(context, index + 1),
             ),
 
-          // Floating bookmark (save) button, top-right like the
-          // reference design. Hidden while a drawing tool is active
-          // (the drawing-mode chip occupies that corner instead).
+          // Bookmark ribbon, top-right like the reference design. Hidden
+          // while a drawing tool is active (the drawing-mode chip occupies
+          // that corner instead).
           if (!drawingActive)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              right: 12,
-              child: Material(
-                color: cs.surface.withValues(alpha: 0.85),
-                shape: const CircleBorder(),
-                elevation: 2,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => prefs.toggleBookmark(_currentPage),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
+              top: MediaQuery.of(context).padding.top,
+              right: 16,
+              child: GestureDetector(
+                onTap: () => prefs.toggleBookmark(_currentPage),
+                child: CustomPaint(
+                  painter: _RibbonPainter(
+                    color: isBookmarked
+                        ? const Color(0xFF1B5E20)
+                        : const Color(0xFF0F3A2C),
+                  ),
+                  child: Container(
+                    width: 44,
+                    height: 64,
+                    alignment: Alignment.topCenter,
+                    padding: const EdgeInsets.only(top: 10),
                     child: Icon(
                       isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isBookmarked
-                          ? cs.primary
-                          : cs.onSurface.withValues(alpha: 0.7),
-                      size: 24,
+                      color: Colors.white.withValues(alpha: 0.95),
+                      size: 22,
                     ),
                   ),
                 ),
               ),
             ),
 
-          // Floating note button, bottom-left like the reference
-          // design. Opens the page drawing/notes menu.
+          // Floating + button, bottom-left like the reference design.
+          // Opens the page drawing/notes menu (same as the note button).
           Positioned(
             left: 12,
             bottom: 92,
             child: Material(
-              color: const Color(0xFFE8F5E9),
+              color: const Color(0xFF0F3A2C),
               shape: const CircleBorder(),
               elevation: 3,
               child: InkWell(
@@ -1196,28 +1185,29 @@ class _MushafScreenState extends State<MushafScreen> {
                 child: const Padding(
                   padding: EdgeInsets.all(10),
                   child: Icon(
-                    Icons.edit_note,
-                    color: Color(0xFF2E7D32),
-                    size: 24,
+                    Icons.add,
+                    color: Colors.white,
+                    size: 26,
                   ),
                 ),
               ),
             ),
           ),
 
-          // Persistent reader control bar: Speed / Play / Repeat / Menu
-          // (image-1 style; always visible at the bottom of the page).
+          // Persistent reader control bar: Speed / Play / Repeat / Menu.
+          // Reference design: dark bar with gold accents.
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: cs.surface,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0A1F17),
                 border: Border(
                   top: BorderSide(
-                    color: cs.primary.withValues(alpha: 0.25),
+                    color: Color(0xFFC9A227),
+                    width: 1.5,
                   ),
                 ),
               ),
@@ -1236,8 +1226,8 @@ class _MushafScreenState extends State<MushafScreen> {
                         children: [
                           Text(
                             _speedLabel(prefs.playbackSpeed),
-                            style: TextStyle(
-                              color: cs.primary,
+                            style: const TextStyle(
+                              color: Color(0xFFE8C766),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -1245,7 +1235,7 @@ class _MushafScreenState extends State<MushafScreen> {
                           Text(
                             'Speed',
                             style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 11,
                             ),
                           ),
@@ -1261,11 +1251,12 @@ class _MushafScreenState extends State<MushafScreen> {
                       height: 58,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: cs.primary, width: 2),
+                        border: Border.all(
+                            color: const Color(0xFFC9A227), width: 2.5),
                       ),
                       child: Icon(
                         audio.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: cs.onSurface,
+                        color: Colors.white,
                         size: 32,
                       ),
                     ),
@@ -1285,7 +1276,7 @@ class _MushafScreenState extends State<MushafScreen> {
                             children: [
                               Icon(
                                 Icons.repeat,
-                                color: cs.onSurface.withValues(alpha: 0.75),
+                                color: Colors.white.withValues(alpha: 0.85),
                                 size: 24,
                               ),
                               if (prefs.repeatMode != 0)
@@ -1296,13 +1287,13 @@ class _MushafScreenState extends State<MushafScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 5, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: cs.primary,
+                                      color: const Color(0xFFC9A227),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       _repeatLabels[prefs.repeatMode] ?? '',
-                                      style: TextStyle(
-                                        color: cs.onPrimary,
+                                      style: const TextStyle(
+                                        color: Color(0xFF0A1F17),
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -1314,7 +1305,7 @@ class _MushafScreenState extends State<MushafScreen> {
                           Text(
                             'Repeat',
                             style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 11,
                             ),
                           ),
@@ -1331,7 +1322,7 @@ class _MushafScreenState extends State<MushafScreen> {
                           horizontal: 12, vertical: 8),
                       child: Icon(
                         Icons.more_vert,
-                        color: cs.onSurface.withValues(alpha: 0.75),
+                        color: Colors.white.withValues(alpha: 0.85),
                         size: 26,
                       ),
                     ),
@@ -1531,30 +1522,68 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
   }
 }
 
-/// Page-number medallion: an 8-pointed Islamic star in gold with a dark
-/// green inner star, the page number centered in white.
-class _PageMedallion extends StatelessWidget {
-  final int pageNum;
-  const _PageMedallion({required this.pageNum});
+/// Bookmark ribbon painter: a vertical ribbon with a V-notch at the bottom.
+class _RibbonPainter extends CustomPainter {
+  final Color color;
+  _RibbonPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    const notch = 12.0;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(w, 0)
+      ..lineTo(w, h)
+      ..lineTo(w / 2, h - notch)
+      ..lineTo(0, h)
+      ..close();
+    // Shadow.
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+    );
+    canvas.drawPath(path, Paint()..color = color);
+    // Gold edge highlight on the left.
+    canvas.drawLine(
+      const Offset(1.5, 0),
+      Offset(1.5, h - 2),
+      Paint()
+        ..color = const Color(0xFFC9A227).withValues(alpha: 0.7)
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RibbonPainter old) => old.color != color;
+}
+
+/// Manzil badge: an ornamental golden frame with the Manzil number,
+/// like the reference mushaf design.
+class _ManzilBadge extends StatelessWidget {
+  final int manzil;
+  final bool nightDim;
+  const _ManzilBadge({required this.manzil, required this.nightDim});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 60,
-      height: 60,
-      child: CustomPaint(
-        painter: _StarPainter(const Color(0xFFC9A227)),
-        child: CustomPaint(
-          painter: _StarPainter(const Color(0xFF0F3A2C), scale: 0.8),
-          child: Center(
-            child: Text(
-              '$pageNum',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-              ),
-            ),
+    const gold = Color(0xFFC9A227);
+    const deepGold = Color(0xFF9A7B1E);
+    const green = Color(0xFF0F3A2C);
+    return CustomPaint(
+      painter: _ManzilFramePainter(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 8),
+        child: Text(
+          'Manzil $manzil',
+          style: TextStyle(
+            fontFamily: 'Amiri Quran',
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+            color: nightDim ? Colors.white : green,
           ),
         ),
       ),
@@ -1562,66 +1591,100 @@ class _PageMedallion extends StatelessWidget {
   }
 }
 
-/// Paints an 8-pointed star (two overlapping squares) centered in the box.
-class _StarPainter extends CustomPainter {
-  final Color color;
-  final double scale;
-  _StarPainter(this.color, {this.scale = 1.0});
-
+/// Ornamental double frame with pointed ends for the Manzil badge.
+class _ManzilFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r = (size.width / 2) * scale;
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    for (int k = 0; k < 2; k++) {
-      final path = Path();
-      final rot = k * 3.14159 / 4 - 3.14159 / 2;
-      for (int i = 0; i < 4; i++) {
-        final a = rot + i * 3.14159 / 2;
-        final x = cx + r * cos(a);
-        final y = cy + r * sin(a);
-        if (i == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, paint);
+    const gold = Color(0xFFC9A227);
+    const deepGold = Color(0xFF9A7B1E);
+    final w = size.width;
+    final h = size.height;
+    const tip = 14.0;
+
+    Path frame(double inset) {
+      final p = Path();
+      // Top edge with pointed left/right tips.
+      p.moveTo(inset + tip, inset);
+      p.lineTo(w - inset - tip, inset);
+      p.lineTo(w - inset, h / 2);
+      p.lineTo(w - inset - tip, h - inset);
+      p.lineTo(inset + tip, h - inset);
+      p.lineTo(inset, h / 2);
+      p.close();
+      return p;
+    }
+
+    // Outer gold frame.
+    canvas.drawPath(
+      frame(0),
+      Paint()
+        ..color = gold
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
+    );
+    // Inner deep-gold frame.
+    canvas.drawPath(
+      frame(5),
+      Paint()
+        ..color = deepGold
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+    // Small diamonds at the pointed tips.
+    for (final dx in [0.0, w]) {
+      final cx = dx == 0 ? 0.0 : w;
+      final path = Path()
+        ..moveTo(cx, h / 2 - 5)
+        ..lineTo(cx + (dx == 0 ? 5 : -5), h / 2)
+        ..lineTo(cx, h / 2 + 5)
+        ..lineTo(cx + (dx == 0 ? -5 : 5), h / 2)
+        ..close();
+      canvas.drawPath(path, Paint()..color = gold);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _StarPainter old) =>
-      old.color != color || old.scale != scale;
+  bool shouldRepaint(covariant _ManzilFramePainter old) => false;
 }
 
-/// Subtle Islamic diamond lattice painted behind the page ornaments.
+/// Golden Islamic arabesque lattice painted behind the reader ornaments,
+/// like the reference mushaf design.
 class _OrnamentPatternPainter extends CustomPainter {
   final bool nightDim;
   _OrnamentPatternPainter({required this.nightDim});
 
   @override
   void paint(Canvas canvas, Size size) {
+    final base = nightDim ? Colors.black : const Color(0xFF9A7B1E);
     final paint = Paint()
-      ..color = (nightDim ? Colors.black : const Color(0xFFC9A227))
-          .withValues(alpha: 0.06)
+      ..color = base.withValues(alpha: 0.10)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    const step = 58.0;
-    const r = 9.0;
+      ..strokeWidth = 1.2;
+    final dotPaint = Paint()
+      ..color = base.withValues(alpha: 0.14)
+      ..style = PaintingStyle.fill;
+    const step = 52.0;
+    const r = 11.0;
     for (double y = step / 2; y < size.height; y += step) {
       for (double x = step / 2; x < size.width; x += step) {
-        final path = Path()
-          ..moveTo(x, y - r)
-          ..lineTo(x + r, y)
-          ..lineTo(x, y + r)
-          ..lineTo(x - r, y)
-          ..close();
-        canvas.drawPath(path, paint);
+        // 8-point star outline: two overlapping squares.
+        for (int k = 0; k < 2; k++) {
+          final path = Path();
+          final rot = k * 3.14159 / 4;
+          for (int i = 0; i < 4; i++) {
+            final a = rot + i * 3.14159 / 2;
+            final px = x + r * cos(a);
+            final py = y + r * sin(a);
+            if (i == 0) {
+              path.moveTo(px, py);
+            } else {
+              path.lineTo(px, py);
+            }
+          }
+          path.close();
+          canvas.drawPath(path, paint);
+        }
+        canvas.drawCircle(Offset(x, y), 1.6, dotPaint);
       }
     }
   }
