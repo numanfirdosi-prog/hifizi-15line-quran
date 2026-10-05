@@ -52,6 +52,18 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
         results.add(e);
       }
     }
+    // Fallback: if strict Arabic search found nothing, try the lenient
+    // form (alef stripped) so Uthmani spellings match simplified queries
+    // (e.g. فَسْأَلُوا vs فَاسْأَلُوا).
+    if (results.isEmpty && normQ.contains(RegExp('[؀-ۿ]'))) {
+      final laxQ = normalizeArabicLenient(q);
+      for (final e in entries) {
+        if (results.length >= 200) break;
+        if (normalizeArabicLenient(e.ar).contains(laxQ)) {
+          results.add(e);
+        }
+      }
+    }
     if (!mounted) return;
     setState(() {
       _results = results;

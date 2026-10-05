@@ -54,10 +54,16 @@ Future<Map<String, int>> loadVersePageIndex() async =>
 Future<Map<int, String>> loadPageFirstVerseIndex() async =>
     buildPageFirstVerseIndex(await loadPageAyahsJson());
 
-/// Strips Arabic diacritics (tashkeel U+064B..U+0652, U+0670, tatweel U+0640)
-/// and normalizes alef/hamza variants, for diacritic-insensitive search.
+/// Strips ALL Arabic diacritics — basic harakat (U+064B..U+065F), superscript
+/// alef (U+0670), Quranic marks (U+06D6..U+06ED, U+08D3..U+08FF), tatweel
+/// (U+0640) and the RTL mark (U+200F) — and normalizes alef/hamza variants,
+/// for diacritic-insensitive search. The bundled Quran text uses Quranic
+/// Unicode marks (e.g. ۡ U+06E1, ٓ U+0653) that the basic harakat range
+/// missed, causing valid verses to return 0 results. Hamza-above/below
+/// (U+0654/U+0655, e.g. in ـٔ) become alef so they match أ/إ/آ in queries.
 String normalizeArabic(String s) {
-  var out = s.replaceAll(RegExp('[\u064B-\u0652\u0670\u0640]'), '');
+  var out = s.replaceAll('ٔ', 'ا').replaceAll('ٕ', 'ا');
+  out = out.replaceAll(RegExp('[ً-ٰٟۖ-ۭ࣓-࿿ـ‏]'), '');
   out = out
       .replaceAll('أ', 'ا')
       .replaceAll('إ', 'ا')
@@ -69,6 +75,11 @@ String normalizeArabic(String s) {
       .replaceAll('ى', 'ي');
   return out;
 }
+
+/// Lenient variant for search fallback: additionally strips alef so
+/// Uthmani spellings (فَسْأَلُوا) match simplified queries (فَاسْأَلُوا).
+String normalizeArabicLenient(String s) =>
+    normalizeArabic(s).replaceAll('ا', '');
 
 class QuranTextEntry {
   final int s;
