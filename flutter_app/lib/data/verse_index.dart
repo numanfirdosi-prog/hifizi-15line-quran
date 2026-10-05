@@ -61,8 +61,11 @@ Future<Map<int, String>> loadPageFirstVerseIndex() async =>
 /// Unicode marks (e.g. ۡ U+06E1, ٓ U+0653) that the basic harakat range
 /// missed, causing valid verses to return 0 results. Hamza-above/below
 /// (U+0654/U+0655, e.g. in ـٔ) become alef so they match أ/إ/آ in queries.
+/// Uthmani وٰ (waw + superscript alef, e.g. صَلَوٰة) becomes alef to match
+/// simplified صَلَاة.
 String normalizeArabic(String s) {
-  var out = s.replaceAll('ٔ', 'ا').replaceAll('ٕ', 'ا');
+  var out = s.replaceAll('وٰ', 'ا');
+  out = out.replaceAll('ٔ', 'ا').replaceAll('ٕ', 'ا');
   out = out.replaceAll(RegExp('[ً-ٰٟۖ-ۭ࣓-࿿ـ‏]'), '');
   out = out
       .replaceAll('أ', 'ا')
