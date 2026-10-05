@@ -64,7 +64,10 @@ Future<Map<int, String>> loadPageFirstVerseIndex() async =>
 /// Uthmani وٰ (waw + superscript alef, e.g. صَلَوٰة) becomes alef to match
 /// simplified صَلَاة.
 String normalizeArabic(String s) {
-  var out = s.replaceAll('وٰ', 'ا');
+  // Uthmani data writes tanween-alef as "ࣰ ا" (open fathatan + SPACE + alef),
+  // splitting the word in two — join it so "ضعيفا" matches "ضَعِيفࣰ ا".
+  var out = s.replaceAll('ࣰ ا', 'ࣰا');
+  out = out.replaceAll('وٰ', 'ا');
   out = out.replaceAll('ٔ', 'ا').replaceAll('ٕ', 'ا');
   out = out.replaceAll(RegExp('[ً-ٰٟۖ-ۭ࣓-࿿ـ‏]'), '');
   out = out
