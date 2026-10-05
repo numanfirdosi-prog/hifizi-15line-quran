@@ -13,10 +13,13 @@ String arabicFontFamily(String scriptStyle) =>
 /// (non-joining), so the text shaper breaks cursive joining around it and
 /// letters render isolated/disconnected ("harf alag alag"). Replacing it
 /// with the standard U+0652 ARABIC SUKUN (joining type "T", transparent)
-/// restores correct joining. This only affects rendering — the data files
-/// stay untouched and the meaning is identical.
-String normalizeArabicDisplay(String text) =>
-    text.replaceAll('\u06E1', '\u0652');
+/// restores correct joining. Also joins split tanween-alef words ("ࣰ ا" →
+/// "ࣰا") which the source data writes with a space, rendering as a broken
+/// "ضَعِيفً ا". This only affects rendering — the data files stay untouched
+/// and the meaning is identical.
+String normalizeArabicDisplay(String text) => text
+    .replaceAll('\u06E1', '\u0652')
+    .replaceAll('ࣰ ا', 'ࣰا');
 
 /// Dedicated Urdu text style using the bundled Noto Nastaliq Urdu font
 /// (OFL licensed). Use for Urdu translations and Urdu UI text — never for
