@@ -121,6 +121,29 @@ String normalizeArabic(String s) {
 String normalizeArabicLenient(String s) =>
     normalizeArabic(s).replaceAll('ا', '');
 
+/// Normalizes Urdu text for diacritic-insensitive search: strips all Arabic
+/// diacritics/Quranic marks, tatweel, superscript alef and the RTL mark, and
+/// unifies Urdu orthography variants (ے→ی, ھ→ہ, ك→ک, ي→ی, أإآٱ→ا, ؤ→و,
+/// ئ→ی, ة→ہ, ى→ی) so a query typed on any Urdu keyboard matches the bundled
+/// Kanzul Iman translation.
+String normalizeUrdu(String s) {
+  var out = s.replaceAll(RegExp('[ً-ٟۖ-ۮـٰ‏]'), '');
+  out = out
+      .replaceAll('أ', 'ا')
+      .replaceAll('إ', 'ا')
+      .replaceAll('آ', 'ا')
+      .replaceAll('ٱ', 'ا')
+      .replaceAll('ؤ', 'و')
+      .replaceAll('ئ', 'ی')
+      .replaceAll('ة', 'ہ')
+      .replaceAll('ے', 'ی')
+      .replaceAll('ھ', 'ہ')
+      .replaceAll('ى', 'ی')
+      .replaceAll('ك', 'ک')
+      .replaceAll('ي', 'ی');
+  return out;
+}
+
 class QuranTextEntry {
   final int s;
   final int v;
