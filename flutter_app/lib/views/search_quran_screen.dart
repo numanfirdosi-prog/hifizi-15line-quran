@@ -6,8 +6,8 @@ import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 import 'ayah_player_sheet.dart';
 
-/// Full-text search across the Quran (Arabic + English). Filter runs only on
-/// submit, never on every keystroke.
+/// Full-text search across the Quran (Arabic + English + Urdu). Filter runs
+/// only on submit, never on every keystroke.
 class SearchQuranScreen extends StatefulWidget {
   final void Function(int page) onOpenPage;
   const SearchQuranScreen({required this.onOpenPage, super.key});
@@ -44,11 +44,26 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
     _urdu = data[2] as Map<String, String>;
     final normQ = normalizeArabic(q);
     final lowerQ = q.toLowerCase();
+    // Urdu: match the query against the bundled Kanzul Iman translation,
+    // normalized for diacritic-insensitive search (ے/ی, ھ/ہ unified). Only
+    // runs when the query is typed in Perso-Arabic script, so English
+    // queries never false-positive on Urdu text.
+    final urduScript = RegExp('[؀-ۿ]').hasMatch(q);
+    final normUrduQ = normalizeUrdu(q);
+    final normUrduList = urduScript
+        ? entries
+            .map((e) => normalizeUrdu(_urdu['${e.s}:${e.v}'] ?? ''))
+            .toList()
+        : const <String>[];
     final results = <QuranTextEntry>[];
-    for (final e in entries) {
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
       if (results.length >= 200) break;
       if (normalizeArabic(e.ar).contains(normQ) ||
-          e.en.toLowerCase().contains(lowerQ)) {
+          e.en.toLowerCase().contains(lowerQ) ||
+          (urduScript &&
+              normUrduQ.isNotEmpty &&
+              normUrduList[i].contains(normUrduQ))) {
         results.add(e);
       }
     }
@@ -99,7 +114,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                     textInputAction: TextInputAction.search,
                     onSubmitted: (_) => _runSearch(),
                     decoration: InputDecoration(
-                      hintText: 'Search any keyword in Arabic or English',
+                      hintText: 'Search any keyword in Arabic, English or Urdu',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.clear),
@@ -301,7 +316,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Enter an Arabic or English keyword and press Search',
+              'Enter an Arabic, English or Urdu keyword and press Search',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
@@ -331,7 +346,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Try Arabic or English keywords',
+              'Try Arabic, English or Urdu keywords',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
             ),
