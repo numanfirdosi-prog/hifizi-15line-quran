@@ -761,9 +761,9 @@ class _MushafScreenState extends State<MushafScreen> {
       MediaQuery.of(context).size.width / _kPageAspect;
 
   /// The page image (with night tint overlay), without the InteractiveViewer
-  /// wrapper. The reader is decorated top and bottom: an ornamental header
-  /// with the surah name above the page and a star medallion with the page
-  /// number below, over a subtle Islamic pattern — so the screen never looks
+  /// wrapper. The reader is decorated top and bottom: the golden Bismillah
+  /// cartouche above the page and a star medallion with the page number
+  /// below, over a rich golden arabesque pattern — so the screen never looks
   /// empty. The image box keeps the exact page-image aspect (_kPageAspect)
   /// so ayah tap coordinates map 1:1 to the image.
   Widget _buildPageImage(BuildContext context, int pageNum) {
@@ -777,18 +777,34 @@ class _MushafScreenState extends State<MushafScreen> {
     // highlight/drawing overlays painted above it.
     final nightPage =
         Provider.of<PreferencesService>(context, listen: false).nightPageMode;
-    // Reference design: warm golden background with arabesque pattern.
-    final bgColor = nightPage
-        ? Colors.black
-        : nightDim
-            ? const Color(0xFF8A7A4A)
-            : const Color(0xFFF3E9C8);
+    // Royal golden background like the reference mushaf: a luminous gold
+    // gradient with a denser arabesque pattern. Night page mode stays pure
+    // black; dark theme uses a deep bronze gradient.
+    final bgDecoration = nightPage
+        ? const BoxDecoration(color: Colors.black)
+        : BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: nightDim
+                  ? const [
+                      Color(0xFF6E5E2F),
+                      Color(0xFF8A7A4A),
+                      Color(0xFF6E5E2F)
+                    ]
+                  : const [
+                      Color(0xFFF8E7B4),
+                      Color(0xFFF0D89E),
+                      Color(0xFFE4C47C)
+                    ],
+            ),
+          );
     return SafeArea(
       bottom: false,
       child: Container(
         // Seamless page background: on tall screens the area around the page
         // blends with the page instead of looking like an empty gap.
-        color: bgColor,
+        decoration: bgDecoration,
         child: CustomPaint(
           painter: _OrnamentPatternPainter(nightDim: nightDim || nightPage),
           child: Column(
@@ -877,35 +893,31 @@ class _MushafScreenState extends State<MushafScreen> {
 
   /// Ornamental header above the page: Bismillah in gold calligraphy under
   /// a thin gold top border, like the reference mushaf design.
+  /// Ornamental header above the page: the golden Bismillah cartouche from
+  /// the reference mushaf design. It glows on the golden background and
+  /// keeps its royal look on the black night-page background.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
-    const gold = Color(0xFFC9A227);
-    const deepGold = Color(0xFF9A7B1E);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Thin gold border below the status bar.
-        Container(
-          height: 3,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [deepGold, gold, deepGold],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(
+            'assets/images/cartouche_bismillah.png',
+            fit: BoxFit.contain,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 6),
-          child: Text(
-            'بِسْمِ اللَّهِ الرَّحْمَـٰنِ الرَّحِيمِ',
-            style: TextStyle(
-              fontFamily: 'Amiri Quran',
-              fontSize: 30,
-              color: nightDim ? const Color(0xFFE8C766) : deepGold,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -921,9 +933,29 @@ class _MushafScreenState extends State<MushafScreen> {
           final s = int.tryParse(fv.split(':').first);
           if (s != null) manzil = _manzilForSurah(s);
         }
-        return Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 14),
-          child: Center(child: _ManzilBadge(manzil: manzil, nightDim: nightDim)),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Thin golden divider tying the footer to the royal header.
+            Container(
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 72),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF9A7B1E),
+                    Color(0xFFC9A227),
+                    Color(0xFF9A7B1E)
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 14),
+              child: Center(
+                  child: _ManzilBadge(manzil: manzil, nightDim: nightDim)),
+            ),
+          ],
         );
       },
     );
@@ -1446,7 +1478,9 @@ class _PageDrawingPainter extends CustomPainter {
     var h = hex.replaceAll('#', '');
     if (h.length == 6) h = 'FF$h';
     final c = Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
-    return translucent ? c.withValues(alpha: 0.45) : c;
+    // The highlighter must stay translucent like a real marker so the
+    // Quranic text always shows through, even with dark colors.
+    return translucent ? c.withValues(alpha: 0.30) : c;
   }
 
   @override
@@ -1759,14 +1793,14 @@ class _OrnamentPatternPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final base = nightDim ? Colors.black : const Color(0xFF9A7B1E);
     final paint = Paint()
-      ..color = base.withValues(alpha: 0.10)
+      ..color = base.withValues(alpha: 0.17)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     final dotPaint = Paint()
-      ..color = base.withValues(alpha: 0.14)
+      ..color = base.withValues(alpha: 0.22)
       ..style = PaintingStyle.fill;
-    const step = 52.0;
-    const r = 11.0;
+    const step = 36.0;
+    const r = 8.0;
     for (double y = step / 2; y < size.height; y += step) {
       for (double x = step / 2; x < size.width; x += step) {
         // 8-point star outline: two overlapping squares.
