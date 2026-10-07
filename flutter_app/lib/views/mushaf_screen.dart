@@ -771,9 +771,18 @@ class _MushafScreenState extends State<MushafScreen> {
     // eyes. Only the page image is filtered, not the highlight/drawing
     // overlays painted above it.
     final nightDim = Theme.of(context).brightness == Brightness.dark;
+    // Night page mode: invert the page image (black background, white
+    // text) for comfortable reading at night. Persisted toggle in
+    // PreferencesService; only the page image is filtered, never the
+    // highlight/drawing overlays painted above it.
+    final nightPage =
+        Provider.of<PreferencesService>(context, listen: false).nightPageMode;
     // Reference design: warm golden background with arabesque pattern.
-    final bgColor =
-        nightDim ? const Color(0xFF8A7A4A) : const Color(0xFFF3E9C8);
+    final bgColor = nightPage
+        ? Colors.black
+        : nightDim
+            ? const Color(0xFF8A7A4A)
+            : const Color(0xFFF3E9C8);
     return SafeArea(
       bottom: false,
       child: Container(
@@ -781,7 +790,7 @@ class _MushafScreenState extends State<MushafScreen> {
         // blends with the page instead of looking like an empty gap.
         color: bgColor,
         child: CustomPaint(
-          painter: _OrnamentPatternPainter(nightDim: nightDim),
+          painter: _OrnamentPatternPainter(nightDim: nightDim || nightPage),
           child: Column(
             children: [
               _buildTopOrnament(pageNum, nightDim),
@@ -792,10 +801,13 @@ class _MushafScreenState extends State<MushafScreen> {
                     children: [
                 Positioned.fill(
                   child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      Colors.black.withValues(alpha: nightDim ? 0.22 : 0.0),
-                      BlendMode.darken,
-                    ),
+                    colorFilter: nightPage
+                        ? const ColorFilter.matrix(_kInvertMatrix)
+                        : ColorFilter.mode(
+                            Colors.black
+                                .withValues(alpha: nightDim ? 0.22 : 0.0),
+                            BlendMode.darken,
+                          ),
                     child: _ResilientPageImage(
                       key: ValueKey(
                           'mushaf-page-$pageNum-${_imgRetry[pageNum] ?? 0}'),
@@ -929,6 +941,16 @@ class _MushafScreenState extends State<MushafScreen> {
 
   /// True aspect ratio of the bundled page images (720x1080).
   static const double _kPageAspect = 2 / 3;
+
+  /// Color matrix that inverts the mushaf page image for night page mode:
+  /// white page -> black background, black text -> white. Only the page
+  /// image is filtered, never the highlight/drawing overlays above it.
+  static const List<double> _kInvertMatrix = <double>[
+    -1, 0, 0, 0, 255,
+    0, -1, 0, 0, 255,
+    0, 0, -1, 0, 255,
+    0, 0, 0, 1, 0,
+  ];
 
   /// Page images are rendered with BoxFit.contain. When the overlay box
   /// aspect differs from the image aspect, the image is letterboxed — this
@@ -1339,6 +1361,37 @@ class _MushafScreenState extends State<MushafScreen> {
                           ),
                           Text(
                             'Repeat',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Night page mode toggle: invert page (black bg, white text)
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () =>
+                        prefs.setNightPageMode(!prefs.nightPageMode),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            prefs.nightPageMode
+                                ? Icons.dark_mode
+                                : Icons.dark_mode_outlined,
+                            color: prefs.nightPageMode
+                                ? const Color(0xFFE8C766)
+                                : Colors.white.withValues(alpha: 0.85),
+                            size: 24,
+                          ),
+                          Text(
+                            'Night',
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.6),
                               fontSize: 11,
