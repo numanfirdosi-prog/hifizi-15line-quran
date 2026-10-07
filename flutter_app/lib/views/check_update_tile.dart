@@ -117,8 +117,22 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
 
   Future<void> _openDownload() async {
     final uri = Uri.parse(_downloadUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    var opened = false;
+    try {
+      if (await canLaunchUrl(uri)) {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      opened = false;
+    }
+    // Never fail silently: tell the user when the browser could not open.
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Download link nahi khul saka — dobara try karein'),
+        ),
+      );
     }
   }
 
