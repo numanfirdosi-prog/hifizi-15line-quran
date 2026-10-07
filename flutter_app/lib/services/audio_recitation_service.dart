@@ -234,13 +234,26 @@ class AudioRecitationService extends ChangeNotifier {
     _initAudioSession();
     _player.playerStateStream.listen(_onPlayerState);
     // Website-style highlight fill: 0..1 progress of the current ayah.
+    // Per-ayah MP3s carry short silence padding at both ends (measured
+    // across qaris: ~0.15-0.85s leading, ~0.4-0.7s trailing). Mapping raw
+    // position/duration therefore leaves the highlight a word behind at
+    // the start and creeping through the last words after the recitation
+    // ends. Trim a conservative padding so the fill tracks the recitation.
     _player.positionStream.listen((pos) {
       if (!_ayahMode || _progressClosed) return;
       final d = _player.duration;
-      final p = (d == null || d.inMilliseconds <= 0)
-          ? 0.0
-          : (pos.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
-      _ayahProgressController.add(p);
+      double p;
+      if (d == null || d.inMilliseconds <= 0) {
+        p = 0.0;
+      } else {
+        final startMs = _kHighlightLeadTrimMs.toDouble();
+        final endMs = (d.inMilliseconds - _kHighlightTrailTrimMs).toDouble();
+        final spanMs = endMs - startMs;
+        p = spanMs <= 0
+            ? pos.inMilliseconds / d.inMilliseconds
+            : (pos.inMilliseconds - startMs) / spanMs;
+      }
+      _ayahProgressController.add(p.clamp(0.0, 1.0));
     });
   }
 
@@ -276,6 +289,14 @@ class AudioRecitationService extends ChangeNotifier {
 
   final _ayahProgressController = StreamController<double>.broadcast();
   bool _progressClosed = false;
+
+  /// Conservative silence trims (ms) applied to the ayah highlight
+  /// progress (see the positionStream listener above). Per-ayah MP3s have
+  /// silence padding at both ends; these stay below the smallest measured
+  /// padding so the highlight only moves closer to the recitation, never
+  /// overshoots it.
+  static const int _kHighlightLeadTrimMs = 150;
+  static const int _kHighlightTrailTrimMs = 400;
 
   /// 0..1 playback progress of the currently playing ayah (ayah mode).
   /// Drives the website-style right-to-left highlight fill.
