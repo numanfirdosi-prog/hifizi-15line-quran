@@ -221,16 +221,6 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                     scale: prefs.ayahScale,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  e.en,
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
                                 if ((_urdu['${e.s}:${e.v}'] ?? '').isNotEmpty) ...[
                                   const SizedBox(height: 6),
                                   Text(
@@ -254,6 +244,16 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                     ),
                                   ),
                                 ],
+                                const SizedBox(height: 6),
+                                Text(
+                                  e.en,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
