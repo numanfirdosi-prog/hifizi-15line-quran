@@ -11,6 +11,12 @@ import '../utils/script_font.dart';
 /// Cached full-Quran text (Arabic + English) for the player sheet.
 Future<List<QuranTextEntry>>? _quranTextFuture;
 
+/// Cached Urdu (Kanzul Iman) translation for the player sheet.
+Future<Map<String, String>>? _urduFuture;
+
+/// Combined player data: [List<QuranTextEntry>, Map<String, String>].
+Future<List<dynamic>>? _playerDataFuture;
+
 /// Shares an ayah via the Android share sheet (Arabic + English + reference).
 /// Never includes private notes.
 Future<void> shareAyah(BuildContext context,
@@ -39,6 +45,9 @@ void showAyahPlayer(BuildContext context,
     {required int surah, required int ayah}) {
   final audio = Provider.of<AudioRecitationService>(context, listen: false);
   _quranTextFuture ??= loadQuranText();
+  _urduFuture ??= loadUrduKanzulIman();
+  _playerDataFuture ??=
+      Future.wait<dynamic>([_quranTextFuture!, _urduFuture!]);
   // Start playback after the sheet is on screen so the UI updates live.
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     final ok = await audio.playAyah(surah: surah, ayah: ayah);
@@ -132,10 +141,14 @@ class _AyahPlayerSheet extends StatelessWidget {
               // Highlighted current ayah
               Flexible(
                 child: SingleChildScrollView(
-                  child: FutureBuilder<List<QuranTextEntry>>(
-                    future: _quranTextFuture,
+                  child: FutureBuilder<List<dynamic>>(
+                    future: _playerDataFuture,
                     builder: (context, snap) {
-                      final entry = _find(snap.data, s, v);
+                      final list = snap.data?[0] as List<QuranTextEntry>?;
+                      final urduMap =
+                          snap.data?[1] as Map<String, String>?;
+                      final entry = _find(list, s, v);
+                      final urdu = urduMap?['$s:$v'] ?? '';
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -165,6 +178,31 @@ class _AyahPlayerSheet extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 12),
+                                  if (urdu.isNotEmpty) ...[
+                                    Text(
+                                      urdu,
+                                      textAlign: TextAlign.center,
+                                      textDirection: TextDirection.rtl,
+                                      style: urduStyle(
+                                        fontSize: 18,
+                                        color: cs.onSurface
+                                            .withValues(alpha: 0.9),
+                                        scale: prefs.ayahScale,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'ترجمہ: کنزالایمان (احمد رضا خان)',
+                                      textAlign: TextAlign.center,
+                                      textDirection: TextDirection.rtl,
+                                      style: urduStyle(
+                                        fontSize: 12,
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                   Text(
                                     entry.en,
                                     textAlign: TextAlign.center,
