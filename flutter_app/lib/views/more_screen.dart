@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
+import 'check_update_tile.dart';
 import 'info_screens.dart';
 import 'juz_index_screen.dart';
 import 'khatm_planner_screen.dart';
@@ -216,6 +217,7 @@ class MoreScreen extends StatelessWidget {
             subtitle: 'رازداری کی پالیسی',
             onTap: () => _push(context, PrivacyScreen()),
           ),
+          const CheckUpdateTile(),
           const SizedBox(height: 24),
         ],
       ),
