@@ -1,7 +1,7 @@
 name: nur_al_quran
 description: "Nur-ul-Quran (نور القرآن) - 15 Line Offline Hifzi Mushaf, Prayer Times with Azan, Qiblah Compass & Multi-Language Voice Search"
 publish_to: 'none'
-version: 1.0.34+35
+version: 1.0.35+36
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -43,6 +43,7 @@ dependencies:
   cached_network_image: ^3.4.1
   timezone: ^0.9.4
   url_launcher: ^6.3.3
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
