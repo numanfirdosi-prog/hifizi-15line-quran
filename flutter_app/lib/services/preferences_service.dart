@@ -28,6 +28,7 @@ class PreferencesService extends ChangeNotifier {
   double _playbackSpeed = 1.0;
   bool _audioHighlightEnabled = true; // highlight ayahs during audio
   bool _backgroundPlaybackEnabled = true; // keep audio in background
+  bool _nightPageMode = false; // invert mushaf page: black bg, white text
   List<String> _savedAyahs = []; // 's:v'
   Map<String, String> _pageNotes = {}; // page -> note
   Map<String, String> _pageTint = {}; // page -> color hex
@@ -73,6 +74,7 @@ class PreferencesService extends ChangeNotifier {
   bool get autoBackup => _autoBackup;
   bool get audioHighlightEnabled => _audioHighlightEnabled;
   bool get backgroundPlaybackEnabled => _backgroundPlaybackEnabled;
+  bool get nightPageMode => _nightPageMode;
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
@@ -105,6 +107,7 @@ class PreferencesService extends ChangeNotifier {
     _audioHighlightEnabled = _prefs.getBool('nur_audio_highlight') ?? true;
     _backgroundPlaybackEnabled =
         _prefs.getBool('nur_background_playback') ?? true;
+    _nightPageMode = _prefs.getBool('nur_night_page_mode') ?? false;
     _lastAutoBackup = _prefs.getString('nur_last_auto_backup') ?? '';
 
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
@@ -316,6 +319,12 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setAudioHighlightEnabled(bool enabled) async {
     _audioHighlightEnabled = enabled;
     await _prefs.setBool('nur_audio_highlight', enabled);
+    notifyListeners();
+  }
+
+  Future<void> setNightPageMode(bool enabled) async {
+    _nightPageMode = enabled;
+    await _prefs.setBool('nur_night_page_mode', enabled);
     notifyListeners();
   }
 
