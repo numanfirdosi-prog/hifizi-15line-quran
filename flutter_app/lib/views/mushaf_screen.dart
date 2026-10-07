@@ -1009,18 +1009,29 @@ class _MushafScreenState extends State<MushafScreen> {
                 final progress = (progSnap.data ?? 0.0).clamp(0.0, 1.0);
                 // Website progress distribution: segments fill in line order,
                 // weighted by width (min 5), each filling right-to-left.
+                // Every segment's [start, end) progress window is precomputed
+                // here. Never mutate shared state inside the Builder closures
+                // below: their build order is not guaranteed, and a shared
+                // accumulator assigned wrong windows to segments — lighting
+                // up the wrong lines out of order (first line dark while
+                // later lines filled).
                 final weights = ayahSegs.map((s) => max(5.0, s.width)).toList();
                 final total = weights.fold(0.0, (a, b) => a + b);
+                final windows = <List<double>>[];
                 double acc = 0;
+                for (final w in weights) {
+                  final startFrac = acc / total;
+                  acc += w;
+                  windows.add([startFrac, acc / total]);
+                }
                 return IgnorePointer(
                   child: Stack(
                     children: [
                       for (int i = 0; i < ayahSegs.length; i++)
                         Builder(builder: (context) {
                           final seg = ayahSegs[i];
-                          final startFrac = acc / total;
-                          acc += weights[i];
-                          final endFrac = acc / total;
+                          final startFrac = windows[i][0];
+                          final endFrac = windows[i][1];
                           double segProg;
                           if (progress >= endFrac) {
                             segProg = 1.0;
