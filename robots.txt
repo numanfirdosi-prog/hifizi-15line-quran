@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hifizi-15line-quran.vercel.app/sitemap.xml
