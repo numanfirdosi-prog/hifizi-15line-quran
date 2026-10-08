@@ -91,7 +91,30 @@ Future<Map<int, List<AyahSeg>>> loadPageAyahSegments() async {
         ));
       }
     }
-    out[page] = segs;
+    // Fix data-generation mis-splits: the first segment of an ayah is
+    // sometimes a narrow sliver (width < 15%) at the far edge (right > 85%)
+    // on the same line where the previous ayah ends, exactly adjacent to
+    // it. That sliver does not exist in the real layout (verified: 2:123
+    // has no text on line 6, the website shows it only on lines 7-8) — it
+    // wrongly highlights the previous ayah's words. Drop it.
+    final filtered = <AyahSeg>[];
+    for (int i = 0; i < segs.length; i++) {
+      final s = segs[i];
+      var bogus = false;
+      if (i > 0) {
+        final prev = segs[i - 1];
+        final isFirstOfAyah = s.surah != prev.surah || s.ayah != prev.ayah;
+        if (isFirstOfAyah &&
+            s.width < 15 &&
+            s.right > 85 &&
+            s.line == prev.line &&
+            (prev.right + prev.width - s.right).abs() < 1.0) {
+          bogus = true;
+        }
+      }
+      if (!bogus) filtered.add(s);
+    }
+    out[page] = filtered;
   });
   _segmentsCache = out;
   return out;
