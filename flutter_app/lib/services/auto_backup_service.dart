@@ -15,15 +15,27 @@ class AutoBackupService {
   static const int alarmId = 0xBA6C0; // 763072
   static const String fileName = 'nur_al_quran_auto_backup.json';
 
+  /// Whether the weekly scheduler can actually run on this platform.
+  /// AndroidAlarmManager is Android-only — the Backup & Restore screen
+  /// should gate/disable its auto-backup toggle on `!isSupported` instead
+  /// of showing a fake ON.
+  static bool get isSupported => Platform.isAndroid;
+
   /// Schedules the next weekly backup from now.
   static Future<void> scheduleWeekly() async {
+    // iOS path: AndroidAlarmManager does not exist here, so do not
+    // pretend to schedule (no-op instead of a fake toggle-ON state).
+    if (!Platform.isAndroid) return;
     try {
       final next = DateTime.now().add(const Duration(days: 7));
+      // BUG3 FIX: exact:false — with exact:true, Android 12+ throws
+      // SecurityException when SCHEDULE_EXACT_ALARM was denied, so the
+      // toggle showed ON but zero backups ever ran.
       await AndroidAlarmManager.oneShotAt(
         next,
         alarmId,
         autoBackupAlarmCallback,
-        exact: true,
+        exact: false,
         wakeup: true,
         rescheduleOnReboot: true,
       );
@@ -34,6 +46,8 @@ class AutoBackupService {
   }
 
   static Future<void> cancel() async {
+    // iOS path: nothing was ever scheduled, nothing to cancel.
+    if (!Platform.isAndroid) return;
     try {
       await AndroidAlarmManager.cancel(alarmId);
     } catch (e) {

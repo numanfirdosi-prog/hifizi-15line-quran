@@ -15,11 +15,17 @@ String arabicFontFamily(String scriptStyle) =>
 /// with the standard U+0652 ARABIC SUKUN (joining type "T", transparent)
 /// restores correct joining. Also joins split tanween-alef words ("ࣰ ا" →
 /// "ࣰا") which the source data writes with a space, rendering as a broken
-/// "ضَعِيفً ا". This only affects rendering — the data files stay untouched
-/// and the meaning is identical.
+/// "ضَعِيفً ا". The split occurs with several tanween marks, so all variants
+/// are joined (U+08F0, U+064B, U+064C, U+064D, U+08F1). This only affects
+/// rendering — the data files stay untouched and the meaning is identical.
+///
+/// Tanween marks the bundled text writes split as "<tanween> ا" before alef.
+const _splitTanweenMarks = 'ࣰًٌࣱٍ';
+
 String normalizeArabicDisplay(String text) => text
     .replaceAll('\u06E1', '\u0652')
-    .replaceAll('ࣰ ا', 'ࣰا');
+    .replaceAllMapped(
+        RegExp('([$_splitTanweenMarks]) ا'), (m) => '${m[1]}ا');
 
 /// Dedicated Urdu text style using the bundled Noto Nastaliq Urdu font
 /// (OFL licensed). Use for Urdu translations and Urdu UI text — never for

@@ -44,28 +44,36 @@ class QariAudioStorage {
   }
 
   /// Local file for surah [surah] of [qari], or null when not downloaded.
+  /// A zero-byte leftover of a killed download counts as not downloaded,
+  /// so playback falls back to streaming instead of failing on it.
   static Future<File?> surahFile(Qari qari, int surah) async {
     final dir = await qariDir(qari.id);
     final file = File('${dir.path}/${surahFileName(surah)}');
-    return await file.exists() ? file : null;
+    return (await file.exists() && await file.length() > 0) ? file : null;
   }
 
   /// Local file for ayah [ayah] of surah [surah] of [qari],
-  /// or null when not downloaded.
+  /// or null when not downloaded (zero-byte leftovers count as missing,
+  /// so playback falls back to streaming).
   static Future<File?> ayahFile(Qari qari, int surah, int ayah) async {
     final dir = await qariDir(qari.id);
     final file = File('${dir.path}/${ayahFileName(surah, ayah)}');
-    return await file.exists() ? file : null;
+    return (await file.exists() && await file.length() > 0) ? file : null;
   }
 
   /// (surahsDownloaded, ayahsDownloaded) for [qariId], counted by
-  /// file-name prefix. Never throws.
+  /// file-name prefix. Zero-byte files — leftovers of a force-killed
+  /// download — are NOT counted, so [isPackComplete] never reports a
+  /// truncated pack as complete. Never throws.
   static Future<(int, int)> downloadedCounts(String qariId) async {
     try {
       final dir = await qariDir(qariId);
       var surahs = 0;
       var ayahs = 0;
       await for (final entry in dir.list()) {
+        if (entry is! File) continue;
+        // A zero-byte leftover of a killed download is not a real download.
+        if (await entry.length() <= 0) continue;
         final name = entry.path.split('/').last;
         if (name.startsWith('surah_') && name.endsWith('.mp3')) {
           surahs++;
@@ -79,8 +87,8 @@ class QariAudioStorage {
     }
   }
 
-  /// True when the full pack (114 surahs + 6236 ayahs) is on disk.
-  /// Never throws.
+  /// True when the full pack (114 surahs + 6236 ayahs) of non-empty
+  /// files is on disk. Never throws.
   static Future<bool> isPackComplete(String qariId) async {
     final (surahs, ayahs) = await downloadedCounts(qariId);
     return surahs >= totalSurahFiles && ayahs >= totalAyahFiles;

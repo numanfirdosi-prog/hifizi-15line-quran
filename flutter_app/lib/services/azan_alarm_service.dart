@@ -246,14 +246,30 @@ void azanAlarmCallback(int id) async {
         if (entry != null) {
           final nextTime = PrayerCalculationService.cityWallTimeToAbsolute(
               city, entry, tomorrow);
-          await AndroidAlarmManager.oneShotAt(
-            nextTime,
-            id,
-            azanAlarmCallback,
-            exact: true,
-            wakeup: true,
-            rescheduleOnReboot: true,
-          );
+          try {
+            await AndroidAlarmManager.oneShotAt(
+              nextTime,
+              id,
+              azanAlarmCallback,
+              exact: true,
+              wakeup: true,
+              rescheduleOnReboot: true,
+            );
+          } catch (_) {
+            // BUG2 FIX: exact-alarm permission may have been revoked after
+            // the day's schedule was made. Without this inner fallback the
+            // SecurityException killed the whole next-day chain (log-only),
+            // so this prayer's alarm silently never fired again until the
+            // app was reopened. Retry inexactly so the chain survives.
+            await AndroidAlarmManager.oneShotAt(
+              nextTime,
+              id,
+              azanAlarmCallback,
+              exact: false,
+              wakeup: true,
+              rescheduleOnReboot: true,
+            );
+          }
           debugPrint(
               '[AzanAlarm] Chained $prayerName for ${nextTime.toIso8601String()}');
         }
@@ -534,7 +550,11 @@ class AzanAlarmService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        // BUG1 FIX: the fallback path must never require the exact-alarm
+        // permission — on Android 12+ with SCHEDULE_EXACT_ALARM denied,
+        // exactAllowWhileIdle throws SecurityException, so the log-only
+        // catch left zero prayer alerts firing while toggles showed ON.
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );

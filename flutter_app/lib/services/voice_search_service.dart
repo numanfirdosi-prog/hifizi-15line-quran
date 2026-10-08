@@ -61,6 +61,13 @@ class VoiceSearchService {
     if (raw.isEmpty) return [];
 
     final clean = cleanSurahPrefix(raw);
+    // Diacritics-only queries (no actual letters) normalize to an empty
+    // string, and `contains('')` matches every surah — return zero results
+    // instead of bogus matches. Digits alone are a valid surah-number query
+    // (matched below), so they pass the guard.
+    if (!RegExp('[؀-ۿa-zA-Zऀ-ॿ0-9]').hasMatch(clean)) {
+      return [];
+    }
     final cleanNorm =
         clean.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
     final cleanHindiNorm = normalizeHindi(clean);

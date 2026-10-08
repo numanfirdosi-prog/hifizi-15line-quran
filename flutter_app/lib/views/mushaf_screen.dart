@@ -29,6 +29,9 @@ class _MushafScreenState extends State<MushafScreen> {
   final TransformationController _transformController =
       TransformationController();
   ScrollController? _scrollController;
+  // List width the scroll controller was built for: the scroll item height
+  // derives from the width, so on rotation the offset must be re-based.
+  double? _scrollViewWidth;
   // Per-page image retry counters: bumping the counter rebuilds the
   // page image loader with a fresh key to retry a failed load.
   final Map<int, int> _imgRetry = {};
@@ -753,12 +756,21 @@ class _MushafScreenState extends State<MushafScreen> {
     await audio.playSurah(surahNumber: surah);
   }
 
-  /// Height of one page item in scroll mode. The item is an
-  /// AspectRatio(_kPageAspect) at full list width (see _buildPageItem), so the
-  /// scroll math must use the full width — not width minus margins —
-  /// or jump targets drift further off with every page.
-  double _scrollItemHeight(BuildContext context) =>
-      MediaQuery.of(context).size.width / _kPageAspect;
+  /// Height of one page item in scroll mode. The item sizes to its
+  /// content: the SafeArea top inset, the fixed-height top/bottom
+  /// ornaments, the page image at its exact aspect ([_kPageAspect]) at
+  /// full list width, and the control-bar clearance spacer — so the scroll
+  /// math must use the full width (not width minus margins) or jump
+  /// targets drift further off with every page.
+  double _scrollItemHeight(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    return mq.padding.top +
+        _kTopOrnamentHeight +
+        mq.size.width / _kPageAspect +
+        _kBottomOrnamentHeight +
+        _kBottomSpacerHeight +
+        mq.padding.bottom;
+  }
 
   /// The page image (with night tint overlay), without the InteractiveViewer
   /// wrapper. The reader is decorated top and bottom: the golden Bismillah
@@ -766,7 +778,13 @@ class _MushafScreenState extends State<MushafScreen> {
   /// below, over a rich golden arabesque pattern — so the screen never looks
   /// empty. The image box keeps the exact page-image aspect (_kPageAspect)
   /// so ayah tap coordinates map 1:1 to the image.
-  Widget _buildPageImage(BuildContext context, int pageNum) {
+  ///
+  /// In scroll mode ([scrollMode]) the column height is unbounded, so the
+  /// image box sizes purely from the list width (exact aspect) and the
+  /// fixed-height ornaments frame it — the decorated page is never forced
+  /// into a fixed AspectRatio, which used to squeeze the image box.
+  Widget _buildPageImage(BuildContext context, int pageNum,
+      {bool scrollMode = false}) {
     // Night theme: gently darken the white page so it doesn't strain the
     // eyes. Only the page image is filtered, not the highlight/drawing
     // overlays painted above it.
@@ -809,12 +827,21 @@ class _MushafScreenState extends State<MushafScreen> {
           painter: _OrnamentPatternPainter(nightDim: nightDim || nightPage),
           child: Column(
             children: [
-              _buildTopOrnament(pageNum, nightDim),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: _kPageAspect,
-                  child: Stack(
-                    children: [
+              SizedBox(
+                // Fixed ornament heights: scroll-mode items size to their
+                // content, so these must be exact — _scrollItemHeight
+                // depends on them.
+                height: _kTopOrnamentHeight,
+                child: _buildTopOrnament(pageNum, nightDim),
+              ),
+              // The page-image box keeps the exact page aspect in both
+              // modes: in scroll mode the column height is unbounded, so
+              // the box sizes purely from the list width instead of being
+              // squeezed by the ornaments inside a fixed AspectRatio.
+              _buildImageBox(
+                scrollMode,
+                Stack(
+                  children: [
                 Positioned.fill(
                   child: ColorFiltered(
                     colorFilter: nightPage
@@ -876,19 +903,33 @@ class _MushafScreenState extends State<MushafScreen> {
                 // (The 📜 per-page button was replaced by the screen-level
                 // floating note button, bottom-left like the reference design.)
                 _buildDrawingModeChip(),
-              ],
-            ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: _kBottomOrnamentHeight,
+                child: Center(child: _buildBottomOrnament(pageNum, nightDim)),
+              ),
+              // Reserve space for the overlaying bottom control bar so the
+              // Manzil badge isn't hidden behind it.
+              SizedBox(
+                height: _kBottomSpacerHeight +
+                    MediaQuery.of(context).padding.bottom,
+              ),
+            ],
           ),
-        ),
-        _buildBottomOrnament(pageNum, nightDim),
-        // Reserve space for the overlaying bottom control bar so the
-        // Manzil badge isn't hidden behind it.
-        SizedBox(height: 76 + MediaQuery.of(context).padding.bottom),
-      ],
-    ),
   ),
   ),
 );
+  }
+
+  /// Wraps the page-image [stack] in a box with the exact page aspect.
+  /// In scroll mode the column height is unbounded, so the box sizes
+  /// purely from the list width (never squeezed); otherwise Expanded
+  /// fills the leftover column space as before.
+  Widget _buildImageBox(bool scrollMode, Widget stack) {
+    final box = AspectRatio(aspectRatio: _kPageAspect, child: stack);
+    return scrollMode ? box : Expanded(child: box);
   }
 
   /// Ornamental header above the page: Bismillah in gold calligraphy under
@@ -974,6 +1015,18 @@ class _MushafScreenState extends State<MushafScreen> {
 
   /// True aspect ratio of the bundled page images (720x1080).
   static const double _kPageAspect = 2 / 3;
+
+  /// Fixed ornament heights (px) framing the page image. Scroll-mode items
+  /// size to their content, so these must stay exact: [_scrollItemHeight]
+  /// adds them to the width-derived image height for the scroll math.
+  /// Top: 86px Bismillah cartouche + 10px padding.
+  static const double _kTopOrnamentHeight = 96.0;
+
+  /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
+  static const double _kBottomOrnamentHeight = 64.0;
+
+  /// Spacer reserving room for the overlaying bottom control bar.
+  static const double _kBottomSpacerHeight = 76.0;
 
   /// Color matrix that inverts the mushaf page image for night page mode:
   /// white page -> black background, black text -> white. Only the page
@@ -1117,9 +1170,12 @@ class _MushafScreenState extends State<MushafScreen> {
   /// is non-interactive (no pinch zoom) so the list can scroll.
   Widget _buildPageItem(BuildContext context, int pageNum,
       {bool interactive = true}) {
-    final pageImage = _buildPageImage(context, pageNum);
+    final pageImage = _buildPageImage(context, pageNum, scrollMode: !interactive);
     if (!interactive) {
-      return AspectRatio(aspectRatio: _kPageAspect, child: pageImage);
+      // Scroll mode: the item sizes to its content (fixed-height ornaments
+      // + the page image at its exact aspect) — never force the decorated
+      // page into a fixed AspectRatio, which squeezed the image box.
+      return pageImage;
     }
     // While a drawing tool is active, pinch/pan zoom is disabled so draw
     // gestures are not stolen by the InteractiveViewer.
@@ -1176,12 +1232,21 @@ class _MushafScreenState extends State<MushafScreen> {
 
   Widget _buildScrollView(BuildContext context) {
     final itemHeight = _scrollItemHeight(context);
+    final width = MediaQuery.of(context).size.width;
+    if (_scrollController == null || _scrollViewWidth != width) {
+      // (Re)create the controller when entering scroll mode or when the
+      // width changes (rotation): the item height derives from the width,
+      // so the old pixel offset would land mid-page or past the end —
+      // re-base it on the current page instead.
+      _scrollController?.dispose();
+      _scrollController = ScrollController(
+        initialScrollOffset: (_currentPage - 1) * itemHeight,
+      );
+      _scrollViewWidth = width;
+    }
     // Scrolling is disabled while drawing so strokes are not interrupted.
     final drawingActive =
         Provider.of<PageDrawingService>(context).isDrawingMode;
-    _scrollController ??= ScrollController(
-      initialScrollOffset: (_currentPage - 1) * itemHeight,
-    );
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollUpdateNotification ||
@@ -1218,6 +1283,7 @@ class _MushafScreenState extends State<MushafScreen> {
     if (!isScroll && _scrollController != null) {
       _scrollController!.dispose();
       _scrollController = null;
+      _scrollViewWidth = null;
     }
 
     return Scaffold(

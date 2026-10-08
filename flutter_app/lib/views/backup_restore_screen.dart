@@ -41,27 +41,34 @@ class BackupRestoreScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    // The weekly scheduler is Android-only; on other platforms the
+                    // toggle is disabled with an explanation instead of a
+                    // fake ON. "Back Up Now" below stays available everywhere.
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text('Auto backup (weekly)',
                           style: TextStyle(color: cs.onSurface)),
                       subtitle: Text(
-                        'Quietly saves your data to this device once a week. No internet needed.',
+                        AutoBackupService.isSupported
+                            ? 'Quietly saves your data to this device once a week. No internet needed.'
+                            : 'Weekly auto backup is only available on Android. Use "Back Up Now" on this device.',
                         style: TextStyle(
-                            color:
-                                cs.onSurface.withValues(alpha: 0.6),
+                            color: cs.onSurface.withValues(alpha: 0.6),
                             fontSize: 12),
                       ),
-                      value: prefs.autoBackup,
+                      value: AutoBackupService.isSupported &&
+                          prefs.autoBackup,
                       activeColor: cs.primary,
-                      onChanged: (val) async {
-                        await prefs.setAutoBackup(val);
-                        if (val) {
-                          await AutoBackupService.scheduleWeekly();
-                        } else {
-                          await AutoBackupService.cancel();
-                        }
-                      },
+                      onChanged: AutoBackupService.isSupported
+                          ? (val) async {
+                              await prefs.setAutoBackup(val);
+                              if (val) {
+                                await AutoBackupService.scheduleWeekly();
+                              } else {
+                                await AutoBackupService.cancel();
+                              }
+                            }
+                          : null,
                     ),
                     if (prefs.lastAutoBackup.isNotEmpty)
                       Padding(
@@ -351,6 +358,12 @@ class _ImportFieldState extends State<_ImportField> {
               // Imported page drawings must reach the drawing service too.
               await Provider.of<PageDrawingService>(context, listen: false)
                   .reload();
+              // Match the weekly auto-backup alarm to the imported toggle.
+              if (prefs.autoBackup) {
+                await AutoBackupService.scheduleWeekly();
+              } else {
+                await AutoBackupService.cancel();
+              }
             }
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

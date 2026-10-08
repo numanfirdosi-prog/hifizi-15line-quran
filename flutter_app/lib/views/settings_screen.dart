@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
@@ -8,6 +9,10 @@ import '../utils/script_font.dart';
 class SettingsScreen extends StatelessWidget {
   final void Function(int page) onOpenPage;
   const SettingsScreen({super.key, required this.onOpenPage});
+
+  /// Installed app version, loaded once for the About box.
+  static final Future<PackageInfo> _packageInfoFuture =
+      PackageInfo.fromPlatform();
 
   Future<void> _reschedule(PreferencesService prefs) {
     return AzanAlarmService().scheduleDailyPrayerAlarms(
@@ -637,9 +642,17 @@ class SettingsScreen extends StatelessWidget {
                       color: Colors.white70, fontSize: 12, height: 1.4),
                 ),
                 SizedBox(height: 6),
-                Text(
-                  'Version 1.0.11',
-                  style: TextStyle(color: cs.primary, fontSize: 11),
+                FutureBuilder<PackageInfo>(
+                  future: _packageInfoFuture,
+                  builder: (context, snapshot) {
+                    final version = snapshot.data?.version;
+                    return Text(
+                      version == null || version.isEmpty
+                          ? 'Version…'
+                          : 'Version $version',
+                      style: TextStyle(color: cs.primary, fontSize: 11),
+                    );
+                  },
                 ),
               ],
             ),

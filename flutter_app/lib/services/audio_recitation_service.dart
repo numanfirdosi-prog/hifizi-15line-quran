@@ -192,6 +192,13 @@ class AudioRecitationService extends ChangeNotifier {
   int repeatMode = 0;
   int _completedPlays = 0;
 
+  /// Generation token guarding against the race where an in-flight
+  /// auto-advance overwrites a newer user-initiated playback: every
+  /// user-initiated playAyah/stop/playSurah bumps [_playGeneration], and
+  /// [_advanceAyah] only plays when its scheduled generation is still
+  /// current.
+  int _playGeneration = 0;
+
   /// Ayah-by-ayah mode: plays one ayah MP3 after another, advancing through
   /// the Mushaf until the user stops. Ignores [repeatMode].
   bool _ayahMode = false;
@@ -320,11 +327,15 @@ class AudioRecitationService extends ChangeNotifier {
   }
 
   Future<void> _onPlayerState(PlayerState state) async {
+    // Capture the play generation synchronously: a 'completed' event must
+    // not trigger an auto-advance that overwrites a newer user-initiated
+    // playback which started while this handler was awaiting.
+    final gen = _playGeneration;
     _isPlaying =
         state.playing && state.processingState != ProcessingState.completed;
     if (state.processingState == ProcessingState.completed) {
       if (_ayahMode) {
-        await _advanceAyah();
+        await _advanceAyah(gen);
       } else if (repeatMode == -1) {
         // Infinite repeat.
         await _player.setLoopMode(LoopMode.one);
@@ -347,14 +358,19 @@ class AudioRecitationService extends ChangeNotifier {
   /// repeat range is set, loops back to its start after its end instead.
   /// Stops ayah mode at the end of the Quran (114:6). A single bad audio
   /// file (404/corrupt) is skipped instead of killing the whole recitation.
-  Future<void> _advanceAyah() async {
+  /// [gen] is the play generation captured when the 'completed' event was
+  /// scheduled: if the user tapped a new ayah (or stopped) meanwhile, the
+  /// generation changed and this stale advance is ignored.
+  Future<void> _advanceAyah(int gen) async {
+    if (gen != _playGeneration || !_ayahMode) return;
     if (_repeatRangeSurah != null &&
         _currentSurah == _repeatRangeSurah &&
         _currentAyah >= (_repeatRangeEnd ?? 0)) {
       await playAyah(
           surah: _repeatRangeSurah!,
           ayah: _repeatRangeStart ?? 1,
-          keepRepeatRange: true);
+          keepRepeatRange: true,
+          autoAdvance: true);
       return;
     }
     var nextOpt = _nextAyah();
@@ -368,10 +384,16 @@ class AudioRecitationService extends ChangeNotifier {
     // spin forever); stop only when the Quran ends or all retries fail.
     // keepRepeatRange: true — this is internal auto-advance, not a new
     // user request, so an active repeat range must survive.
+    // The gen check in the loop condition aborts the skip chain when the
+    // user tapped a new ayah while a file was loading.
     var failures = 0;
     var next = nextOpt;
-    while (!(await playAyah(
-        surah: next.$1, ayah: next.$2, keepRepeatRange: true))) {
+    while (gen == _playGeneration &&
+        !(await playAyah(
+            surah: next.$1,
+            ayah: next.$2,
+            keepRepeatRange: true,
+            autoAdvance: true))) {
       failures++;
       if (failures >= 5) {
         _ayahMode = false;
@@ -398,21 +420,24 @@ class AudioRecitationService extends ChangeNotifier {
   /// the end of the Quran.
   (int, int)? _nextAyah() => nextAyahAfter(_currentSurah, _currentAyah);
 
-  /// Skips to the next ayah (stays in ayah mode).
+  /// Skips to the next ayah (stays in ayah mode). An active ayah repeat
+  /// range is preserved across the skip (lock-screen skips arrive here via
+  /// the audio handler too).
   Future<void> playNextAyah() async {
     final next = _nextAyah();
     if (next == null) {
       await stop();
       return;
     }
-    await playAyah(surah: next.$1, ayah: next.$2);
+    await playAyah(surah: next.$1, ayah: next.$2, keepRepeatRange: true);
   }
 
-  /// Skips to the previous ayah (stays in ayah mode).
+  /// Skips to the previous ayah (stays in ayah mode). An active ayah repeat
+  /// range is preserved across the skip.
   Future<void> playPrevAyah() async {
     final prev = prevAyahBefore(_currentSurah, _currentAyah);
     if (prev == null) return;
-    await playAyah(surah: prev.$1, ayah: prev.$2);
+    await playAyah(surah: prev.$1, ayah: prev.$2, keepRepeatRange: true);
   }
 
   /// Starts repeating ayahs [startAyah]..[endAyah] of [surah] in a loop,
@@ -465,6 +490,9 @@ class AudioRecitationService extends ChangeNotifier {
 
   Future<void> playSurah({required int surahNumber}) async {
     _ayahMode = false;
+    // A new user-initiated session invalidates any in-flight ayah
+    // auto-advance (see _playGeneration).
+    _playGeneration++;
     // A whole-surah playback is a fresh session: drop any ayah repeat
     // range left over from earlier, or _advanceAyah would later loop back
     // into the stale range when an ayah of that surah is played.
@@ -502,11 +530,20 @@ class AudioRecitationService extends ChangeNotifier {
   /// user stops. The current ayah is highlighted in the ayah player sheet.
   /// Plays a single ayah's audio and auto-advances ayah-by-ayah.
   /// Returns true on success, false when the audio could not be loaded
-  /// (e.g. no internet). When [keepRepeatRange] is false (user-initiated
-  /// playback), any stale ayah-repeat range is cleared so it can't hijack
-  /// later sessions.
+  /// (e.g. no internet) or when a newer user-initiated playback superseded
+  /// this one while it was loading. When [keepRepeatRange] is false
+  /// (user-initiated playback), any stale ayah-repeat range is cleared so
+  /// it can't hijack later sessions. [autoAdvance] marks internal
+  /// auto-advance calls, which must not bump the play generation.
   Future<bool> playAyah(
-      {required int surah, required int ayah, bool keepRepeatRange = false}) async {
+      {required int surah,
+      required int ayah,
+      bool keepRepeatRange = false,
+      bool autoAdvance = false}) async {
+    // Every user-initiated playback bumps the generation so a stale
+    // in-flight auto-advance can never overwrite the newer tap.
+    if (!autoAdvance) _playGeneration++;
+    final gen = _playGeneration;
     _ayahMode = true;
     _currentSurah = surah;
     _currentAyah = ayah;
@@ -521,14 +558,26 @@ class AudioRecitationService extends ChangeNotifier {
 
     try {
       await _player.setLoopMode(LoopMode.off);
+      // Apply the saved playback speed, like the surah-play path does:
+      // without this, ayah taps after a cold start always play at 1.0x
+      // even though the reader bar shows the saved speed. Key mirrors
+      // PreferencesService ('nur_playback_speed').
+      try {
+        final sp = await SharedPreferences.getInstance();
+        await _player.setSpeed(sp.getDouble('nur_playback_speed') ?? 1.0);
+      } catch (_) {}
       // Offline first: play the downloaded pack file when present.
       final localFile = await QariAudioStorage.ayahFile(_selectedQari, surah, ayah);
+      // A newer user tap superseded this playback while it was loading:
+      // leave the player alone — the newer tap owns it now.
+      if (gen != _playGeneration) return false;
       await _player.setAudioSource(
         localFile != null
             ? AudioSource.uri(Uri.file(localFile.path))
             // Cache the ayah audio on disk while streaming, like surah audio.
             : LockCachingAudioSource(Uri.parse(audioUrl)),
       );
+      if (gen != _playGeneration) return false;
       await _player.play();
       notifyListeners();
       return true;
@@ -557,6 +606,9 @@ class AudioRecitationService extends ChangeNotifier {
 
   Future<void> stop() async {
     _ayahMode = false;
+    // Invalidate any in-flight auto-advance: it must not restart audio
+    // after the user pressed stop (see _playGeneration).
+    _playGeneration++;
     _repeatRangeSurah = null;
     _repeatRangeStart = null;
     _repeatRangeEnd = null;

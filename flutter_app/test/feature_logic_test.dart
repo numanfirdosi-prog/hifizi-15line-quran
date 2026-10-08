@@ -52,7 +52,7 @@ class _NoAudioService extends AudioRecitationService {
   _NoAudioService() : super();
 
   @override
-  Future<bool> playAyah({required int surah, required int ayah}) async {
+  Future<bool> playAyah({required int surah, required int ayah, bool keepRepeatRange = false, bool autoAdvance = false}) async {
     // No-op in tests.
     return true;
   }

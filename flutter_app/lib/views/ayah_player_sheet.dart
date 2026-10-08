@@ -141,29 +141,73 @@ class _AyahPlayerSheet extends StatelessWidget {
               // Highlighted current ayah
               Flexible(
                 child: SingleChildScrollView(
-                  child: FutureBuilder<List<dynamic>>(
-                    future: _playerDataFuture,
-                    builder: (context, snap) {
-                      final list = snap.data?[0] as List<QuranTextEntry>?;
-                      final urduMap =
-                          snap.data?[1] as Map<String, String>?;
-                      final entry = _find(list, s, v);
-                      final urdu = urduMap?['$s:$v'] ?? '';
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cs.primary.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: cs.primary.withValues(alpha: 0.5)),
-                        ),
-                        child: entry == null
-                            ? Center(
-                                child: CircularProgressIndicator(
-                                    color: cs.primary),
-                              )
-                            : Column(
+                  child: StatefulBuilder(
+                    builder: (sctx, setState) =>
+                        FutureBuilder<List<dynamic>>(
+                      future: _playerDataFuture,
+                      builder: (context, snap) {
+                        // Load failure: show an error with Retry instead of
+                        // spinning forever on the poisoned cached future.
+                        if (snap.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.error_outline,
+                                      color: cs.error, size: 36),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Quran ka text load nahi ho saka',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: cs.onSurface, fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FilledButton(
+                                    onPressed: () {
+                                      // Drop the failed cached futures so the
+                                      // retry actually re-fires them.
+                                      _quranTextFuture = loadQuranText();
+                                      _urduFuture =
+                                          loadUrduKanzulIman();
+                                      _playerDataFuture =
+                                          Future.wait<dynamic>([
+                                        _quranTextFuture!,
+                                        _urduFuture!,
+                                      ]);
+                                      setState(() {});
+                                    },
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        final list =
+                            snap.data?[0] as List<QuranTextEntry>?;
+                        final urduMap =
+                            snap.data?[1] as Map<String, String>?;
+                        final entry = _find(list, s, v);
+                        final urdu = urduMap?['$s:$v'] ?? '';
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: cs.primary.withValues(alpha: 0.5)),
+                          ),
+                          child: entry == null
+                              ? Center(
+                                  child: CircularProgressIndicator(
+                                      color: cs.primary),
+                                )
+                              : Column(
                                 children: [
                                   Text(
                                     entry.ar,
@@ -216,7 +260,8 @@ class _AyahPlayerSheet extends StatelessWidget {
                                 ],
                               ),
                       );
-                    },
+                      },
+                    ),
                   ),
                 ),
               ),

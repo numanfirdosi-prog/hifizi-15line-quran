@@ -51,8 +51,25 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
       return;
     }
     setState(() => _status = _UpdateStatus.checking);
+    // The installed version loads async at startup; comparing against the
+    // empty pre-load value would falsely report "update available". Wait for
+    // it here so the check only ever runs against a real installed version.
+    if (_installedVersion.isEmpty) {
+      await _loadInstalledVersion();
+    }
+    if (_installedVersion.isEmpty) {
+      // PackageInfo unavailable: cannot compare — stay in the unknown state
+      // instead of showing a false "update available".
+      if (!mounted) return;
+      setState(() => _status = _UpdateStatus.idle);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Installed version maloom nahi ho saki')),
+      );
+      return;
+    }
+    final client = HttpClient();
     try {
-      final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 15);
       final request = await client.getUrl(Uri.parse(_releasesUrl));
       // GitHub API rejects requests without a User-Agent.
@@ -61,7 +78,6 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
       final response =
           await request.close().timeout(const Duration(seconds: 20));
       final body = await response.transform(utf8.decoder).join();
-      client.close();
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
       }
@@ -99,6 +115,10 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
         const SnackBar(
             content: Text('Update check nahi ho saka — internet check karein')),
       );
+    } finally {
+      // Always release the client's sockets, even when the request times
+      // out or throws before reaching the success path.
+      client.close();
     }
   }
 

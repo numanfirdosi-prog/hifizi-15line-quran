@@ -39,6 +39,19 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
   Future<void> _runSearch() async {
     final q = _controller.text.trim();
     if (q.isEmpty) return;
+    // Diacritics-only queries (e.g. just harakat, no letters) normalize to an
+    // empty string, and `contains('')` matches every verse — ~200 bogus
+    // results. Require at least one actual letter; otherwise show the normal
+    // "no results" UI.
+    final stripped = normalizeArabic(q).replaceAll(RegExp(r'\s+'), '');
+    if (!RegExp('[؀-ۿa-zA-Z]').hasMatch(stripped)) {
+      if (!mounted) return;
+      setState(() {
+        _results = [];
+        _searched = true;
+      });
+      return;
+    }
     final data = await _loadFuture;
     final entries = data[0] as List<QuranTextEntry>;
     _urdu = data[2] as Map<String, String>;

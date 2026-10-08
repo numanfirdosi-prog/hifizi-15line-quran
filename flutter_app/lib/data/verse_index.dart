@@ -70,10 +70,13 @@ String normalizeArabic(String s) {
   // Diacritic class incl. Quranic marks (ۖ-ۮ); tanween incl. open variants.
   const d = 'ً-ٟۖ-ۮ';
   const tanween = 'ًࣰٌࣱٍࣲ';
-  // Split tanween-alef words: "ـࣰٔ ا", "ࣰ ا" → join.
+  // Split tanween-alef words: "ـࣰٔ ا", "ࣰ ا" → join. The split occurs with
+  // every tanween variant (U+08F0, U+064B, U+064C, U+064D, U+08F1), so join
+  // all of them, not just U+08F0.
   var out = s.replaceAllMapped(
       RegExp('ـ[$d]*[ٕٔ][$d]*[$tanween] ا'), (m) => 'ئا');
-  out = out.replaceAll('ࣰ ا', 'ࣰا');
+  out = out.replaceAllMapped(
+      RegExp('([$tanween]) ا'), (m) => '${m[1]}ا');
   // Superscript-alef + maddah (ٰٓ) is آ; waw + superscript-alef (وٰ) is ا.
   out = out.replaceAll('ٰٓ', 'آ').replaceAll('ٰٓ', 'آ');
   out = out.replaceAll('وٰ', 'ا');

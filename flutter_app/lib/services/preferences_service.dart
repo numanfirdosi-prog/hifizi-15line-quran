@@ -3,12 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/city.dart';
 import '../data/preset_cities.dart';
+import 'auto_backup_service.dart';
 
 class PreferencesService extends ChangeNotifier {
   late SharedPreferences _prefs;
 
   int _lastReadPage = 2;
-  String _themeMode = 'emerald'; // emerald, parchment, night
   City _selectedCity = presetCities[0];
   String _asrMethod = 'Hanafi';
   bool _azanSoundEnabled = true;
@@ -48,7 +48,6 @@ class PreferencesService extends ChangeNotifier {
   };
 
   int get lastReadPage => _lastReadPage;
-  String get themeMode => _themeMode;
   City get selectedCity => _selectedCity;
   String get asrMethod => _asrMethod;
   bool get azanSoundEnabled => _azanSoundEnabled;
@@ -78,10 +77,22 @@ class PreferencesService extends ChangeNotifier {
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
+  /// The retired 'nastaliq' (Gulzar) script style migrates to Noto Sans
+  /// Arabic ('sans'). Applied both at startup and on backup import so old
+  /// stored values and old backups can never bypass the migration.
+  static String _migrateScriptStyle(String style) =>
+      style == 'nastaliq' ? 'sans' : style;
+
+  /// Parses an int from a num or a numeric String; null when corrupt.
+  static int? _tryParseInt(dynamic v) {
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _lastReadPage = _prefs.getInt('nur_last_read_page') ?? 2;
-    _themeMode = _prefs.getString('nur_theme_mode') ?? 'emerald';
     _asrMethod = _prefs.getString('nur_asr_method') ?? 'Hanafi';
     _azanSoundEnabled = _prefs.getBool('nur_azan_sound') ?? true;
     _lockscreenAlarmEnabled = _prefs.getBool('nur_lockscreen_alarm') ?? true;
@@ -93,9 +104,10 @@ class PreferencesService extends ChangeNotifier {
     _themeName = _prefs.getString('nur_theme_name') ?? 'night';
     _scriptStyle = _prefs.getString('nur_script_style') ?? 'sans';
     // Migrate the retired 'nastaliq' (Gulzar) style to Noto Sans Arabic.
-    if (_scriptStyle == 'nastaliq') {
-      _scriptStyle = 'sans';
-      await _prefs.setString('nur_script_style', 'sans');
+    final migratedStyle = _migrateScriptStyle(_scriptStyle);
+    if (migratedStyle != _scriptStyle) {
+      _scriptStyle = migratedStyle;
+      await _prefs.setString('nur_script_style', migratedStyle);
     }
     _ayahScale = _prefs.getDouble('nur_ayah_scale') ?? 1.0;
     _readingMode = _prefs.getString('nur_reading_mode') ?? 'slide';
@@ -154,7 +166,9 @@ class PreferencesService extends ChangeNotifier {
 
     final bookmarksList = _prefs.getStringList('nur_bookmarks');
     if (bookmarksList != null) {
-      _bookmarks = bookmarksList.map((e) => int.tryParse(e) ?? 2).toList();
+      // Corrupt entries are skipped, never defaulted to a real page.
+      _bookmarks =
+          bookmarksList.map(_tryParseInt).whereType<int>().toList();
     }
 
     final khatmList = _prefs.getStringList('nur_khatm_days');
@@ -177,8 +191,14 @@ class PreferencesService extends ChangeNotifier {
     if (alarmsJson != null) {
       try {
         final decoded = jsonDecode(alarmsJson) as Map<String, dynamic>;
-        _prayerAlarms =
-            decoded.map((key, value) => MapEntry(key, value as bool));
+        // Per-alarm fallback: keep the good stored values, default only
+        // the bad ones — one corrupt value no longer resets all five.
+        for (final entry in decoded.entries) {
+          if (_prayerAlarms.containsKey(entry.key) &&
+              entry.value is bool) {
+            _prayerAlarms[entry.key] = entry.value as bool;
+          }
+        }
       } catch (_) {}
     }
 
@@ -188,12 +208,6 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setLastReadPage(int page) async {
     _lastReadPage = page;
     await _prefs.setInt('nur_last_read_page', page);
-    notifyListeners();
-  }
-
-  Future<void> setThemeMode(String mode) async {
-    _themeMode = mode;
-    await _prefs.setString('nur_theme_mode', mode);
     notifyListeners();
   }
 
@@ -426,6 +440,7 @@ class PreferencesService extends ChangeNotifier {
     await _prefs.remove('nur_saved_ayahs');
     await _prefs.remove('nur_page_notes');
     await _prefs.remove('nur_page_tint');
+    await _prefs.remove('nur_page_drawings');
     await _prefs.remove('nur_read_pages');
     await _prefs.remove('nur_last_read_page');
     await _prefs.remove('nur_last_read_surah');
@@ -438,7 +453,6 @@ class PreferencesService extends ChangeNotifier {
   String exportJson() {
     return jsonEncode({
       'lastReadPage': _lastReadPage,
-      'themeMode': _themeMode,
       'selectedCity': _selectedCity.toJson(),
       'asrMethod': _asrMethod,
       'azanSoundEnabled': _azanSoundEnabled,
@@ -466,17 +480,22 @@ class PreferencesService extends ChangeNotifier {
       'autoBackup': _autoBackup,
       'audioHighlightEnabled': _audioHighlightEnabled,
       'backgroundPlaybackEnabled': _backgroundPlaybackEnabled,
+      'nightPageMode': _nightPageMode,
       'lastAutoBackup': _lastAutoBackup,
     });
   }
 
-  /// Applies a JSON blob produced by [exportJson]. Applies, persists and
-  /// notifies on success. Returns false on bad input and never throws.
-  Future<bool> importJson(String jsonStr) async {
+
+  /// Validates a backup JSON blob and stages every present field. Returns
+  /// null when the blob itself is malformed (bad JSON, non-object top level,
+  /// or a field that cannot be parsed, e.g. a corrupt city map) — in that
+  /// case [importJson] persists nothing at all. Never throws.
+  static _ParsedBackup? _parseBackupJson(String jsonStr) {
     try {
       final decoded = jsonDecode(jsonStr);
-      if (decoded is! Map<String, dynamic>) return false;
+      if (decoded is! Map<String, dynamic>) return null;
       final m = decoded;
+      final data = _ParsedBackup();
 
       int? asInt(dynamic v) {
         if (v is num) return v.toInt();
@@ -493,212 +512,301 @@ class PreferencesService extends ChangeNotifier {
       String? asString(dynamic v) => v is String ? v : null;
       bool? asBool(dynamic v) => v is bool ? v : null;
 
-      final lastReadPage = asInt(m['lastReadPage']);
-      if (lastReadPage != null) {
-        _lastReadPage = lastReadPage;
-        await _prefs.setInt('nur_last_read_page', lastReadPage);
-      }
-
-      final themeMode = asString(m['themeMode']);
-      if (themeMode != null) {
-        _themeMode = themeMode;
-        await _prefs.setString('nur_theme_mode', themeMode);
-      }
+      data.lastReadPage = asInt(m['lastReadPage']);
 
       final cityMap = m['selectedCity'];
       if (cityMap is Map<String, dynamic>) {
-        _selectedCity = City.fromJson(cityMap);
-        await _prefs.setString('nur_selected_city', jsonEncode(cityMap));
+        // Throws on malformed maps (e.g. a String where a number belongs) —
+        // that invalidates the whole backup instead of half-applying it.
+        data.selectedCity = City.fromJson(cityMap);
       }
 
-      final asrMethod = asString(m['asrMethod']);
-      if (asrMethod != null) {
-        _asrMethod = asrMethod;
-        await _prefs.setString('nur_asr_method', asrMethod);
-      }
-
-      final azanSound = asBool(m['azanSoundEnabled']);
-      if (azanSound != null) {
-        _azanSoundEnabled = azanSound;
-        await _prefs.setBool('nur_azan_sound', azanSound);
-      }
-
-      final lockAlarm = asBool(m['lockscreenAlarmEnabled']);
-      if (lockAlarm != null) {
-        _lockscreenAlarmEnabled = lockAlarm;
-        await _prefs.setBool('nur_lockscreen_alarm', lockAlarm);
-      }
+      data.asrMethod = asString(m['asrMethod']);
+      data.azanSoundEnabled = asBool(m['azanSoundEnabled']);
+      data.lockscreenAlarmEnabled = asBool(m['lockscreenAlarmEnabled']);
 
       final bookmarks = m['bookmarks'];
       if (bookmarks is List) {
-        _bookmarks = bookmarks
-            .map(
-                (e) => e is num ? e.toInt() : (int.tryParse(e.toString()) ?? 2))
-            .toList();
-        await _prefs.setStringList(
-            'nur_bookmarks', _bookmarks.map((e) => e.toString()).toList());
+        // Corrupt entries are skipped, never defaulted to a real page.
+        data.bookmarks =
+            bookmarks.map(_tryParseInt).whereType<int>().toList();
       }
 
       final alarms = m['prayerAlarms'];
       if (alarms is Map) {
-        _prayerAlarms = alarms.map((k, v) => MapEntry(k.toString(), v == true));
-        await _prefs.setString('nur_prayer_alarms', jsonEncode(_prayerAlarms));
+        // Per-alarm fallback: keep the backup's valid entries, default only
+        // the bad ones — one bad value no longer wipes all five alarms.
+        final parsed = <String, bool>{
+          'fajr': true,
+          'dhuhr': true,
+          'asr': true,
+          'maghrib': true,
+          'isha': true,
+        };
+        for (final entry in alarms.entries) {
+          final key = entry.key.toString();
+          if (parsed.containsKey(key) && entry.value is bool) {
+            parsed[key] = entry.value as bool;
+          }
+        }
+        data.prayerAlarms = parsed;
       }
 
-      final lastReadSurah = asInt(m['lastReadSurah']);
-      if (lastReadSurah != null) {
-        _lastReadSurah = lastReadSurah;
-        await _prefs.setInt('nur_last_read_surah', lastReadSurah);
-      }
-
-      final lastReadAyah = asInt(m['lastReadAyah']);
-      if (lastReadAyah != null) {
-        _lastReadAyah = lastReadAyah;
-        await _prefs.setInt('nur_last_read_ayah', lastReadAyah);
-      }
-
-      final lastReadAt = asString(m['lastReadAt']);
-      if (lastReadAt != null) {
-        _lastReadAt = lastReadAt;
-        await _prefs.setString('nur_last_read_at', lastReadAt);
-      }
-
-      final dailyTarget = asInt(m['dailyTargetPages']);
-      if (dailyTarget != null) {
-        _dailyTargetPages = dailyTarget;
-        await _prefs.setInt('nur_daily_target_pages', dailyTarget);
-      }
-
-      final themeName = asString(m['themeName']);
-      if (themeName != null) {
-        _themeName = themeName;
-        await _prefs.setString('nur_theme_name', themeName);
-      }
+      data.lastReadSurah = asInt(m['lastReadSurah']);
+      data.lastReadAyah = asInt(m['lastReadAyah']);
+      data.lastReadAt = asString(m['lastReadAt']);
+      data.dailyTargetPages = asInt(m['dailyTargetPages']);
+      data.themeName = asString(m['themeName']);
 
       final scriptStyle = asString(m['scriptStyle']);
       if (scriptStyle != null) {
-        _scriptStyle = scriptStyle;
-        await _prefs.setString('nur_script_style', scriptStyle);
+        // Old backups may still carry the retired 'nastaliq' style —
+        // run the same migration as app startup.
+        data.scriptStyle = _migrateScriptStyle(scriptStyle);
       }
 
-      final ayahScale = asDouble(m['ayahScale']);
-      if (ayahScale != null) {
-        _ayahScale = ayahScale;
-        await _prefs.setDouble('nur_ayah_scale', ayahScale);
-      }
-
-      final readingMode = asString(m['readingMode']);
-      if (readingMode != null) {
-        _readingMode = readingMode;
-        await _prefs.setString('nur_reading_mode', readingMode);
-      }
-
-      final repeatMode = asInt(m['repeatMode']);
-      if (repeatMode != null) {
-        _repeatMode = repeatMode;
-        await _prefs.setInt('nur_repeat_mode', repeatMode);
-      }
-
-      final playbackSpeed = asDouble(m['playbackSpeed']);
-      if (playbackSpeed != null) {
-        _playbackSpeed = playbackSpeed;
-        await _prefs.setDouble('nur_playback_speed', playbackSpeed);
-      }
+      data.ayahScale = asDouble(m['ayahScale']);
+      data.readingMode = asString(m['readingMode']);
+      data.repeatMode = asInt(m['repeatMode']);
+      data.playbackSpeed = asDouble(m['playbackSpeed']);
 
       final savedAyahs = m['savedAyahs'];
       if (savedAyahs is List) {
-        _savedAyahs = savedAyahs.map((e) => e.toString()).toList();
-        await _prefs.setString('nur_saved_ayahs', jsonEncode(_savedAyahs));
+        data.savedAyahs = savedAyahs.map((e) => e.toString()).toList();
       }
 
       final pageNotes = m['pageNotes'];
       if (pageNotes is Map) {
-        _pageNotes =
+        data.pageNotes =
             pageNotes.map((k, v) => MapEntry(k.toString(), v.toString()));
-        await _prefs.setString('nur_page_notes', jsonEncode(_pageNotes));
       }
 
       final pageTint = m['pageTint'];
       if (pageTint is Map) {
-        _pageTint =
+        data.pageTint =
             pageTint.map((k, v) => MapEntry(k.toString(), v.toString()));
-        await _prefs.setString('nur_page_tint', jsonEncode(_pageTint));
       }
+
       // Page drawings (freehand highlighter/pen strokes). Old backups
       // without this key import fine — nothing is overwritten.
       final pageDrawings = m['pageDrawings'];
       if (pageDrawings is String && pageDrawings.isNotEmpty) {
-        await _prefs.setString('nur_page_drawings', pageDrawings);
+        try {
+          if (jsonDecode(pageDrawings) is Map) {
+            data.pageDrawings = pageDrawings;
+          }
+        } catch (_) {
+          // Corrupt drawings blob: skip it, keep the current one.
+        }
       }
 
-      final ayahTapHintShown = asBool(m['ayahTapHintShown']);
-      if (ayahTapHintShown != null) {
-        _ayahTapHintShown = ayahTapHintShown;
-        await _prefs.setBool('nur_ayah_tap_hint_shown', ayahTapHintShown);
-      }
+      data.ayahTapHintShown = asBool(m['ayahTapHintShown']);
 
       final khatmDays = m['khatmDays'];
       if (khatmDays is List) {
-        _khatmDays = khatmDays
-            .map((e) =>
-                e is num ? e.toInt() : (int.tryParse(e.toString()) ?? 0))
+        data.khatmDays = khatmDays
+            .map(_tryParseInt)
+            .whereType<int>()
             .where((d) => d >= 1 && d <= 30)
             .toList();
-        await _prefs.setStringList(
-            'nur_khatm_days', _khatmDays.map((e) => e.toString()).toList());
       }
 
       final readPages = m['readPages'];
       if (readPages is List) {
-        _readPages = readPages
-            .map((e) =>
-                e is num ? e.toInt() : (int.tryParse(e.toString()) ?? 0))
+        data.readPages = readPages
+            .map(_tryParseInt)
+            .whereType<int>()
             .where((p) => p >= 1 && p <= 611)
             .toSet();
-        await _prefs.setStringList(
-            'nur_read_pages', _readPages.map((e) => e.toString()).toList());
       }
 
-      final onboardingDone = asBool(m['onboardingDone']);
-      if (onboardingDone != null) {
-        _onboardingDone = onboardingDone;
-        await _prefs.setBool('nur_onboarding_done', onboardingDone);
-      }
+      data.onboardingDone = asBool(m['onboardingDone']);
+      data.autoBackup = asBool(m['autoBackup']);
+      data.audioHighlightEnabled = asBool(m['audioHighlightEnabled']);
+      data.backgroundPlaybackEnabled =
+          asBool(m['backgroundPlaybackEnabled']);
+      data.nightPageMode = asBool(m['nightPageMode']);
+      data.lastAutoBackup = asString(m['lastAutoBackup']);
 
-      final autoBackup = asBool(m['autoBackup']);
-      if (autoBackup != null) {
-        _autoBackup = autoBackup;
-        await _prefs.setBool('nur_auto_backup', autoBackup);
-      }
-      final audioHighlight = asBool(m['audioHighlightEnabled']);
-      if (audioHighlight != null) {
-        _audioHighlightEnabled = audioHighlight;
-        await _prefs.setBool('nur_audio_highlight', audioHighlight);
-      }
-      final bgPlayback = asBool(m['backgroundPlaybackEnabled']);
-      if (bgPlayback != null) {
-        _backgroundPlaybackEnabled = bgPlayback;
-        await _prefs.setBool('nur_background_playback', bgPlayback);
-      }
-
-      final lastAutoBackup = asString(m['lastAutoBackup']);
-      if (lastAutoBackup != null) {
-        _lastAutoBackup = lastAutoBackup;
-        await _prefs.setString('nur_last_auto_backup', lastAutoBackup);
-      }
-
-      notifyListeners();
-      return true;
+      return data;
     } catch (_) {
-      return false;
+      return null;
     }
+  }
+
+  /// Applies a JSON blob produced by [exportJson]. The whole blob is
+  /// validated first (see [_parseBackupJson]) and only then is anything
+  /// persisted, so a malformed backup can never half-overwrite the current
+  /// data. Returns false on bad input and never throws.
+  Future<bool> importJson(String jsonStr) async {
+    final data = _parseBackupJson(jsonStr);
+    if (data == null) return false;
+
+    if (data.lastReadPage != null) {
+      _lastReadPage = data.lastReadPage!;
+      await _prefs.setInt('nur_last_read_page', _lastReadPage);
+    }
+
+    if (data.selectedCity != null) {
+      _selectedCity = data.selectedCity!;
+      await _prefs.setString(
+          'nur_selected_city', jsonEncode(_selectedCity.toJson()));
+    }
+
+    if (data.asrMethod != null) {
+      _asrMethod = data.asrMethod!;
+      await _prefs.setString('nur_asr_method', _asrMethod);
+    }
+
+    if (data.azanSoundEnabled != null) {
+      _azanSoundEnabled = data.azanSoundEnabled!;
+      await _prefs.setBool('nur_azan_sound', _azanSoundEnabled);
+    }
+
+    if (data.lockscreenAlarmEnabled != null) {
+      _lockscreenAlarmEnabled = data.lockscreenAlarmEnabled!;
+      await _prefs.setBool('nur_lockscreen_alarm', _lockscreenAlarmEnabled);
+    }
+
+    if (data.bookmarks != null) {
+      _bookmarks = data.bookmarks!;
+      await _prefs.setStringList(
+          'nur_bookmarks', _bookmarks.map((e) => e.toString()).toList());
+    }
+
+    if (data.prayerAlarms != null) {
+      _prayerAlarms = data.prayerAlarms!;
+      await _prefs.setString('nur_prayer_alarms', jsonEncode(_prayerAlarms));
+    }
+
+    if (data.lastReadSurah != null) {
+      _lastReadSurah = data.lastReadSurah!;
+      await _prefs.setInt('nur_last_read_surah', _lastReadSurah);
+    }
+
+    if (data.lastReadAyah != null) {
+      _lastReadAyah = data.lastReadAyah!;
+      await _prefs.setInt('nur_last_read_ayah', _lastReadAyah);
+    }
+
+    if (data.lastReadAt != null) {
+      _lastReadAt = data.lastReadAt!;
+      await _prefs.setString('nur_last_read_at', _lastReadAt);
+    }
+
+    if (data.dailyTargetPages != null) {
+      _dailyTargetPages = data.dailyTargetPages!;
+      await _prefs.setInt('nur_daily_target_pages', _dailyTargetPages);
+    }
+
+    if (data.themeName != null) {
+      _themeName = data.themeName!;
+      await _prefs.setString('nur_theme_name', _themeName);
+    }
+
+    if (data.scriptStyle != null) {
+      _scriptStyle = data.scriptStyle!;
+      await _prefs.setString('nur_script_style', _scriptStyle);
+    }
+
+    if (data.ayahScale != null) {
+      _ayahScale = data.ayahScale!;
+      await _prefs.setDouble('nur_ayah_scale', _ayahScale);
+    }
+
+    if (data.readingMode != null) {
+      _readingMode = data.readingMode!;
+      await _prefs.setString('nur_reading_mode', _readingMode);
+    }
+
+    if (data.repeatMode != null) {
+      _repeatMode = data.repeatMode!;
+      await _prefs.setInt('nur_repeat_mode', _repeatMode);
+    }
+
+    if (data.playbackSpeed != null) {
+      _playbackSpeed = data.playbackSpeed!;
+      await _prefs.setDouble('nur_playback_speed', _playbackSpeed);
+    }
+
+    if (data.savedAyahs != null) {
+      _savedAyahs = data.savedAyahs!;
+      await _prefs.setString('nur_saved_ayahs', jsonEncode(_savedAyahs));
+    }
+
+    if (data.pageNotes != null) {
+      _pageNotes = data.pageNotes!;
+      await _prefs.setString('nur_page_notes', jsonEncode(_pageNotes));
+    }
+
+    if (data.pageTint != null) {
+      _pageTint = data.pageTint!;
+      await _prefs.setString('nur_page_tint', jsonEncode(_pageTint));
+    }
+
+    if (data.pageDrawings != null) {
+      await _prefs.setString('nur_page_drawings', data.pageDrawings!);
+    }
+
+    if (data.ayahTapHintShown != null) {
+      _ayahTapHintShown = data.ayahTapHintShown!;
+      await _prefs.setBool('nur_ayah_tap_hint_shown', _ayahTapHintShown);
+    }
+
+    if (data.khatmDays != null) {
+      _khatmDays = data.khatmDays!;
+      await _prefs.setStringList(
+          'nur_khatm_days', _khatmDays.map((e) => e.toString()).toList());
+    }
+
+    if (data.readPages != null) {
+      _readPages = data.readPages!;
+      await _prefs.setStringList(
+          'nur_read_pages', _readPages.map((e) => e.toString()).toList());
+    }
+
+    if (data.onboardingDone != null) {
+      _onboardingDone = data.onboardingDone!;
+      await _prefs.setBool('nur_onboarding_done', _onboardingDone);
+    }
+
+    if (data.autoBackup != null) {
+      _autoBackup = data.autoBackup!;
+      await _prefs.setBool('nur_auto_backup', _autoBackup);
+    }
+
+    if (data.audioHighlightEnabled != null) {
+      _audioHighlightEnabled = data.audioHighlightEnabled!;
+      await _prefs.setBool('nur_audio_highlight', _audioHighlightEnabled);
+    }
+
+    if (data.backgroundPlaybackEnabled != null) {
+      _backgroundPlaybackEnabled = data.backgroundPlaybackEnabled!;
+      await _prefs.setBool(
+          'nur_background_playback', _backgroundPlaybackEnabled);
+    }
+
+    if (data.nightPageMode != null) {
+      _nightPageMode = data.nightPageMode!;
+      await _prefs.setBool('nur_night_page_mode', _nightPageMode);
+    }
+
+    if (data.lastAutoBackup != null) {
+      _lastAutoBackup = data.lastAutoBackup!;
+      await _prefs.setString('nur_last_auto_backup', _lastAutoBackup);
+    }
+
+    notifyListeners();
+    return true;
   }
 
   /// Clears everything from storage and restores all in-memory defaults.
   Future<void> resetAll() async {
     await _prefs.clear();
+    // A full reset must not leave the weekly auto-backup alarm firing while
+    // the toggle now reads OFF.
+    await AutoBackupService.cancel();
     _lastReadPage = 2;
-    _themeMode = 'emerald';
     _selectedCity = presetCities[0];
     _asrMethod = 'Hanafi';
     _azanSoundEnabled = true;
@@ -731,7 +839,45 @@ class PreferencesService extends ChangeNotifier {
     _autoBackup = false;
     _audioHighlightEnabled = true;
     _backgroundPlaybackEnabled = true;
+    _nightPageMode = false;
     _lastAutoBackup = '';
     notifyListeners();
   }
+}
+
+/// Staged, fully validated backup data for [PreferencesService.importJson].
+/// A null field means "absent from the backup — keep the current value".
+/// Used to validate the whole blob before persisting anything, so a
+/// malformed backup is rejected cleanly without half-overwriting data.
+class _ParsedBackup {
+  int? lastReadPage;
+  City? selectedCity;
+  String? asrMethod;
+  bool? azanSoundEnabled;
+  bool? lockscreenAlarmEnabled;
+  List<int>? bookmarks;
+  Map<String, bool>? prayerAlarms;
+  int? lastReadSurah;
+  int? lastReadAyah;
+  String? lastReadAt;
+  int? dailyTargetPages;
+  String? themeName;
+  String? scriptStyle;
+  double? ayahScale;
+  String? readingMode;
+  int? repeatMode;
+  double? playbackSpeed;
+  List<String>? savedAyahs;
+  Map<String, String>? pageNotes;
+  Map<String, String>? pageTint;
+  String? pageDrawings;
+  bool? ayahTapHintShown;
+  List<int>? khatmDays;
+  Set<int>? readPages;
+  bool? onboardingDone;
+  bool? autoBackup;
+  bool? audioHighlightEnabled;
+  bool? backgroundPlaybackEnabled;
+  bool? nightPageMode;
+  String? lastAutoBackup;
 }

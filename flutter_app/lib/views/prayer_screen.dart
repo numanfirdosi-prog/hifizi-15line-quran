@@ -27,6 +27,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
   DateTime? _cachedDay;
   String? _cachedCityId;
   String? _cachedAsrMethod;
+  double? _cachedTzOffset;
 
   @override
   void initState() {
@@ -47,21 +48,45 @@ class _PrayerScreenState extends State<PrayerScreen> {
   }
 
   PrayerSchedule _scheduleFor(PreferencesService prefs) {
-    final day = PrayerCalculationService.cityToday(prefs.selectedCity);
-    final cityId = prefs.selectedCity.id;
+    var city = prefs.selectedCity;
+    final day = PrayerCalculationService.cityToday(city);
+    // GPS cities have no IANA zone: the stored offset was captured when GPS
+    // was picked and goes stale across DST transitions (times off by 1h
+    // until GPS is re-picked). Recompute the device timezone's DST-aware
+    // offset for the displayed day before calculating. Noon avoids edge
+    // cases on DST transition days.
+    var tzOffset = city.tz;
+    if (city.ianaTz == null) {
+      tzOffset =
+          DateTime(day.year, day.month, day.day, 12).timeZoneOffset.inMinutes /
+              60.0;
+      city = City(
+        id: city.id,
+        name: city.name,
+        urdu: city.urdu,
+        country: city.country,
+        lat: city.lat,
+        lng: city.lng,
+        tz: tzOffset,
+        ianaTz: null,
+      );
+    }
+    final cityId = city.id;
     final asrMethod = prefs.asrMethod;
     if (_cachedSchedule == null ||
         _cachedDay != day ||
         _cachedCityId != cityId ||
-        _cachedAsrMethod != asrMethod) {
+        _cachedAsrMethod != asrMethod ||
+        _cachedTzOffset != tzOffset) {
       _cachedSchedule = PrayerCalculationService.calculate(
         date: day,
-        location: prefs.selectedCity,
+        location: city,
         asrMode: asrMethod,
       );
       _cachedDay = day;
       _cachedCityId = cityId;
       _cachedAsrMethod = asrMethod;
+      _cachedTzOffset = tzOffset;
     }
     return _cachedSchedule!;
   }

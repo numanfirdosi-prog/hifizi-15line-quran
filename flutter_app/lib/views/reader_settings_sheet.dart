@@ -109,7 +109,20 @@ class _ReaderSettingsSheet extends StatelessWidget {
             ),
             value: prefs.audioHighlightEnabled,
             activeColor: cs.primary,
-            onChanged: (v) => prefs.setAudioHighlightEnabled(v),
+            onChanged: (v) async {
+              await prefs.setAudioHighlightEnabled(v);
+              // The toggle must actually control audio, not just the
+              // highlight: turning it off pauses the recitation, turning
+              // it on resumes a paused recitation (it never starts a new
+              // one — resume only applies when a source is already loaded).
+              if (v) {
+                if (!audio.isPlaying && audio.player.audioSource != null) {
+                  await audio.resume();
+                }
+              } else if (audio.isPlaying) {
+                await audio.pause();
+              }
+            },
           ),
           Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Background Playback
@@ -303,6 +316,10 @@ class _ReaderSettingsSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ).then((_) {
+      // The dialog is closed: release the controllers.
+      startCtrl.dispose();
+      endCtrl.dispose();
+    });
   }
 }

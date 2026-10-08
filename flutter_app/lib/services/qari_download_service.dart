@@ -74,6 +74,20 @@ class QariDownloadService extends ChangeNotifier {
   HttpClient? _httpClient;
   bool _cancelRequested = false;
 
+  /// Max time to establish a TCP connection for one file. Without this a
+  /// stalled network froze the queue at "Downloading…" forever.
+  static const _connectTimeout = Duration(seconds: 25);
+
+  /// Max quiet time while waiting for a server's response headers. A
+  /// server that connects but never answers raises [TimeoutException],
+  /// handled below like any other failed file.
+  static const _headerTimeout = Duration(seconds: 60);
+
+  /// Max time for one file's body to finish streaming (generous, so very
+  /// slow networks can still complete a large surah MP3); a mid-download
+  /// stall raises [TimeoutException] instead of hanging the queue.
+  static const _bodyTimeout = Duration(minutes: 10);
+
   /// Monotonic run id: every [startDownload] call takes the next value, so
   /// a newer call supersedes any older run still stuck in [_buildQueue] or
   /// [_runQueue]. Without this, starting qari B while qari A was still
@@ -234,12 +248,14 @@ class QariDownloadService extends ChangeNotifier {
   }
 
   /// Builds the (url, targetPath) queue, skipping files already on disk.
+  /// A zero-byte file is a leftover of a force-killed download and is
+  /// queued for re-download, not skipped.
   Future<List<_DownloadJob>> _buildQueue(Qari qari) async {
     final dir = await QariAudioStorage.qariDir(qari.id);
     final jobs = <_DownloadJob>[];
     for (var s = 1; s <= 114; s++) {
       final path = '${dir.path}/${QariAudioStorage.surahFileName(s)}';
-      if (!await File(path).exists()) {
+      if (await _needsDownload(path)) {
         jobs.add(_DownloadJob(qari.urlForSurah(s), path));
       }
     }
@@ -247,7 +263,7 @@ class QariDownloadService extends ChangeNotifier {
       final totalAyahs = allSurahs[s - 1].totalAyahs;
       for (var v = 1; v <= totalAyahs; v++) {
         final path = '${dir.path}/${QariAudioStorage.ayahFileName(s, v)}';
-        if (!await File(path).exists()) {
+        if (await _needsDownload(path)) {
           jobs.add(_DownloadJob(qari.ayahUrl(s, v), path));
         }
       }
@@ -255,26 +271,39 @@ class QariDownloadService extends ChangeNotifier {
     return jobs;
   }
 
+  /// True when [path] is missing or holds only a zero-byte leftover of a
+  /// killed download — both must be (re)downloaded.
+  static Future<bool> _needsDownload(String path) async {
+    final file = File(path);
+    return !await file.exists() || await file.length() == 0;
+  }
+
   /// Downloads [jobs] sequentially, streaming each response straight to
   /// disk. A failed or cancelled file's partial output is deleted so a
   /// later resume re-downloads it cleanly. Failed files are counted and
-  /// skipped — they never abort the pack. Stops promptly when
-  /// [_cancelRequested] is set or when [runSeq] no longer matches [_runSeq]
-  /// (a newer [startDownload] superseded this run).
+  /// skipped — they never abort the pack. Stalled connections raise
+  /// [TimeoutException] via the timeouts below and are handled like any
+  /// other failed file. Stops promptly when [_cancelRequested] is set or
+  /// when [runSeq] no longer matches [_runSeq] (a newer [startDownload]
+  /// superseded this run).
   Future<void> _runQueue(String qariId, List<_DownloadJob> jobs, int runSeq) async {
-    final client = HttpClient();
+    final client = HttpClient()..connectionTimeout = _connectTimeout;
     _httpClient = client;
     try {
       for (final job in jobs) {
         if (_cancelRequested || runSeq != _runSeq) break;
         final file = File(job.path);
         try {
-          final request = await client.getUrl(Uri.parse(job.url));
-          final response = await request.close();
+          // Bounded: connectionTimeout guards the TCP connect above; these
+          // guard a stalled server (headers never arrive) and a stalled
+          // body stream (bytes stop mid-file).
+          final request =
+              await client.getUrl(Uri.parse(job.url)).timeout(_headerTimeout);
+          final response = await request.close().timeout(_headerTimeout);
           if (response.statusCode != 200) {
             throw HttpException('HTTP ${response.statusCode} for ${job.url}');
           }
-          await response.pipe(file.openWrite());
+          await response.pipe(file.openWrite()).timeout(_bodyTimeout);
           final p = progressOf(qariId);
           _set(qariId, p.copyWith(done: p.done + 1));
         } catch (e) {
