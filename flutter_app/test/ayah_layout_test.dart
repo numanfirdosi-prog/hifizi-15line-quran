@@ -167,5 +167,49 @@ void main() {
       expect(hit!.surah, 2);
       expect(hit.ayah, 5);
     });
+
+    test('real hit-test: page 20 line 6 keeps Ayah 123 (وَاتَّقُوْا)', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final map = await loadPageAyahSegments();
+      final p20 = map[20]!;
+      // Line 6 has 2:123 opening word at right=90, width=10
+      final line6Seg = p20.firstWhere(
+        (s) => s.surah == 2 && s.ayah == 123 && s.line == 6,
+      );
+      expect(line6Seg.right, 90.0);
+      expect(line6Seg.width, 10.0);
+
+      // Hit test on line 6 at xRight=95 (tx=0.05)
+      final hit = hitTestAyah(p20, fxForTx(0.05), fyForTy(5.5 / 15), 20);
+      expect(hit, isNotNull);
+      expect(hit!.surah, 2);
+      expect(hit.ayah, 123);
+    });
+
+    test('real hit-test: page 20 line 8 correctly separates Ayah 123 and 124', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final map = await loadPageAyahSegments();
+      final p20 = map[20]!;
+
+      // Ayah 123 ends with يُنْصَرُوْنَ + circle marker (0 to 70% from right)
+      // Tapping at xRight=60 (tx=0.40) must hit Ayah 123
+      final hit123 = hitTestAyah(p20, fxForTx(0.40), fyForTy(7.5 / 15), 20);
+      expect(hit123, isNotNull);
+      expect(hit123!.surah, 2);
+      expect(hit123.ayah, 123);
+
+      // Tapping near circle marker at xRight=66 (tx=0.34) must hit Ayah 123
+      final hitMarker = hitTestAyah(p20, fxForTx(0.34), fyForTy(7.5 / 15), 20);
+      expect(hitMarker, isNotNull);
+      expect(hitMarker!.surah, 2);
+      expect(hitMarker.ayah, 123);
+
+      // Ayah 124 starts with وَإِذِ ابْتَلَى (70% to 100% from right)
+      // Tapping at xRight=80 (tx=0.20) must hit Ayah 124
+      final hit124 = hitTestAyah(p20, fxForTx(0.20), fyForTy(7.5 / 15), 20);
+      expect(hit124, isNotNull);
+      expect(hit124!.surah, 2);
+      expect(hit124.ayah, 124);
+    });
   });
 }

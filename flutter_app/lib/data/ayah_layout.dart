@@ -91,78 +91,7 @@ Future<Map<int, List<AyahSeg>>> loadPageAyahSegments() async {
         ));
       }
     }
-    // Fix data-generation mis-splits: the first segment of an ayah is
-    // sometimes a narrow sliver (width < 15%) at the far edge (right > 85%)
-    // on the same line where the previous ayah ends, exactly adjacent to
-    // it. That sliver does not exist in the real layout (verified: 2:123
-    // has no text on line 6, the website shows it only on lines 7-8) — it
-    // wrongly highlights the previous ayah's words. Drop it.
-    final filtered = <AyahSeg>[];
-    for (int i = 0; i < segs.length; i++) {
-      final s = segs[i];
-      var bogus = false;
-      if (i > 0) {
-        final prev = segs[i - 1];
-        final isFirstOfAyah = s.surah != prev.surah || s.ayah != prev.ayah;
-        if (isFirstOfAyah &&
-            s.width < 15 &&
-            s.right > 85 &&
-            s.line == prev.line &&
-            (prev.right + prev.width - s.right).abs() < 1.0) {
-          bogus = true;
-        }
-      }
-      if (!bogus) filtered.add(s);
-    }
-    // Fix boundary misalignments: on lines shared by two ayahs, the
-    // data boundary sometimes cuts through the earlier ayah's last visual
-    // word (e.g. 2:123's "يُنصَرُونَ" extends past xRight=60 into 2:124's
-    // range). Shift each inter-ayah boundary 3% toward the later ayah,
-    // giving the earlier ayah's last word its full visual extent.
-    // Group by line, sort by right, then adjust adjacent pairs.
-    final byLine = <int, List<AyahSeg>>{};
-    for (final s in filtered) {
-      byLine.putIfAbsent(s.line, () => []).add(s);
-    }
-    final adjusted = <AyahSeg>[];
-    for (final lineSegs in byLine.values) {
-      lineSegs.sort((a, b) => a.right.compareTo(b.right));
-      for (int i = 0; i < lineSegs.length; i++) {
-        var s = lineSegs[i];
-        // If next segment starts exactly where this ends (adjacent boundary)
-        // and they are different ayahs, shift the boundary 3% right.
-        if (i + 1 < lineSegs.length) {
-          final n = lineSegs[i + 1];
-          final isBoundary = (s.surah != n.surah || s.ayah != n.ayah) &&
-              (s.right + s.width - n.right).abs() < 1.0;
-          if (isBoundary && s.width > 6 && n.width > 6) {
-            // Expand s by 3% (width += 3), shrink n (right += 3, width -= 3).
-            s = AyahSeg(
-              surah: s.surah,
-              ayah: s.ayah,
-              line: s.line,
-              right: s.right,
-              width: s.width + 3,
-            );
-            lineSegs[i + 1] = AyahSeg(
-              surah: n.surah,
-              ayah: n.ayah,
-              line: n.line,
-              right: n.right + 3,
-              width: n.width - 3,
-            );
-          }
-        }
-        adjusted.add(s);
-      }
-    }
-    // Restore original order (by ayah, then line).
-    adjusted.sort((a, b) {
-      if (a.surah != b.surah) return a.surah.compareTo(b.surah);
-      if (a.ayah != b.ayah) return a.ayah.compareTo(b.ayah);
-      return a.line.compareTo(b.line);
-    });
-    out[page] = adjusted;
+    out[page] = segs;
   });
   _segmentsCache = out;
   return out;
@@ -222,9 +151,14 @@ AyahSeg? _matchLine(List<AyahSeg> segs, int line, double tx) {
     if (dist < bestDist) {
       bestDist = dist;
       best = s;
-    } else if (dist == bestDist && best != null && s.width < best.width) {
-      // Exact tie (tap precisely on a shared boundary): prefer narrower.
-      best = s;
+    } else if (dist == bestDist && best != null) {
+      // If one segment is strictly contained within the other, prefer the narrower one.
+      final isNested = s.right >= best.right &&
+          (s.right + s.width) <= (best.right + best.width) &&
+          s.width < best.width;
+      if (isNested) {
+        best = s;
+      }
     }
   }
   // Ignore taps far from any ayah text.
