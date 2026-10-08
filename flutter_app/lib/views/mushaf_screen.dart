@@ -898,15 +898,15 @@ class _MushafScreenState extends State<MushafScreen> {
   /// keeps its royal look on the black night-page background.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -914,6 +914,7 @@ class _MushafScreenState extends State<MushafScreen> {
           borderRadius: BorderRadius.circular(10),
           child: Image.asset(
             'assets/images/cartouche_bismillah.png',
+            height: 86,
             fit: BoxFit.contain,
           ),
         ),
@@ -1027,13 +1028,29 @@ class _MushafScreenState extends State<MushafScreen> {
             // The image may be letterboxed inside the box (BoxFit.contain);
             // map highlight coordinates to the true rendered image rect.
             final img = _imageRect(w, h);
-            // Website: 15px band on the (max 580px wide -> ~870px tall) wrapper.
-            final bandH = img.h * 0.0172;
             final isDark = Theme.of(context).brightness == Brightness.dark;
             // Website gold: light rgba(212,175,55,0.45), dark rgba(240,205,95,0.50).
             final gold = isDark
                 ? const Color.fromRGBO(240, 205, 95, 0.50)
                 : const Color.fromRGBO(212, 175, 55, 0.45);
+            // Full-line highlight: each line of the ayah gets a band spanning
+            // the page's full text width (min left .. max right across all
+            // segments), so the highlight advances as a full-width stripe
+            // that fills right-to-left with the audio progress.
+            double minL = 1.0, maxR = 0.0;
+            for (final s in segs) {
+              final rr = rectForSeg(s, pageNum);
+              if (rr.width <= 0) continue;
+              if (rr.left < minL) minL = rr.left;
+              final rEnd = rr.left + rr.width;
+              if (rEnd > maxR) maxR = rEnd;
+            }
+            if (maxR <= minL) {
+              minL = 0.06;
+              maxR = 0.94;
+            }
+            final lineLeft = img.dx + minL * img.w;
+            final lineW = (maxR - minL) * img.w;
             return StreamBuilder<double>(
               stream: audio.ayahProgressStream,
               initialData: 0.0,
@@ -1074,24 +1091,23 @@ class _MushafScreenState extends State<MushafScreen> {
                                 (progress - startFrac) / (endFrac - startFrac);
                           }
                           final r = rectForSeg(seg, pageNum);
-                          final rw = r.width * img.w;
                           return Positioned(
-                            left: img.dx + r.left * img.w,
-                            top: img.dy +
-                                r.top * img.h +
-                                (r.height * img.h - bandH) / 2,
-                            width: rw,
-                            height: bandH,
+                            left: lineLeft,
+                            top: img.dy + r.top * img.h,
+                            width: lineW,
+                            height: r.height * img.h,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(3),
                               child: Stack(
                                 children: [
-                                  // RTL fill: gold grows from the right edge.
+                                  // RTL fill: gold grows from the right edge
+                                  // across the full line width.
                                   Positioned(
                                     right: 0,
                                     top: 0,
                                     bottom: 0,
-                                    width: rw * segProg.clamp(0.0, 1.0),
+                                    width:
+                                        lineW * segProg.clamp(0.0, 1.0),
                                     child: Container(color: gold),
                                   ),
                                 ],
@@ -1252,8 +1268,8 @@ class _MushafScreenState extends State<MushafScreen> {
                 child: CustomPaint(
                   painter: _RibbonPainter(
                     color: isBookmarked
-                        ? const Color(0xFF1B5E20)
-                        : const Color(0xFF0F3A2C),
+                        ? const Color(0xFF6E5018)
+                        : const Color(0xFF4A3517),
                   ),
                   child: Container(
                     width: 44,
@@ -1276,7 +1292,7 @@ class _MushafScreenState extends State<MushafScreen> {
             left: 12,
             bottom: 92,
             child: Material(
-              color: const Color(0xFF0F3A2C),
+              color: const Color(0xFF4A3517),
               shape: const CircleBorder(),
               elevation: 3,
               child: InkWell(
@@ -1303,7 +1319,7 @@ class _MushafScreenState extends State<MushafScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: const BoxDecoration(
-                color: Color(0xFF0A1F17),
+                color: Color(0xFF2A1D08),
                 border: Border(
                   top: BorderSide(
                     color: Color(0xFFC9A227),
@@ -1606,7 +1622,7 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
           children: [
             const CircularProgressIndicator(
               valueColor:
-                  AlwaysStoppedAnimation<Color>(Color(0xFF0F3A2C)),
+                  AlwaysStoppedAnimation<Color>(Color(0xFF4A3517)),
             ),
             const SizedBox(height: 12),
             Text(
@@ -1614,7 +1630,7 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
                   ? 'Loading Page ${widget.pageNum}... $pct%'
                   : 'Loading Page ${widget.pageNum}...',
               style: const TextStyle(
-                  color: Color(0xFF0F3A2C), fontWeight: FontWeight.bold),
+                  color: Color(0xFF4A3517), fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -1630,14 +1646,14 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, size: 64, color: Color(0xFF0F3A2C)),
+            const Icon(Icons.cloud_off, size: 64, color: Color(0xFF4A3517)),
             const SizedBox(height: 16),
             Text(
               'صفحہ ${widget.pageNum}',
               style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F3A2C)),
+                  color: Color(0xFF4A3517)),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -1708,7 +1724,7 @@ class _ManzilBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     const gold = Color(0xFFC9A227);
     const deepGold = Color(0xFF9A7B1E);
-    const green = Color(0xFF0F3A2C);
+    const bronze = Color(0xFF4A3517);
     return CustomPaint(
       painter: _ManzilFramePainter(),
       child: Container(
@@ -1719,7 +1735,7 @@ class _ManzilBadge extends StatelessWidget {
             fontFamily: 'Amiri Quran',
             fontSize: 19,
             fontWeight: FontWeight.bold,
-            color: nightDim ? Colors.white : green,
+            color: nightDim ? Colors.white : bronze,
           ),
         ),
       ),
