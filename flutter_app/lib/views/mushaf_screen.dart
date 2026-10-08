@@ -1033,24 +1033,11 @@ class _MushafScreenState extends State<MushafScreen> {
             final gold = isDark
                 ? const Color.fromRGBO(240, 205, 95, 0.50)
                 : const Color.fromRGBO(212, 175, 55, 0.45);
-            // Full-line highlight: each line of the ayah gets a band spanning
-            // the page's full text width (min left .. max right across all
-            // segments), so the highlight advances as a full-width stripe
-            // that fills right-to-left with the audio progress.
-            double minL = 1.0, maxR = 0.0;
-            for (final s in segs) {
-              final rr = rectForSeg(s, pageNum);
-              if (rr.width <= 0) continue;
-              if (rr.left < minL) minL = rr.left;
-              final rEnd = rr.left + rr.width;
-              if (rEnd > maxR) maxR = rEnd;
-            }
-            if (maxR <= minL) {
-              minL = 0.06;
-              maxR = 0.94;
-            }
-            final lineLeft = img.dx + minL * img.w;
-            final lineW = (maxR - minL) * img.w;
+            // Ayah-confined highlight: each line-band covers ONLY the tapped
+            // ayah's own words on that line (its segment extent) — from where
+            // the ayah starts to where it ends — at full line height, filling
+            // right-to-left with the audio progress. Never the full text
+            // width: neighbouring ayahs on the same line must stay unlit.
             return StreamBuilder<double>(
               stream: audio.ayahProgressStream,
               initialData: 0.0,
@@ -1091,23 +1078,23 @@ class _MushafScreenState extends State<MushafScreen> {
                                 (progress - startFrac) / (endFrac - startFrac);
                           }
                           final r = rectForSeg(seg, pageNum);
+                          final rw = r.width * img.w;
                           return Positioned(
-                            left: lineLeft,
+                            left: img.dx + r.left * img.w,
                             top: img.dy + r.top * img.h,
-                            width: lineW,
+                            width: rw,
                             height: r.height * img.h,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(3),
                               child: Stack(
                                 children: [
                                   // RTL fill: gold grows from the right edge
-                                  // across the full line width.
+                                  // of the ayah's own words on this line.
                                   Positioned(
                                     right: 0,
                                     top: 0,
                                     bottom: 0,
-                                    width:
-                                        lineW * segProg.clamp(0.0, 1.0),
+                                    width: rw * segProg.clamp(0.0, 1.0),
                                     child: Container(color: gold),
                                   ),
                                 ],
