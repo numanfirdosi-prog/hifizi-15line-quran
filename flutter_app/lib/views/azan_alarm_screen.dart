@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/azan_alarm_service.dart';
+import '../services/lock_screen_service.dart';
 
 /// Full-screen alarm UI shown when a prayer-time azan fires.
 ///
@@ -24,6 +25,20 @@ class AzanAlarmScreen extends StatefulWidget {
 
 class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
   bool _stopping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show over the lock screen only while the alarm UI is visible.
+    LockScreenService.setShowWhenLocked(true);
+  }
+
+  @override
+  void dispose() {
+    // Never bypass the lock screen outside the alarm UI.
+    LockScreenService.setShowWhenLocked(false);
+    super.dispose();
+  }
 
   Future<void> _stopAzan() async {
     if (_stopping) return;
