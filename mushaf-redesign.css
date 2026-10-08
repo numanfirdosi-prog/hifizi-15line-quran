@@ -6511,6 +6511,18 @@ body.dark .reader-more-sheet {
 }
 
 /* ==========================================================================
+   PAGE SLIDE MODE — full-width page rendering
+   ========================================================================== */
+.reader-overlay-v2[data-mode="page-slide"] .quran-page {
+  width: min(920px, 100%) !important;
+}
+
+.reader-overlay-v2[data-mode="page-slide"] .mushaf-image-wrapper {
+  max-width: min(860px, 94vw) !important;
+  max-height: calc(100vh - 160px) !important;
+}
+
+/* ==========================================================================
    DEDICATED SEARCH QURAN VIEW STYLES
    ========================================================================== */
 .search-results {
