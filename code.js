@@ -4055,10 +4055,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('globalSearch')?.addEventListener('input', (e) => {
     const val = e.target.value.trim();
     if (val) {
-      showView('surahs');
-      if ($('surahSearch')) {
-        $('surahSearch').value = val;
-        renderSurahsCardGrid();
+      showView('search');
+      if ($('dedicatedSearchInput')) {
+        $('dedicatedSearchInput').value = val;
+        handleSearch(val);
       }
     }
   });
@@ -4602,10 +4602,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('mobileSearchInput')?.addEventListener('input', (e) => {
     const val = e.target.value.trim();
     if (val) {
-      showView('surahs');
-      if ($('surahSearch')) {
-        $('surahSearch').value = val;
-        renderSurahsCardGrid();
+      showView('search');
+      if ($('dedicatedSearchInput')) {
+        $('dedicatedSearchInput').value = val;
+        handleSearch(val);
       }
     }
   });
