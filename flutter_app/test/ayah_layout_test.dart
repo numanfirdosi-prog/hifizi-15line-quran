@@ -236,5 +236,38 @@ void main() {
       expect(hit124!.surah, 2);
       expect(hit124.ayah, 124);
     });
+
+    test('real hit-test: page 20 line 13 correctly separates Ayah 125 and 126', () async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      final map = await loadPageAyahSegments();
+      final p20 = map[20]!;
+
+      // Ayah 125 ends on Line 13 with السُّجُودِ + circle marker 125 (0 to 26.7% from right)
+      final a125Seg = p20.firstWhere(
+        (s) => s.surah == 2 && s.ayah == 125 && s.line == 13,
+      );
+      expect(a125Seg.right, 0.0);
+      expect(a125Seg.width, greaterThan(20.0));
+      expect(a125Seg.width, lessThan(35.0));
+
+      // Tapping on Ayah 125 word on line 13 (xRight=15%, tx=0.85) hits Ayah 125
+      final hit125 = hitTestAyah(p20, fxForTx(0.85), fyForTy(12.5 / 15), 20);
+      expect(hit125, isNotNull);
+      expect(hit125!.surah, 2);
+      expect(hit125.ayah, 125);
+
+      // Ayah 126 starts on Line 13 with وَإِذْ قَالَ إِبْرَاهِيمُ (starts after Ayah 125)
+      final a126Seg = p20.firstWhere(
+        (s) => s.surah == 2 && s.ayah == 126 && s.line == 13,
+      );
+      expect(a126Seg.right, a125Seg.width);
+      expect(a126Seg.right, greaterThan(0.0)); // NEVER starts at 0%
+
+      // Tapping on Ayah 126 on line 13 (xRight=60%, tx=0.40) hits Ayah 126
+      final hit126 = hitTestAyah(p20, fxForTx(0.40), fyForTy(12.5 / 15), 20);
+      expect(hit126, isNotNull);
+      expect(hit126!.surah, 2);
+      expect(hit126.ayah, 126);
+    });
   });
 }
