@@ -131,14 +131,33 @@ bool _isLauhPage(int page) => page == 2 || page == 3;
 /// position [tx] (0..1 from the LEFT edge of the line row).
 AyahSeg? _matchLine(List<AyahSeg> segs, int line, double tx) {
   if (tx < 0 || tx > 1) return null;
-  const eps = 0.5; // tolerance in % for segment boundaries
   final xRight = (1 - tx) * 100; // % from the right edge (RTL)
   AyahSeg? best;
+  double bestDist = double.infinity;
   for (final s in segs) {
     if (s.line != line) continue;
-    if (xRight < s.right - eps || xRight > s.right + s.width + eps) continue;
-    if (best == null || s.width < best.width) best = s;
+    // Distance from the tap to the segment's [right, right + width] range
+    // (0 when the tap is inside it). No epsilon overlap: a tap just inside
+    // one ayah's boundary must not be stolen by the neighbouring ayah
+    // (e.g. tapping the last word of 2:123 must select 123, not 124).
+    final double dist;
+    if (xRight < s.right) {
+      dist = s.right - xRight;
+    } else if (xRight > s.right + s.width) {
+      dist = xRight - (s.right + s.width);
+    } else {
+      dist = 0;
+    }
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = s;
+    } else if (dist == bestDist && best != null && s.width < best.width) {
+      // Exact tie (tap precisely on a shared boundary): prefer narrower.
+      best = s;
+    }
   }
+  // Ignore taps far from any ayah text.
+  if (best == null || bestDist > 3.0) return null;
   return best;
 }
 
