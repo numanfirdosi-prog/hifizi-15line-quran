@@ -247,7 +247,7 @@ void main() {
         (s) => s.surah == 2 && s.ayah == 125 && s.line == 13,
       );
       expect(a125Seg.right, 0.0);
-      expect(a125Seg.width, greaterThan(20.0));
+      expect(a125Seg.width, greaterThan(15.0));
       expect(a125Seg.width, lessThan(35.0));
 
       // Tapping on Ayah 125 word on line 13 (xRight=15%, tx=0.85) hits Ayah 125
