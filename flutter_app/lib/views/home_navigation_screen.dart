@@ -93,21 +93,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
     });
   }
 
-  final List<int> _tabHistory = [];
-
-  void _pushTabHistory(int fromIndex) {
-    if (_tabHistory.isEmpty || _tabHistory.last != fromIndex) {
-      _tabHistory.add(fromIndex);
-      if (_tabHistory.length > 20) {
-        _tabHistory.removeAt(0);
-      }
-    }
-  }
-
   void _jumpToMushafPage(int page) {
-    if (_currentIndex != 1) {
-      _pushTabHistory(_currentIndex);
-    }
     setState(() {
       _mushafTargetPage = page;
       _currentIndex = 1; // Switch to Mushaf tab
@@ -139,12 +125,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   }
 
   void _selectTab(int index) {
-    if (_currentIndex != index) {
-      _pushTabHistory(_currentIndex);
-      setState(() {
-        _currentIndex = index;
-      });
-    }
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
@@ -165,23 +148,14 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       ),
     ];
 
-    // Back button: pop previous screen/tab history; if on home with empty
-    // history, ask for confirmation before closing the app.
+    // Back button: on a non-home tab go back to Home; on Home ask for
+    // confirmation before closing the app.
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (_tabHistory.isNotEmpty) {
-          final prevTab = _tabHistory.removeLast();
-          if (mounted) {
-            setState(() => _currentIndex = prevTab);
-          }
-          return;
-        }
         if (_currentIndex != 0) {
-          if (mounted) {
-            setState(() => _currentIndex = 0);
-          }
+          setState(() => _currentIndex = 0);
           return;
         }
         final exit = await showDialog<bool>(

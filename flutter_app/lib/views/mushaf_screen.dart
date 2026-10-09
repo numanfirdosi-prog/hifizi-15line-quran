@@ -932,10 +932,35 @@ class _MushafScreenState extends State<MushafScreen> {
     return scrollMode ? box : Expanded(child: box);
   }
 
-  /// Ornamental header above the page: authentic Islamic calligraphy Bismillah
-  /// framed in an elegant golden unwan cartouche with arabesque accents.
+  /// Ornamental header above the page: Bismillah in gold calligraphy under
+  /// a thin gold top border, like the reference mushaf design.
+  /// Ornamental header above the page: the golden Bismillah cartouche from
+  /// the reference mushaf design. It glows on the golden background and
+  /// keeps its royal look on the black night-page background.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
-    return _BismillahHeader(nightDim: nightDim);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(
+            'assets/images/cartouche_bismillah.png',
+            height: 86,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
   }
 
   /// Ornamental footer below the page: the Manzil badge in a golden frame,
@@ -994,8 +1019,8 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Fixed ornament heights (px) framing the page image. Scroll-mode items
   /// size to their content, so these must stay exact: [_scrollItemHeight]
   /// adds them to the width-derived image height for the scroll math.
-  /// Top: Royal Bismillah calligraphy cartouche + padding.
-  static const double _kTopOrnamentHeight = 48.0;
+  /// Top: 86px Bismillah cartouche + 10px padding.
+  static const double _kTopOrnamentHeight = 96.0;
 
   /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
   static const double _kBottomOrnamentHeight = 64.0;
@@ -1739,105 +1764,6 @@ class _RibbonPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RibbonPainter old) => old.color != color;
-}
-
-/// Royal Islamic calligraphy Bismillah header framing the top of each page.
-class _BismillahHeader extends StatelessWidget {
-  final bool nightDim;
-  const _BismillahHeader({required this.nightDim});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = nightDim;
-    final goldPrimary =
-        isDark ? const Color(0xFFF3D572) : const Color(0xFF8B6914);
-    final goldBorder =
-        isDark ? const Color(0x77D4AF37) : const Color(0x99B8860B);
-    final goldInner =
-        isDark ? const Color(0x44D4AF37) : const Color(0x44B8860B);
-    final bgGradient = isDark
-        ? const LinearGradient(
-            colors: [Color(0xFF1C1914), Color(0xFF12100D), Color(0xFF1C1914)],
-          )
-        : const LinearGradient(
-            colors: [Color(0xFFFFFDF8), Color(0xFFF7F1E1), Color(0xFFFFFDF8)],
-          );
-
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 360),
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        decoration: BoxDecoration(
-          gradient: bgGradient,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: goldBorder, width: 1.1),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.4)
-                  : const Color(0xFF9A781E).withValues(alpha: 0.12),
-              blurRadius: 4,
-              offset: const Offset(0, 1.5),
-            ),
-          ],
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: goldInner, width: 0.6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                '۞',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: goldPrimary.withValues(alpha: 0.85),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontFamily: 'Amiri Quran',
-                    fontSize: 18.5,
-                    fontWeight: FontWeight.bold,
-                    height: 1.25,
-                    color: goldPrimary,
-                    shadows: [
-                      Shadow(
-                        color: isDark
-                            ? const Color(0xFFE5C158).withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.8),
-                        blurRadius: 2,
-                        offset: const Offset(0, 0.5),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '۞',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: goldPrimary.withValues(alpha: 0.85),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Manzil badge: an ornamental golden frame with the Manzil number,
