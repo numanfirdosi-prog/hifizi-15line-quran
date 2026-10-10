@@ -160,21 +160,51 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
               dua.transliteration,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontStyle: FontStyle.italic,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(dua.translation, style: theme.textTheme.bodyMedium),
+            if (dua.translationUrdu.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                ),
+                child: Text(
+                  dua.translationUrdu,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    fontFamily: 'Noto Nastaliq Urdu',
+                    fontSize: 14.5,
+                    height: 1.85,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 6),
+            Text(
+              dua.translation,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                height: 1.45,
+              ),
+            ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
-                icon: const Icon(Icons.copy),
+                icon: const Icon(Icons.copy, size: 16),
                 label: const Text('Copy Dua'),
                 onPressed: () async {
                   await Clipboard.setData(
                     ClipboardData(
                       text:
-                          '${dua.arabic}\n${dua.transliteration}\n${dua.translation}',
+                          '${dua.arabic}\n\n${dua.translationUrdu}\n\n${dua.translation}',
                     ),
                   );
                   if (context.mounted) {

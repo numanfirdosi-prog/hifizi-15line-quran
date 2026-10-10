@@ -5,81 +5,128 @@ class Faq {
   const Faq(this.q, this.a);
 }
 
-const List<Faq> faqs = [
+/// English FAQs
+const List<Faq> faqsEn = [
   Faq(
-    'Kya app offline chalti hai?',
-    'Ji haan. Quran ke tamam 611 pages (15-line Hifzi mushaf) download ke baad bina internet ke parhe ja sakte hain. Surah index, juz index, bookmarks aur aapki settings bhi offline kaam karti hain. Audio recitation aur page images ko pehli baar dekhne/sunne ke liye internet chahiye hota hai.',
+    'Does the app work offline?',
+    'Yes. All 611 pages of the 15-line South-Asian Hifzi Mushaf are pre-bundled and work completely offline without internet. Surah index, Juz index, bookmarks, and settings are fully offline as well. Qari audio recitations can also be downloaded for offline listening in the Download Center.',
   ),
   Faq(
-    'Namaz ke auqaat kaise calculate hote hain?',
-    'Namaz ke auqaat aapke GPS location se on-device calculate hote hain. Calculation method, Fajr/Isha angles aur asr juristic method Settings > Prayer Times me badle ja sakte hain (default: Muslim World League). Azan ke liye notification permission zaroori hai.',
+    'How are prayer times calculated?',
+    'Prayer times are calculated on-device using precise astronomical algorithms based on your selected city or live device GPS. Calculation parameters, angles, and Asr juristic method (Hanafi / Shafi\'i) can be customized in Settings > Prayer Times. Notification permission is required for Azan alerts.',
   ),
   Faq(
-    'Qiblah compass ko kaise calibrate karun?',
-    'Settings > Qiblah me calibration slider hai. Apne phone ko flat satah par rakhein aur phone ko figure-8 (8 ki shakal) me 2-3 baar ghumayein taake magnetometer calibrate ho jaye. Phir slider se needle ko apne maloom Qiblah se match karke fine-tune karein.',
+    'How do I calibrate the Qiblah compass?',
+    'Place your device on a flat surface and move it in a figure-8 motion 2 to 3 times to calibrate the magnetometer sensor. Keep away from metallic cases and magnetic phone mounts for optimal precision.',
   ),
   Faq(
-    'Backup & Restore kaise kaam karta hai?',
-    'Settings > Backup me aap apne bookmarks, last-read position, preferences aur namaz settings ka backup file bana sakte hain. Ye file aapke phone par save hoti hai — ise naye phone par Restore se wapas la sakte hain. Koi account ya cloud login nahi chahiye.',
+    'How does Backup & Restore work?',
+    'In Settings > Backup, you can generate a local backup file of your bookmarks, reading progress, and preferences. You can restore this file on any new device without requiring an account or cloud login.',
   ),
   Faq(
-    'Audio recitation me kitna data lagta hai?',
-    'Audio recitation streaming par chalti hai, is liye mobile data par sunne me data kharch hota hai. Download Center se surah ya juz ka audio pehle Wi-Fi par download kar lein, phir offline sun sakte hain.',
+    'How much data does audio recitation consume?',
+    'Streaming recitation uses standard mobile bandwidth. To conserve cellular data while traveling, you can download Surah or Qari audio packs over Wi-Fi in the Download Center for offline playback.',
   ),
   Faq(
-    'Mere bookmarks private hain?',
-    '100% private. Tamam bookmarks, last-read pages aur preferences sirf aapke device par save hote hain. Koi account, server upload ya analytics nahi hai — aapka data aapke phone se bahar nahi jata.',
+    'Are my bookmarks and notes private?',
+    '100% private. All your bookmarks, reading history, and notes are stored strictly on your local device. There are no user tracking, analytics, or third-party server uploads.',
   ),
   Faq(
-    'Ayah repeat / loop feature kaise use karun?',
-    'Audio Studio me kisi bhi ayah par repeat mode on karke us ayah ko baar-baar suna ja sakta hai — hifz (memorization) ke liye bohot mufeed hai. Aap surah range bhi select karke loop me laga sakte hain.',
+    'How do I use the Ayah repeat / loop feature?',
+    'Tap any Ayah on the Mushaf page, and use the repeat control in the bottom audio player to loop individual verses or select a custom range of Ayahs for memorization (Hifz).',
   ),
   Faq(
-    'Themes aur display options kya hain?',
-    'Preferences me Light, Dark aur Sepia themes ke saath Arabic font size, translation on/off aur transliteration display ke options hain. Page view me 15-line Hifzi layout authentic mushaf jaisa dikhta hai.',
+    'What reading themes and modes are available?',
+    'You can choose between Night Slate (pure OLED dark mode), Antique Parchment, and Emerald Day themes. Reading modes include Page-Slide, Continuous Scroll, and Page-Turn.',
   ),
   Faq(
-    'Download Center kis liye hai?',
-    'Download Center se aap poore Quran ke page images, audio recitations (12 qaris) aur translations ko ek saath download karke offline rakh sakte hain — safar me ya kam network wali jagah par behtareen.',
+    'What is the Jump to Page / Parah feature?',
+    'In the 3-dot reader menu, select "Jump to Page / Parah" to navigate either directly by Mushaf page (1 to 611) or by Parah number (1 to 30) and page within that Parah (1 to 20).',
   ),
   Faq(
-    'Koi masla (bug) ho to kahan report karun?',
-    'About screen par "Report an Issue" option hai. Wahan app version, device model aur masle ki tafseel likhein taake hum jald fix kar saken. Aapka feedback hamare liye qeemti hai.',
+    'Where can I report a bug or request a feature?',
+    'Use the "Report an Issue" button on the About & Licenses screen, or email numanfirdosi@gmail.com directly. We review all feedback promptly.',
   ),
 ];
 
+/// Urdu FAQs in authentic Urdu script
+const List<Faq> faqsUr = [
+  Faq(
+    'کیا یہ ایپ انٹرنیٹ کے بغیر (آف لائن) کام کرتی ہے؟',
+    'جی ہاں! ۱۵ سطری حفظی مصحف کے تمام ۶۱۱ صفحات ایپ میں شامل ہیں اور بغیر انٹرنیٹ مکمل آف لائن پڑھے جا سکتے ہیں۔ سورتوں اور پاروں کی فہرست، بُک مارکس اور ترتیبات بھی آف لائن دستیاب ہیں۔ تلاوتِ کلام پاک کی آڈیو بھی ڈاؤن لوڈ سینٹر سے آف لائن سننے کے لیے محفوظ کی جا سکتی ہے۔',
+  ),
+  Faq(
+    'نماز کے اوقات کیسے شمار ہوتے ہیں؟',
+    'نماز کے اوقات آپ کے منتخب کردہ شہر یا موبائل جی پی ایس (GPS) کے ذریعے خودکار فلکیاتی حساب سے طے پاتے ہیں۔ عصر کا طریقہ (حنفی / شافعی) سیٹنگز میں تبدیل کیا جا سکتا ہے۔ اذان کے الارم کے لیے نوٹیفکیشن کی اجازت ضروری ہے۔',
+  ),
+  Faq(
+    'قبلہ کمپاس کی درستگی کیسے یقینی بنائیں؟',
+    'اپنے موبائل کو کسی ہموار سطح پر رکھیں اور انگریزی ہندسے 8 کی شکل میں 2-3 بار گھمائیں تاکہ مقناطیسی سینسر درست ہو جائے۔ موبائل کور یا مقناطیسی ہولڈر سے دور رکھیں۔',
+  ),
+  Faq(
+    'بیک اپ اور بحالی (Backup & Restore) کا طریقہ کیا ہے؟',
+    'سیٹنگز میں بیک اپ کے ذریعے آپ اپنے بُک مارکس، مطالعے کی پیش رفت اور ترتیبات کی فائل محفوظ کر سکتے ہیں۔ نئے فون میں اسے باآسانی ری اسٹور کیا جا سکتا ہے۔ کسی آن لائن اکاؤنٹ کی ضرورت نہیں۔',
+  ),
+  Faq(
+    'آڈیو تلاوت سننے میں کتنا انٹرنیٹ استعمال ہوتا ہے؟',
+    'آن لائن سننے پر عام آڈیو اسٹریمنگ جتنا ڈیٹا لگتا ہے۔ موبائل ڈیٹا بچانے کے لیے آپ وائی فائی پر قاری کے آڈیو پیک ڈاؤن لوڈ کر کے مکمل آف لائن سن سکتے ہیں۔',
+  ),
+  Faq(
+    'کیا میرے بُک مارکس اور ذاتی نوٹس محفوظ ہیں؟',
+    'سو فیصد محفوظ اور پرائیویٹ۔ آپ کا تمام ڈیٹا صرف آپ کے موبائل میں محفوظ رہتا ہے اور کسی بیرونی سرور پر نہیں بھیجا جاتا۔',
+  ),
+  Faq(
+    'آیت کو بار بار دہرانے (تکرار / لوپ) کا فیچر کیسے استعمال کریں؟',
+    'مصحف کے صفحے پر کسی بھی آیت پر ٹیپ کر کے تلاوت شروع کریں، پھر پلیئر میں رپیٹ کا آپشن منتخب کر کے حفظ و تکرار کے لیے آیت کو بار بار سنیں۔',
+  ),
+  Faq(
+    'ایپ میں کون سی تھیمز اور ڈسپلے موڈز ہیں؟',
+    'آپ نائٹ موڈ (او ایل ای ڈی بلیک)، ایمرلڈ گرین اور پارچمنٹ (ہلکا زردی مائل) تھیمز منتخب کر سکتے ہیں۔ پڑھنے کے لیے پیج سلائیڈ، اسکرول اور پیج ٹرن کے طریقے دستیاب ہیں۔',
+  ),
+  Faq(
+    'پارہ اور صفحہ پر جانے (Jump) کا آپشن کہاں ہے؟',
+    'تلاوت والے صفحے پر تھری ڈاٹ مینیو میں "Jump to Page / Parah" منتخب کریں۔ یہاں آپ براہ راست صفحہ نمبر (۱ تا ۶۱۱) یا پارہ نمبر (۱ تا ۳۰) اور پارے کا صفحہ (۱ تا ۲۰) درج کر کے مطلوبہ صفحے پر جا سکتے ہیں۔',
+  ),
+  Faq(
+    'کسی خرابی یا مسئلے کی اطلاع کیسے دیں؟',
+    'ایپ کے About اسکرین پر "Report an Issue" پر ٹیپ کریں یا براہ راست numanfirdosi@gmail.com پر ای میل بھیجیں۔ ہم آپ کی تجاویز کا خیر مقدم کرتے ہیں۔',
+  ),
+];
+
+/// Backwards compatibility default
+const List<Faq> faqs = faqsEn;
+
+List<Faq> getFaqs(String lang) => lang == 'ur' ? faqsUr : faqsEn;
+
 const String aboutIntro =
-    'Nur-ul-Quran — 15-line South-Asian Hifzi mushaf ka digital tajurba. '
-    'Tamam 611 pages authentic Hifzi layout me, jaisa aap printed mushaf me parhte hain. '
-    'Ye app tilawat, hifz aur samajhne ke liye banayi gayi hai — bila zaroorat ke features ke baghair, '
-    'saaf aur pursukoon reading experience ke saath.';
+    'Nur-ul-Quran (نور القرآن) brings the authentic 15-line South-Asian Hifzi Mushaf '
+    'into a beautiful, distraction-free digital experience. All 611 pages are crafted '
+    'in the traditional Hifzi layout familiar to students and reciters worldwide, '
+    'accompanied by accurate prayer times, audio recitation, and comprehensive study tools.';
 
 const String aboutFeatures =
-    '• 611-page 15-line Hifzi mushaf (page-turn aur scroll dono modes)\n'
-    '• 114 surahs ka mukammal index, 30 ajza, aur full-text search (Arabic + English)\n'
-    '• Har ayah par Urdu tarjuma — Kanzul Iman (Imam Ahmad Raza Khan)\n'
-    '• 12 qaris ki audio recitations — surah suniye ya ayah-by-ayah, online ya download karke offline\n'
-    '• Ayah par tap karke tilawat, musalsal ayah-by-ayah playback aur repeat\n'
-    '• Namaz ke auqaat (GPS se), azan alarms, Qiblah compass\n'
-    '• Khatm planner (30 din), bookmarks, reading progress, backup & restore\n'
-    '• Ramzan duas, daily Ayah of the Day, aur kai themes (Night, Emerald, Parchment)';
+    '• Complete 611-page 15-Line Indo-Pak Hifzi Mushaf (Page-turn and continuous scroll modes)\n'
+    '• Tap any Ayah on the page for instant playback with pixel-perfect Ayah highlighting\n'
+    '• Full Surah Index (114 Surahs) & Juz Index (30 Ajza) with bilingual introductions\n'
+    '• Jump to any Page (1 to 611) or Parah (1 to 30) & page within Parah (1 to 20)\n'
+    '• Precise Prayer Times calculated locally with Azan notifications and Qiblah Compass\n'
+    '• Audio recitations by renowned international Qaris with Ayah repeating & looping\n'
+    '• Khatm Planner, Reading Goals, Bookmarks, and Notes with full offline support\n'
+    '• Night Mode, Parchment, and Emerald themes optimized for OLED and daytime reading\n'
+    '• Daily Duas (including full authentic Taraweeh Dua) and Ayah of the Day';
 
 const String aboutSources =
-    '• Mushaf pages: 15-line Hifzi layout images\n'
-    '• Quran text: Tanzil (Uthmani script)\n'
-    '• Urdu tarjuma: Kanzul Iman — Imam Ahmad Raza Khan Barelvi (Tanzil)\n'
-    '• English tarjuma: Saheeh International\n'
-    '• Audio: mp3quran.net (surah recitations), everyayah.com (ayah recitations)\n'
-    '• Namaz timings: on-device astronomical calculation';
+    '• Mushaf Pages: High-resolution 15-line South Asian Hifzi Mushaf\n'
+    '• Quran Data & Verse Coordinates: Tanzil & EveryAyah open-source archives\n'
+    '• Audio Recitations: mp3quran.net & everyayah.com\n'
+    '• Prayer Times & Qibla: On-device astronomical and geomagnetic calculation';
 
 const String aboutLicenses =
-    'Ye app Flutter (BSD 3-Clause) se banayi gayi hai. Darj zail open-source packages istemal hue hain: '
-    'just_audio, audio_service, audio_session, provider, shared_preferences, path_provider, '
-    'google_fonts, share_plus, url_launcher, cached_network_image, timezone, android_alarm_manager_plus, '
-    'geolocator, flutter_compass, speech_to_text, app_links, flutter_local_notifications.\n\n'
-    'Fonts: Noto Sans Arabic aur Amiri Quran (SIL Open Font License 1.1) app me bundled hain.\n\n'
-    'Quran ka mutan (text) aur tarajim taleemi maqsad ke liye shaamil kiye gaye hain.';
-
+    'Nur-ul-Quran is built with Flutter and open-source software under respectful licenses.\n\n'
+    'Key open-source dependencies include just_audio, audio_service, audio_session, '
+    'provider, shared_preferences, path_provider, package_info_plus, geolocator, '
+    'flutter_compass, timezone, and flutter_local_notifications.\n\n'
+    'Arabic and Urdu Typography: Amiri Quran and Noto Sans Arabic under SIL Open Font License 1.1.';
 
 const List<String> ramadanReflections = [
   'Ramzan ka pehla din: niyyat ko khalis karo — rozah sirf bhook nahi, dil ki safai hai.',

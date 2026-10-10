@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
+
 import '../data/static_content.dart';
+import '../services/preferences_service.dart';
 
 /// Email address that receives all bug reports from the app.
 const String supportEmail = 'numanfirdosi@gmail.com';
@@ -14,26 +18,40 @@ class FaqScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final prefs = Provider.of<PreferencesService>(context);
+    final isUrdu = prefs.appLanguage == 'ur';
+    final currentFaqs = getFaqs(prefs.appLanguage);
     return Scaffold(
-      appBar: AppBar(title: const Text('Questions & FAQ')),
+      appBar: AppBar(
+        title: Text(isUrdu ? 'اکثر پوچھے گئے سوالات (FAQ)' : 'Questions & FAQ'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          for (final faq in faqs)
+          for (final faq in currentFaqs)
             Card(
               color: theme.colorScheme.surface,
               margin: const EdgeInsets.only(bottom: 8),
               child: ExpansionTile(
                 title: Text(
                   faq.q,
+                  textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontFamily: isUrdu ? 'Noto Nastaliq Urdu' : null,
                   ),
                 ),
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Text(faq.a, style: theme.textTheme.bodyMedium),
+                    child: Text(
+                      faq.a,
+                      textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: isUrdu ? 'Noto Nastaliq Urdu' : null,
+                        height: isUrdu ? 1.8 : 1.45,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -152,21 +170,28 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Version 1.0.31',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurface.withOpacity(0.6),
-                    ),
+                  FutureBuilder<PackageInfo>(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (context, snapshot) {
+                      final v = snapshot.data?.version ?? '1.0.52';
+                      return Text(
+                        'Version $v',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-          _section(context, 'App ke baare me', aboutIntro),
-          _section(context, 'Khaas features', aboutFeatures),
-          _section(context, 'Data sources', aboutSources),
-          _section(context, 'Licenses', aboutLicenses),
+          _section(context, 'About the App', aboutIntro),
+          _section(context, 'Key Features', aboutFeatures),
+          _section(context, 'Data Sources', aboutSources),
+          _section(context, 'Licenses & Credits', aboutLicenses),
           const SizedBox(height: 4),
           Card(
             color: cs.surface,
@@ -174,7 +199,7 @@ class AboutScreen extends StatelessWidget {
               leading: Icon(Icons.bug_report_outlined, color: cs.primary),
               title: const Text('Report an Issue'),
               subtitle:
-                  const Text('Koi masla ho to humein email karein'),
+                  const Text('Found an issue or bug? Email our support team'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _reportIssue(context),
             ),

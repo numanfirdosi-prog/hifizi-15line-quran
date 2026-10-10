@@ -323,18 +323,43 @@ class _PrayerScreenState extends State<PrayerScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'اوقات الصلوٰۃ (Prayer Times)',
+          'Prayer Times • اوقات الصلوٰۃ',
           style: TextStyle(
-              color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
+              color: cs.onSurface, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         actions: [
-          TextButton.icon(
-            icon: Icon(Icons.location_on, color: cs.primary, size: 18),
-            label: Text(
-              prefs.selectedCity.name.split('/')[0].trim(),
-              style: TextStyle(color: cs.onSurface, fontSize: 13),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: InkWell(
+              onTap: () => _showCityPickerDialog(prefs),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on, color: cs.primary, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      prefs.selectedCity.name.split('/')[0].trim(),
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(Icons.arrow_drop_down, color: cs.primary, size: 18),
+                  ],
+                ),
+              ),
             ),
-            onPressed: () => _showCityPickerDialog(prefs),
           ),
         ],
       ),
@@ -345,19 +370,15 @@ class _PrayerScreenState extends State<PrayerScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.surface, cs.secondary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: cs.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                  color: cs.primary.withValues(alpha: 0.5), width: 1.5),
-              boxShadow: const [
+                  color: cs.primary.withValues(alpha: 0.45), width: 1.5),
+              boxShadow: [
                 BoxShadow(
-                    color: Colors.black45,
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 10,
-                    offset: Offset(0, 4)),
+                    offset: const Offset(0, 4)),
               ],
             ),
             child: Column(
@@ -369,7 +390,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Next: ${nextPrayer.nameEn} (${nextPrayer.nameUrdu})',
+                          'Next: ${nextPrayer.nameEn} • ${nextPrayer.nameUrdu}',
                           style: TextStyle(
                               color: cs.primary,
                               fontSize: 16,
@@ -379,7 +400,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                         Text(
                           'Adhan at ${nextPrayer.time.time12}',
                           style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.7),
+                              color: cs.onSurface.withValues(alpha: 0.75),
                               fontSize: 13),
                         ),
                       ],
@@ -393,8 +414,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black38,
+                    color: cs.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(30),
+                    border:
+                        Border.all(color: cs.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _formatDuration(nextPrayer.remaining),
@@ -418,6 +441,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
             decoration: BoxDecoration(
               color: cs.surface,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -428,7 +452,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
                         color: cs.primary, size: 20),
                     const SizedBox(width: 8),
                     Text('Lockscreen Azan Alarm',
-                        style: TextStyle(color: cs.onSurface, fontSize: 13)),
+                        style: TextStyle(
+                            color: cs.onSurface,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500)),
                   ],
                 ),
                 ElevatedButton.icon(
@@ -473,10 +500,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0B2D22),
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(10),
-                border:
-                    Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
+                border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -491,12 +524,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           urdu,
                           style: TextStyle(
                               color: cs.primary,
-                              fontSize: 12,
-                              fontFamily: 'serif'),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

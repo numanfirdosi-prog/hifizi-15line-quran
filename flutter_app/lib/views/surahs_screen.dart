@@ -109,7 +109,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
     final cs = Theme.of(context).colorScheme;
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     final audio = Provider.of<AudioRecitationService>(context, listen: false);
-    final intro = surahIntros[surah.number] ?? '';
+    final introUrdu = surahIntrosUrdu[surah.number] ?? '';
+    final introEn = surahIntros[surah.number] ?? '';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -201,14 +202,34 @@ class _SurahsScreenState extends State<SurahsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                intro,
-                style: TextStyle(
-                  color: cs.onSurface.withValues(alpha: 0.85),
-                  fontSize: 14,
-                  height: 1.6,
+              if (introUrdu.isNotEmpty) ...[
+                Text(
+                  introUrdu,
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(
+                    fontFamily: 'Noto Nastaliq Urdu',
+                    fontSize: 14.5,
+                    height: 1.85,
+                    color: cs.onSurface,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Divider(
+                  color: cs.primary.withValues(alpha: 0.25),
+                  thickness: 1,
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (introEn.isNotEmpty)
+                Text(
+                  introEn,
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.75),
+                    fontSize: 13.5,
+                    height: 1.55,
+                  ),
+                ),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -267,10 +288,10 @@ class _SurahsScreenState extends State<SurahsScreen> {
     final makkiCount = allSurahs.where((s) => s.isMeccan).length;
     final madaniCount = allSurahs.length - makkiCount;
     final filterLabels = [
-      'All ${allSurahs.length}',
-      'Makki $makkiCount',
-      'Madani $madaniCount',
-      'Bookmarked (${bookmarked.length})',
+      'All (${allSurahs.length})',
+      'Makki ($makkiCount)',
+      'Madani ($madaniCount)',
+      'Bookmarks (${bookmarked.length})',
     ];
 
     return Scaffold(
@@ -382,9 +403,14 @@ class _SurahsScreenState extends State<SurahsScreen> {
                           selected: selected,
                           onSelected: (_) => setState(() => _filterIndex = i),
                           selectedColor: cs.primary,
-                          backgroundColor: const Color(0xFF144234),
+                          backgroundColor: cs.surface,
+                          side: BorderSide(
+                            color: selected
+                                ? cs.primary
+                                : cs.primary.withValues(alpha: 0.25),
+                          ),
                           labelStyle: TextStyle(
-                            color: selected ? cs.onPrimary : Colors.white70,
+                            color: selected ? cs.onPrimary : cs.onSurface,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),

@@ -24,6 +24,22 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  String _formatReadingGoal(int pages) {
+    if (pages < 20) {
+      return '$pages pages / day';
+    } else if (pages == 20) {
+      return '1 Para (20 pgs/day)';
+    } else {
+      final paras = pages ~/ 20;
+      final rem = pages % 20;
+      if (rem == 0) {
+        return '$paras Paras ($pages pgs/day)';
+      } else {
+        return '$paras Para + $rem pgs ($pages/day)';
+      }
+    }
+  }
+
   Widget _scriptCard(
     BuildContext context, {
     required String style,
@@ -38,10 +54,14 @@ class SettingsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
+            color: selected
+                ? cs.primary.withValues(alpha: 0.15)
+                : cs.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? cs.primary : Colors.white12,
+              color: selected
+                  ? cs.primary
+                  : cs.primary.withValues(alpha: 0.25),
               width: selected ? 2 : 1,
             ),
           ),
@@ -51,13 +71,14 @@ class SettingsScreen extends StatelessWidget {
                 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                 textDirection: TextDirection.rtl,
                 textAlign: TextAlign.center,
-                style: arabicStyle(style, fontSize: 18),
+                style: arabicStyle(style,
+                    fontSize: 18, color: cs.onSurface),
               ),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? cs.primary : Colors.white70,
+                  color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -507,6 +528,65 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // App Language Section
+          Card(
+            color: cs.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'App Language / زبان',
+                    style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                  const SizedBox(height: 8),
+                  RadioListTile<String>(
+                    title: Text(
+                        'English (All menus, buttons & FAQs in English)',
+                        style: TextStyle(color: cs.onSurface, fontSize: 14)),
+                    value: 'en',
+                    groupValue: prefs.appLanguage,
+                    activeColor: cs.primary,
+                    onChanged: (val) {
+                      if (val != null) prefs.setAppLanguage(val);
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text('اردو (تمام مینیوز، بٹن اور سوالات اردو میں)',
+                        style: TextStyle(
+                            color: cs.onSurface,
+                            fontSize: 14,
+                            fontFamily: 'Noto Nastaliq Urdu')),
+                    value: 'ur',
+                    groupValue: prefs.appLanguage,
+                    activeColor: cs.primary,
+                    onChanged: (val) {
+                      if (val != null) prefs.setAppLanguage(val);
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, top: 4),
+                    child: Text(
+                      'Note: Quran translations & Duas always display both Urdu & English.',
+                      style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Reading Goal Section
           Card(
             color: cs.surface,
@@ -514,44 +594,90 @@ class SettingsScreen extends StatelessWidget {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: Text(
-                      'Reading Goal / روزانہ ہدف',
-                      style: TextStyle(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Reading Goal • روزانہ ہدف',
+                        style: TextStyle(
+                            color: cs.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: cs.primary.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(
+                          _formatReadingGoal(prefs.dailyTargetPages),
+                          style: TextStyle(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.remove,
-                            color: cs.onSurface.withValues(alpha: 0.7), size: 20),
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.remove, size: 18),
                         onPressed: prefs.dailyTargetPages > 1
-                            ? () => prefs
-                                .setDailyTargetPages(prefs.dailyTargetPages - 1)
+                            ? () => prefs.setDailyTargetPages(
+                                prefs.dailyTargetPages - 1)
                             : null,
                       ),
-                      Text(
-                        '${prefs.dailyTargetPages} pages / day',
-                        style: TextStyle(
-                            color: cs.onSurface,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14),
+                      Expanded(
+                        child: Slider(
+                          value: prefs.dailyTargetPages
+                              .toDouble()
+                              .clamp(1.0, 100.0),
+                          min: 1,
+                          max: 100,
+                          divisions: 99,
+                          activeColor: cs.primary,
+                          label: _formatReadingGoal(prefs.dailyTargetPages),
+                          onChanged: (val) =>
+                              prefs.setDailyTargetPages(val.round()),
+                        ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.add,
-                            color: cs.onSurface.withValues(alpha: 0.7), size: 20),
-                        onPressed: prefs.dailyTargetPages < 20
-                            ? () => prefs
-                                .setDailyTargetPages(prefs.dailyTargetPages + 1)
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.add, size: 18),
+                        onPressed: prefs.dailyTargetPages < 100
+                            ? () => prefs.setDailyTargetPages(
+                                prefs.dailyTargetPages + 1)
                             : null,
                       ),
                     ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('1 page',
+                            style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.5),
+                                fontSize: 11)),
+                        Text('1 Para (20 pgs)',
+                            style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.5),
+                                fontSize: 11)),
+                        Text('5 Paras (100 pgs)',
+                            style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.5),
+                                fontSize: 11)),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -584,7 +710,8 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       Text('${prefs.bookmarks.length} saved',
                           style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
+                              color: cs.onSurface.withValues(alpha: 0.54),
+                              fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -593,8 +720,9 @@ class SettingsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                           'No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.',
-                          style:
-                              TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
+                          style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.6),
+                              fontSize: 13)),
                     )
                   else
                     Wrap(
@@ -602,10 +730,15 @@ class SettingsScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: prefs.bookmarks.map((p) {
                         return ActionChip(
-                          backgroundColor: const Color(0xFF144234),
-                          avatar: Icon(Icons.bookmark, color: cs.primary, size: 16),
+                          backgroundColor: cs.surface,
+                          side: BorderSide(
+                              color: cs.primary.withValues(alpha: 0.3)),
+                          avatar: Icon(Icons.bookmark,
+                              color: cs.primary, size: 16),
                           label: Text('Page $p',
-                              style: const TextStyle(color: Colors.white)),
+                              style: TextStyle(
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.w600)),
                           onPressed: () => onOpenPage(p),
                         );
                       }).toList(),
@@ -621,9 +754,9 @@ class SettingsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0B2D22),
+              color: cs.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -633,15 +766,17 @@ class SettingsScreen extends StatelessWidget {
                   style: TextStyle(
                       color: cs.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14),
+                      fontSize: 15),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
                   '15-Line South Asian / Indo-Pak Hifzi Mushaf (القرآن الكريم). 100% offline, exact astronomical prayer times with lockscreen Azan, Kaaba Qiblah compass, and multi-language voice search.',
                   style: TextStyle(
-                      color: Colors.white70, fontSize: 12, height: 1.4),
+                      color: cs.onSurface.withValues(alpha: 0.8),
+                      fontSize: 12.5,
+                      height: 1.45),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 8),
                 FutureBuilder<PackageInfo>(
                   future: _packageInfoFuture,
                   builder: (context, snapshot) {
@@ -650,7 +785,10 @@ class SettingsScreen extends StatelessWidget {
                       version == null || version.isEmpty
                           ? 'Version…'
                           : 'Version $version',
-                      style: TextStyle(color: cs.primary, fontSize: 11),
+                      style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
                     );
                   },
                 ),

@@ -720,9 +720,27 @@ class _MushafScreenState extends State<MushafScreen> {
     prefs.setRepeatMode(next);
   }
 
+  Future<void> _jumpToPage(int page) async {
+    final clamped = page.clamp(1, totalPagesInMushaf);
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    if (prefs.readingMode == 'scroll') {
+      final itemHeight = _scrollItemHeight(context);
+      _scrollController?.jumpTo((clamped - 1) * itemHeight);
+    } else if (_pageController.hasClients) {
+      _pageController.jumpToPage(clamped - 1);
+    }
+    setState(() {
+      _currentPage = clamped;
+    });
+    _markPageRead(clamped, prefs);
+  }
+
   /// Opens the reader settings bottom sheet (3-dot menu).
   void _showReaderSettings(BuildContext context) {
-    showReaderSettingsSheet(context);
+    showReaderSettingsSheet(
+      context,
+      onJumpToPage: (page) => _jumpToPage(page),
+    );
   }
 
   /// Toggles recitation of the Surah on the current page.
@@ -832,7 +850,7 @@ class _MushafScreenState extends State<MushafScreen> {
                 // content, so these must be exact — _scrollItemHeight
                 // depends on them.
                 height: _kTopOrnamentHeight,
-                child: _buildTopOrnament(pageNum, nightDim),
+                child: _buildTopOrnament(pageNum, nightDim || nightPage),
               ),
               // The page-image box keeps the exact page aspect in both
               // modes: in scroll mode the column height is unbounded, so
@@ -908,7 +926,9 @@ class _MushafScreenState extends State<MushafScreen> {
               ),
               SizedBox(
                 height: _kBottomOrnamentHeight,
-                child: Center(child: _buildBottomOrnament(pageNum, nightDim)),
+                child: Center(
+                    child: _buildBottomOrnament(
+                        pageNum, nightDim || nightPage)),
               ),
               // Reserve space for the overlaying bottom control bar so the
               // Manzil badge isn't hidden behind it.
@@ -938,29 +958,7 @@ class _MushafScreenState extends State<MushafScreen> {
   /// the reference mushaf design. It glows on the golden background and
   /// keeps its royal look on the black night-page background.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.asset(
-            'assets/images/cartouche_bismillah.png',
-            height: 86,
-            fit: BoxFit.contain,
-          ),
-        ),
-      ),
-    );
+    return _BismillahHeader(nightDim: nightDim);
   }
 
   /// Ornamental footer below the page: the Manzil badge in a golden frame,
@@ -1766,6 +1764,103 @@ class _RibbonPainter extends CustomPainter {
   bool shouldRepaint(covariant _RibbonPainter old) => old.color != color;
 }
 
+/// Royal Islamic calligraphy Bismillah header framing the top of each page.
+class _BismillahHeader extends StatelessWidget {
+  final bool nightDim;
+  const _BismillahHeader({required this.nightDim});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = nightDim;
+    final goldPrimary =
+        isDark ? const Color(0xFFF3D572) : const Color(0xFF8B6914);
+    final goldBorder =
+        isDark ? const Color(0x66D4AF37) : const Color(0x99B8860B);
+    final goldInner =
+        isDark ? const Color(0x33D4AF37) : const Color(0x44B8860B);
+    final bgGradient = isDark
+        ? null
+        : const LinearGradient(
+            colors: [Color(0xFFFFFDF8), Color(0xFFF7F1E1), Color(0xFFFFFDF8)],
+          );
+
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 440),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF000000) : null,
+          gradient: bgGradient,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: goldBorder, width: 1.1),
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF9A781E).withValues(alpha: 0.12),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: goldInner, width: 0.6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '۞',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: goldPrimary.withValues(alpha: 0.85),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
+                  textAlign: TextAlign.center,
+                  textDirection: TextDirection.rtl,
+                  style: TextStyle(
+                    fontFamily: 'Amiri Quran',
+                    fontSize: 18.5,
+                    fontWeight: FontWeight.bold,
+                    height: 1.25,
+                    color: goldPrimary,
+                    shadows: [
+                      Shadow(
+                        color: isDark
+                            ? const Color(0xFFE5C158).withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.8),
+                        blurRadius: 2,
+                        offset: const Offset(0, 0.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '۞',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: goldPrimary.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 /// Manzil badge: an ornamental golden frame with the Manzil number,
 /// like the reference mushaf design.
 class _ManzilBadge extends StatelessWidget {
