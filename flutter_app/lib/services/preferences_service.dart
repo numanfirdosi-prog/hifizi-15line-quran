@@ -38,7 +38,6 @@ class PreferencesService extends ChangeNotifier {
   bool _onboardingDone = false;
   bool _autoBackup = false;
   String _lastAutoBackup = '';
-  String _appLanguage = 'en'; // 'en' | 'ur'
 
   Map<String, bool> _prayerAlarms = {
     'fajr': true,
@@ -77,7 +76,6 @@ class PreferencesService extends ChangeNotifier {
   bool get nightPageMode => _nightPageMode;
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
-  String get appLanguage => _appLanguage;
 
   /// The retired 'nastaliq' (Gulzar) script style migrates to Noto Sans
   /// Arabic ('sans'). Applied both at startup and on backup import so old
@@ -123,7 +121,6 @@ class PreferencesService extends ChangeNotifier {
         _prefs.getBool('nur_background_playback') ?? true;
     _nightPageMode = _prefs.getBool('nur_night_page_mode') ?? false;
     _lastAutoBackup = _prefs.getString('nur_last_auto_backup') ?? '';
-    _appLanguage = _prefs.getString('nur_app_language') ?? 'en';
 
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
     if (savedAyahsJson != null) {
@@ -348,12 +345,6 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setBackgroundPlaybackEnabled(bool enabled) async {
     _backgroundPlaybackEnabled = enabled;
     await _prefs.setBool('nur_background_playback', enabled);
-    notifyListeners();
-  }
-
-  Future<void> setAppLanguage(String lang) async {
-    _appLanguage = lang;
-    await _prefs.setString('nur_app_language', lang);
     notifyListeners();
   }
 

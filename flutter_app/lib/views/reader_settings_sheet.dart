@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
@@ -10,19 +9,17 @@ import '../services/preferences_service.dart';
 ///
 /// Mirrors the reference design: Display Mode, Qari (Reciter), Ayah (Range),
 /// Audio Mode and Background Playback — every option is fully functional.
-void showReaderSettingsSheet(BuildContext context,
-    {void Function(int page)? onJumpToPage}) {
+void showReaderSettingsSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => _ReaderSettingsSheet(onJumpToPage: onJumpToPage),
+    builder: (ctx) => const _ReaderSettingsSheet(),
   );
 }
 
 class _ReaderSettingsSheet extends StatelessWidget {
-  final void Function(int page)? onJumpToPage;
-  const _ReaderSettingsSheet({this.onJumpToPage});
+  const _ReaderSettingsSheet();
 
   static const _themes = <String, String>{
     'night': 'Night Slate',
@@ -73,25 +70,6 @@ class _ReaderSettingsSheet extends StatelessWidget {
             trailing: Icon(Icons.chevron_right,
                 color: cs.onSurface.withValues(alpha: 0.5)),
             onTap: () => _showThemeDialog(context),
-          ),
-          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
-          // Jump to Page / Parah
-          ListTile(
-            leading: Icon(Icons.explore_outlined, color: cs.primary),
-            title: Text('Jump to Page / Parah',
-                style: TextStyle(
-                    color: cs.onSurface,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600)),
-            subtitle: Text('صفحہ یا پارہ پر جائیں (Parah 1-30, Page 1-20)',
-                style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
-            trailing: Icon(Icons.chevron_right,
-                color: cs.onSurface.withValues(alpha: 0.5)),
-            onTap: () {
-              Navigator.pop(context);
-              _showJumpToPageDialog(context, onJumpToPage);
-            },
           ),
           Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.12)),
           // Qari (Reciter)
@@ -342,216 +320,6 @@ class _ReaderSettingsSheet extends StatelessWidget {
       // The dialog is closed: release the controllers.
       startCtrl.dispose();
       endCtrl.dispose();
-    });
-  }
-
-  void _showJumpToPageDialog(
-      BuildContext context, void Function(int page)? onJumpToPage) {
-    final cs = Theme.of(context).colorScheme;
-    int selectedMode = 0; // 0: By Parah, 1: By Page
-    int paraNum = 1;
-    final paraPageCtrl = TextEditingController(text: '1');
-    final directPageCtrl = TextEditingController(text: '1');
-
-    showDialog(
-      context: context,
-      builder: (dctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          int computedPage;
-          if (selectedMode == 0) {
-            final p = paraNum.clamp(1, 30);
-            final pg = int.tryParse(paraPageCtrl.text.trim()) ?? 1;
-            final clampedPg = pg.clamp(1, 20);
-            if (p == 1) {
-              computedPage = clampedPg;
-            } else {
-              computedPage =
-                  (juzList[p - 1].startPage + (clampedPg - 1))
-                      .clamp(1, totalPagesInMushaf);
-            }
-          } else {
-            final dp = int.tryParse(directPageCtrl.text.trim()) ?? 1;
-            computedPage = dp.clamp(1, totalPagesInMushaf);
-          }
-
-          return AlertDialog(
-            backgroundColor: cs.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.menu_book, color: cs.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Jump to Page / Parah',
-                    style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Mode Selector Tabs
-                  SegmentedButton<int>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 0,
-                        label: Text('By Parah\nپارہ سے',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12)),
-                      ),
-                      ButtonSegment(
-                        value: 1,
-                        label: Text('By Page\nصفحہ سے',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12)),
-                      ),
-                    ],
-                    selected: {selectedMode},
-                    onSelectionChanged: (set) {
-                      setState(() {
-                        selectedMode = set.first;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (selectedMode == 0) ...[
-                    // Parah Selector Dropdown
-                    InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Parah / Juz (1 - 30)',
-                        labelStyle: TextStyle(color: cs.primary),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: paraNum,
-                          isExpanded: true,
-                          dropdownColor: cs.surface,
-                          items: List.generate(30, (i) {
-                            final j = juzList[i];
-                            return DropdownMenuItem(
-                              value: i + 1,
-                              child: Text(
-                                'Para ${i + 1}: ${j.nameAr} (${j.nameTr})',
-                                style: TextStyle(
-                                    color: cs.onSurface, fontSize: 13),
-                              ),
-                            );
-                          }),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                paraNum = val;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Page inside Parah
-                    TextField(
-                      controller: paraPageCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Page in Parah (1 - 20)',
-                        hintText: 'e.g. 10',
-                        helperText: 'Standard 20 pages per Parah',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon:
-                            Icon(Icons.auto_stories, color: cs.primary),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ] else ...[
-                    // Direct Page
-                    TextField(
-                      controller: directPageCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Mushaf Page (1 - 611)',
-                        hintText: 'e.g. 32',
-                        helperText: 'Total 611 pages in Mushaf',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        prefixIcon:
-                            Icon(Icons.find_in_page, color: cs.primary),
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: cs.primary.withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Destination:',
-                          style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.7),
-                              fontSize: 13),
-                        ),
-                        Text(
-                          'Page $computedPage of $totalPagesInMushaf',
-                          style: TextStyle(
-                              color: cs.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dctx),
-                child: Text('Cancel',
-                    style:
-                        TextStyle(color: cs.onSurface.withValues(alpha: 0.7))),
-              ),
-              FilledButton(
-                onPressed: () {
-                  Navigator.pop(dctx);
-                  onJumpToPage?.call(computedPage);
-                },
-                child: const Text('Go to Page • جائیں'),
-              ),
-            ],
-          );
-        },
-      ),
-    ).then((_) {
-      paraPageCtrl.dispose();
-      directPageCtrl.dispose();
     });
   }
 }

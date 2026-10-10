@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/qari_audio_storage.dart';
 import '../services/qari_download_service.dart';
+import '../services/page_image_service.dart';
 
 /// Pre-downloads mushaf page images into the image cache so they work
 /// offline. Audio quick-set buttons stream only: the player caches audio in
@@ -18,12 +19,37 @@ class OfflineDownloadScreen extends StatefulWidget {
 }
 
 class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
+  static const _totalPages = 611;
+
+  int _downloadedPages = 0;
+  bool _downloadingPages = false;
+
   static const _quickSurahs = <int, String>{
     1: 'Al-Fatihah',
     36: 'Ya-Sin',
     55: 'Ar-Rahman',
     67: 'Al-Mulk',
   };
+
+  Future<void> _downloadAllPages() async {
+    setState(() {
+      _downloadingPages = true;
+      _downloadedPages = 0;
+    });
+    for (var i = 1; i <= _totalPages; i++) {
+      try {
+        // Resilient multi-CDN download; also warms the reader's disk cache.
+        await PageImageService.fetchPageImage(i);
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() => _downloadedPages = i);
+    }
+    if (!mounted) return;
+    setState(() => _downloadingPages = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('All pages downloaded for offline reading')),
+    );
+  }
 
   Future<void> _clearCache() async {
     try {
@@ -48,40 +74,40 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          // Pre-bundled offline status card
+          // Mushaf pages section.
           Card(
             color: theme.colorScheme.surface,
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.offline_pin,
-                      color: theme.colorScheme.primary, size: 32),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mushaf Pages: 100% Offline',
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'All 611 pages are pre-bundled in the app. Download Qari recitations below for full offline audio listening.',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.75),
-                            fontSize: 12.5,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    'Mushaf Pages',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Download all 611 pages for offline reading.',
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _downloadingPages ? null : _downloadAllPages,
+                    child: Text(
+                      _downloadingPages
+                          ? 'Downloading…'
+                          : 'Download all 611 pages',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: _downloadedPages / _totalPages,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Downloaded $_downloadedPages / $_totalPages'),
                 ],
               ),
             ),
