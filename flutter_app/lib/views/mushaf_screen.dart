@@ -720,6 +720,19 @@ class _MushafScreenState extends State<MushafScreen> {
     prefs.setRepeatMode(next);
   }
 
+  /// One control-bar button: a guaranteed 48dp minimum touch target with
+  /// a generous ink splash, regardless of the icon/label size inside.
+  Widget _barControl({required VoidCallback onTap, required Widget child}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        child: Center(child: child),
+      ),
+    );
+  }
+
   /// Opens the reader settings bottom sheet (3-dot menu).
   void _showReaderSettings(BuildContext context) {
     showReaderSettingsSheet(context);
@@ -932,28 +945,36 @@ class _MushafScreenState extends State<MushafScreen> {
     return scrollMode ? box : Expanded(child: box);
   }
 
-  /// Ornamental header above the page: Bismillah in gold calligraphy under
-  /// a thin gold top border, like the reference mushaf design.
   /// Ornamental header above the page: the golden Bismillah cartouche from
-  /// the reference mushaf design. It glows on the golden background and
-  /// keeps its royal look on the black night-page background. The cartouche
-  /// PNG is opaque (baked-in golden background), so in night mode it is
-  /// darkened toward black-gold and sits on a black box instead of looking
-  /// like a cream "sticker".
+  /// the reference mushaf design, framed like a miniature with a thin gold
+  /// border on a warm surface — cream (#FFF8E8) in light mode, night slate
+  /// (#09251D) in dark mode. The cartouche PNG is opaque (baked-in golden
+  /// background), so in night mode it is darkened toward black-gold and the
+  /// slate mat keeps it from looking like a cream "sticker". The artwork is
+  /// never stretched (BoxFit.contain) and the total height stays exactly
+  /// [_kTopOrnamentHeight] so the scroll math is unaffected.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
     final image = Image.asset(
       'assets/images/cartouche_bismillah.png',
-      height: 100,
+      height: 94,
       fit: BoxFit.contain,
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+      padding: const EdgeInsets.fromLTRB(14, 5, 14, 3),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          // Black behind the opaque cartouche in night mode so any
-          // letterboxed area blends with the dark page background.
-          color: nightDim ? Colors.black : Colors.transparent,
+          // Warm mat visible around the opaque cartouche: cream in light
+          // mode, night slate in dark mode (replaces the old black box).
+          color: nightDim
+              ? const Color(0xFF09251D)
+              : const Color(0xFFFFF8E8),
           borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: nightDim
+                ? const Color(0xFFC5A33B)
+                : const Color(0xFFD7B65A),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.18),
@@ -962,17 +983,20 @@ class _MushafScreenState extends State<MushafScreen> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: nightDim
-              ? ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withValues(alpha: 0.45),
-                    BlendMode.darken,
-                  ),
-                  child: image,
-                )
-              : image,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: nightDim
+                ? ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withValues(alpha: 0.45),
+                      BlendMode.darken,
+                    ),
+                    child: image,
+                  )
+                : image,
+          ),
         ),
       ),
     );
@@ -1008,7 +1032,7 @@ class _MushafScreenState extends State<MushafScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 14),
+              padding: const EdgeInsets.only(top: 6, bottom: 10),
               child: Center(
                   child: _ManzilBadge(manzil: manzil, nightDim: nightDim)),
             ),
@@ -1034,7 +1058,8 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Fixed ornament heights (px) framing the page image. Scroll-mode items
   /// size to their content, so these must stay exact: [_scrollItemHeight]
   /// adds them to the width-derived image height for the scroll math.
-  /// Top: 100px Bismillah cartouche + 10px padding.
+  /// Top: 94px Bismillah cartouche + 8px gold-frame matting + 8px outer
+  /// padding (the 1.5px border paints inside the frame, adding no size).
   static const double _kTopOrnamentHeight = 110.0;
 
   /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
@@ -1290,6 +1315,17 @@ class _MushafScreenState extends State<MushafScreen> {
         Provider.of<PageDrawingService>(context).isDrawingMode;
     final cs = Theme.of(context).colorScheme;
     final isBookmarked = prefs.bookmarks.contains(_currentPage);
+    // Reader control-bar palette: warm cream in light mode, deep espresso
+    // in dark mode, with restrained gold accents.
+    final barDark = Theme.of(context).brightness == Brightness.dark;
+    final barSurface =
+        barDark ? const Color(0xFF211906) : const Color(0xFFFFF4D9);
+    final barText =
+        barDark ? const Color(0xFFFFFDF5) : const Color(0xFF382719);
+    final barAccent =
+        barDark ? const Color(0xFFD8B63E) : const Color(0xFFA47727);
+    final barBorder =
+        barDark ? const Color(0xFFC9A227) : const Color(0xFFDCC9A2);
     final isScroll = prefs.readingMode == 'scroll';
     final isTurn = prefs.readingMode == 'turn';
 
@@ -1378,171 +1414,162 @@ class _MushafScreenState extends State<MushafScreen> {
             ),
           ),
 
-          // Persistent reader control bar: Speed / Play / Repeat / Menu.
-          // Reference design: dark bar with gold accents.
+          // Persistent reader control bar: Speed / Play / Repeat / Night /
+          // Menu. Warm cream surface in light mode, deep espresso in dark
+          // mode, with restrained gold accents. SafeArea keeps the controls
+          // clear of the system nav bar; the 76px page spacer below the
+          // Manzil badge already reserves room for the overlay.
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: const BoxDecoration(
-                color: Color(0xFF2A1D08),
+              decoration: BoxDecoration(
+                color: barSurface,
                 border: Border(
                   top: BorderSide(
-                    color: Color(0xFFC9A227),
+                    color: barBorder,
                     width: 1.5,
                   ),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  // Speed
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _cycleSpeed,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _speedLabel(prefs.playbackSpeed),
-                            style: const TextStyle(
-                              color: Color(0xFFE8C766),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Speed',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Play / Pause (big circular button)
-                  GestureDetector(
-                    onTap: _onPlayPausePressed,
-                    child: Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: const Color(0xFFC9A227), width: 2.5),
-                      ),
-                      child: Icon(
-                        audio.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                  // Repeat (badge shows active mode)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _cycleRepeat,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.repeat,
-                                color: Colors.white.withValues(alpha: 0.85),
-                                size: 24,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // Speed
+                      _barControl(
+                        onTap: _cycleSpeed,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _speedLabel(prefs.playbackSpeed),
+                              style: TextStyle(
+                                color: barAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
-                              if (prefs.repeatMode != 0)
-                                Positioned(
-                                  right: -8,
-                                  top: -6,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFC9A227),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      _repeatLabels[prefs.repeatMode] ?? '',
-                                      style: const TextStyle(
-                                        color: Color(0xFF0A1F17),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
+                            ),
+                            Text(
+                              'Speed',
+                              style: TextStyle(
+                                color: barText.withValues(alpha: 0.65),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Play / Pause (big circular button, gold outline)
+                      GestureDetector(
+                        onTap: _onPlayPausePressed,
+                        child: Container(
+                          width: 58,
+                          height: 58,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: barAccent, width: 2.5),
+                          ),
+                          child: Icon(
+                            audio.isPlaying ? Icons.pause : Icons.play_arrow,
+                            color: barText,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                      // Repeat (badge shows active mode)
+                      _barControl(
+                        onTap: _cycleRepeat,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  Icons.repeat,
+                                  color: barText.withValues(alpha: 0.85),
+                                  size: 24,
+                                ),
+                                if (prefs.repeatMode != 0)
+                                  Positioned(
+                                    right: -8,
+                                    top: -6,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 5, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: barAccent,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _repeatLabels[prefs.repeatMode] ?? '',
+                                        style: TextStyle(
+                                          color: barDark
+                                              ? const Color(0xFF0A1F17)
+                                              : const Color(0xFFFFFDF5),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
-                          ),
-                          Text(
-                            'Repeat',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11,
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Night page mode toggle: invert page (black bg, white text)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () =>
-                        prefs.setNightPageMode(!prefs.nightPageMode),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            prefs.nightPageMode
-                                ? Icons.dark_mode
-                                : Icons.dark_mode_outlined,
-                            color: prefs.nightPageMode
-                                ? const Color(0xFFE8C766)
-                                : Colors.white.withValues(alpha: 0.85),
-                            size: 24,
-                          ),
-                          Text(
-                            'Night',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 11,
+                            Text(
+                              'Repeat',
+                              style: TextStyle(
+                                color: barText.withValues(alpha: 0.65),
+                                fontSize: 11,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                  // 3-dot menu -> reader settings sheet
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => _showReaderSettings(context),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: Icon(
-                        Icons.more_vert,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        size: 26,
+                      // Night page mode toggle: invert page (black bg, white text)
+                      _barControl(
+                        onTap: () =>
+                            prefs.setNightPageMode(!prefs.nightPageMode),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              prefs.nightPageMode
+                                  ? Icons.dark_mode
+                                  : Icons.dark_mode_outlined,
+                              color: prefs.nightPageMode
+                                  ? barAccent
+                                  : barText.withValues(alpha: 0.85),
+                              size: 24,
+                            ),
+                            Text(
+                              'Night',
+                              style: TextStyle(
+                                color: barText.withValues(alpha: 0.65),
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      // 3-dot menu -> reader settings sheet
+                      _barControl(
+                        onTap: () => _showReaderSettings(context),
+                        child: Icon(
+                          Icons.more_vert,
+                          color: barText.withValues(alpha: 0.85),
+                          size: 24,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -1790,20 +1817,21 @@ class _ManzilBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const gold = Color(0xFFC9A227);
-    const deepGold = Color(0xFF9A7B1E);
     const bronze = Color(0xFF4A3517);
     return CustomPaint(
       painter: _ManzilFramePainter(),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 7),
         child: Text(
           'Manzil $manzil',
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'Amiri Quran',
             fontSize: 19,
             fontWeight: FontWeight.bold,
-            color: nightDim ? Colors.white : bronze,
+            // Warm white in dark mode (matches the night palette), deep
+            // bronze on the golden background in light mode.
+            color: nightDim ? const Color(0xFFFFFDF5) : bronze,
           ),
         ),
       ),
@@ -1819,7 +1847,8 @@ class _ManzilFramePainter extends CustomPainter {
     const deepGold = Color(0xFF9A7B1E);
     final w = size.width;
     final h = size.height;
-    const tip = 14.0;
+    // Slim pointed tips so the badge stays compact on narrow screens.
+    const tip = 12.0;
 
     Path frame(double inset) {
       final p = Path();
@@ -1854,10 +1883,10 @@ class _ManzilFramePainter extends CustomPainter {
     for (final dx in [0.0, w]) {
       final cx = dx == 0 ? 0.0 : w;
       final path = Path()
-        ..moveTo(cx, h / 2 - 5)
-        ..lineTo(cx + (dx == 0 ? 5 : -5), h / 2)
-        ..lineTo(cx, h / 2 + 5)
-        ..lineTo(cx + (dx == 0 ? -5 : 5), h / 2)
+        ..moveTo(cx, h / 2 - 4.5)
+        ..lineTo(cx + (dx == 0 ? 4.5 : -4.5), h / 2)
+        ..lineTo(cx, h / 2 + 4.5)
+        ..lineTo(cx + (dx == 0 ? -4.5 : 4.5), h / 2)
         ..close();
       canvas.drawPath(path, Paint()..color = gold);
     }

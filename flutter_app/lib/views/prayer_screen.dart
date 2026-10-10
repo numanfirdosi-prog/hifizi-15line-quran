@@ -421,13 +421,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black38,
+                    color: cs.primary,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Text(
                     _formatDuration(nextPrayer.remaining),
                     style: TextStyle(
-                      color: cs.onSurface,
+                      color: cs.onPrimary,
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
@@ -506,7 +506,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0B2D22),
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(10),
                 border:
                     Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
@@ -519,15 +519,15 @@ class _PrayerScreenState extends State<PrayerScreen> {
                       children: [
                         Text(
                           name,
-                          style: const TextStyle(
-                              color: Color(0xFFFFF8E7),
+                          style: TextStyle(
+                              color: cs.onSurface,
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
                         ),
                         Text(
                           urdu,
-                          style: const TextStyle(
-                              color: Color(0xFFD4AF37),
+                          style: TextStyle(
+                              color: cs.primary,
                               fontSize: 12,
                               fontFamily: 'serif'),
                         ),
@@ -536,8 +536,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   ),
                   Text(
                     entry.time12,
-                    style: const TextStyle(
-                      color: Color(0xFFFFF8E7),
+                    style: TextStyle(
+                      color: cs.onSurface,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

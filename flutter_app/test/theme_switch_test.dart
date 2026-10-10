@@ -51,7 +51,7 @@ void main() {
     // inherits the theme's scaffoldBackgroundColor — assert the effective.)
     final scaffoldCtx = tester.element(find.byType(Scaffold).first);
     expect(Theme.of(scaffoldCtx).scaffoldBackgroundColor,
-        const Color(0xFFEAF5EF));
+        const Color(0xFFE8F5E9));
 
     // The bottom NavigationBar must also be theme-aware (emerald surface).
     final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));

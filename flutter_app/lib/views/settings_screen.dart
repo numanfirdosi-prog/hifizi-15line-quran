@@ -38,10 +38,14 @@ class SettingsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
+            color: selected
+                ? cs.primary.withValues(alpha: 0.15)
+                : cs.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? cs.primary : Colors.white12,
+              color: selected
+                  ? cs.primary
+                  : cs.onSurface.withValues(alpha: 0.15),
               width: selected ? 2 : 1,
             ),
           ),
@@ -51,13 +55,15 @@ class SettingsScreen extends StatelessWidget {
                 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                 textDirection: TextDirection.rtl,
                 textAlign: TextAlign.center,
-                style: arabicStyle(style, fontSize: 18),
+                style: arabicStyle(style, fontSize: 18, color: cs.onSurface),
               ),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? cs.primary : Colors.white70,
+                  color: selected
+                      ? cs.primary
+                      : cs.onSurface.withValues(alpha: 0.7),
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -89,7 +95,9 @@ class SettingsScreen extends StatelessWidget {
                 color: previewBg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: selected ? cs.primary : Colors.white12,
+                  color: selected
+                      ? cs.primary
+                      : cs.onSurface.withValues(alpha: 0.25),
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -151,10 +159,14 @@ class SettingsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
+            color: selected
+                ? cs.primary.withValues(alpha: 0.15)
+                : cs.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? cs.primary : Colors.white12,
+              color: selected
+                  ? cs.primary
+                  : cs.onSurface.withValues(alpha: 0.15),
               width: selected ? 2 : 1,
             ),
           ),
@@ -162,7 +174,9 @@ class SettingsScreen extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: selected ? cs.primary : Colors.white70,
+                color: selected
+                    ? cs.primary
+                    : cs.onSurface.withValues(alpha: 0.8),
                 fontSize: 15,
                 fontWeight: selected ? FontWeight.bold : FontWeight.normal,
               ),
@@ -378,8 +392,8 @@ class SettingsScreen extends StatelessWidget {
                       _themeCard(
                         context,
                         label: 'Night Slate',
-                        previewBg: const Color(0xFF071F17),
-                        previewText: const Color(0xFFD4AF37),
+                        previewBg: const Color(0xFF09251D),
+                        previewText: const Color(0xFFE0BD45),
                         selected: prefs.themeName == 'night',
                         onTap: () => prefs.setThemeName('night'),
                       ),
@@ -388,7 +402,7 @@ class SettingsScreen extends StatelessWidget {
                         context,
                         label: 'Emerald Day',
                         previewBg: const Color(0xFFE8F5E9),
-                        previewText: const Color(0xFF1B5E20),
+                        previewText: const Color(0xFF176B3A),
                         selected: prefs.themeName == 'emerald',
                         onTap: () => prefs.setThemeName('emerald'),
                       ),
@@ -396,8 +410,8 @@ class SettingsScreen extends StatelessWidget {
                       _themeCard(
                         context,
                         label: 'Antique Parchment',
-                        previewBg: const Color(0xFFF5E6C4),
-                        previewText: const Color(0xFF5D4037),
+                        previewBg: const Color(0xFFF5E8C8),
+                        previewText: const Color(0xFF80551C),
                         selected: prefs.themeName == 'parchment',
                         onTap: () => prefs.setThemeName('parchment'),
                       ),
@@ -435,7 +449,8 @@ class SettingsScreen extends StatelessWidget {
                       'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                       textDirection: TextDirection.rtl,
                       style: arabicStyle(prefs.scriptStyle,
-                          fontSize: 20, scale: prefs.ayahScale),
+                          fontSize: 20, scale: prefs.ayahScale,
+                          color: cs.onSurface),
                     ),
                   ),
                 ],
@@ -575,9 +590,11 @@ class SettingsScreen extends StatelessWidget {
                             label: Text(repeatLabels[m]!),
                             selected: selected,
                             selectedColor: cs.primary,
-                            backgroundColor: const Color(0xFF144234),
+                            backgroundColor: cs.surface,
                             labelStyle: TextStyle(
-                              color: selected ? cs.onPrimary : Colors.white70,
+                              color: selected
+                                  ? cs.onPrimary
+                                  : cs.onSurface.withValues(alpha: 0.8),
                               fontSize: 12,
                             ),
                             onSelected: (_) {
@@ -604,9 +621,11 @@ class SettingsScreen extends StatelessWidget {
                                 : '${v}x'),
                             selected: selected,
                             selectedColor: cs.primary,
-                            backgroundColor: const Color(0xFF144234),
+                            backgroundColor: cs.surface,
                             labelStyle: TextStyle(
-                              color: selected ? cs.onPrimary : Colors.white70,
+                              color: selected
+                                  ? cs.onPrimary
+                                  : cs.onSurface.withValues(alpha: 0.8),
                               fontSize: 12,
                             ),
                             onSelected: (_) {
@@ -721,10 +740,10 @@ class SettingsScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: prefs.bookmarks.map((p) {
                         return ActionChip(
-                          backgroundColor: const Color(0xFF144234),
+                          backgroundColor: cs.surface,
                           avatar: Icon(Icons.bookmark, color: cs.primary, size: 16),
                           label: Text('Page $p',
-                              style: const TextStyle(color: Colors.white)),
+                              style: TextStyle(color: cs.onSurface)),
                           onPressed: () => onOpenPage(p),
                         );
                       }).toList(),
@@ -740,17 +759,18 @@ class SettingsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0B2D22),
+              color: cs.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(
+                  color: cs.onSurface.withValues(alpha: 0.15)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   ur ? 'نور القرآن کے بارے میں' : 'About Nur-ul-Quran (نور القرآن)',
-                  style: const TextStyle(
-                      color: Color(0xFFD4AF37),
+                  style: TextStyle(
+                      color: cs.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14),
                 ),
@@ -759,8 +779,10 @@ class SettingsScreen extends StatelessWidget {
                   ur
                       ? '15 سطری جنوبی ایشیائی حفظی مصحف (القرآن الكريم)۔ 100% آف لائن، لاک اسکرین اذان کے ساتھ درست فلکیاتی نماز کے اوقات، قبلہ کمپاس اور کثیر لسانی تلاش۔'
                       : '15-Line South Asian / Indo-Pak Hifzi Mushaf (القرآن الكريم). 100% offline, exact astronomical prayer times with lockscreen Azan, Kaaba Qiblah compass, and multi-language voice search.',
-                  style: const TextStyle(
-                      color: Colors.white70, fontSize: 12, height: 1.4),
+                  style: TextStyle(
+                      color: cs.onSurface.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      height: 1.4),
                 ),
                 const SizedBox(height: 6),
                 FutureBuilder<PackageInfo>(
@@ -771,7 +793,7 @@ class SettingsScreen extends StatelessWidget {
                       version == null || version.isEmpty
                           ? 'Version…'
                           : 'Version $version',
-                      style: const TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
+                      style: TextStyle(color: cs.primary, fontSize: 11),
                     );
                   },
                 ),

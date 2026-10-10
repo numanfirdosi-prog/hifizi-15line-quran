@@ -19,52 +19,54 @@ ThemeData buildTheme(String name) {
       return ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFEAF5EF),
+        scaffoldBackgroundColor: const Color(0xFFE8F5E9),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF1B4D3E), // Deep Emerald
-          secondary: Color(0xFFD4AF37), // Gold
-          surface: Color(0xFFFFFFFF),
-          onPrimary: Colors.white,
-          onSecondary: Colors.black,
-          onSurface: Color(0xFF1A2B23),
+          primary: Color(0xFF176B3A),
+          secondary: Color(0xFFE0BD45),
+          surface: Color(0xFFF4FBF4),
+          onPrimary: Color(0xFFFFFFFF),
+          onSecondary: Color(0xFF173D2B),
+          onSurface: Color(0xFF173D2B),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1B4D3E),
-          foregroundColor: Colors.white,
+          backgroundColor: Color(0xFF176B3A),
+          foregroundColor: Color(0xFFFFFFFF),
           elevation: 0,
           centerTitle: false,
-          iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
+          iconTheme: IconThemeData(color: Color(0xFFFFFFFF)),
         ),
         cardTheme: const CardThemeData(
-          color: Colors.white,
+          color: Color(0xFFF4FBF4),
           elevation: 1,
         ),
+        dividerColor: const Color(0xFFC8DCCB),
       );
     case 'parchment':
       // Antique Parchment — warm sepia, aged-manuscript feel.
       return ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF3E9D2),
+        scaffoldBackgroundColor: const Color(0xFFF5E8C8),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF8B5E34),
-          secondary: Color(0xFF1B4D3E),
-          surface: Color(0xFFFBF6E9),
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: Color(0xFF3E2F1C),
+          primary: Color(0xFF80551C),
+          secondary: Color(0xFFA47727),
+          surface: Color(0xFFFFF4D9),
+          onPrimary: Color(0xFFFFF4D9),
+          onSecondary: Color(0xFF382719),
+          onSurface: Color(0xFF382719),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF8B5E34),
-          foregroundColor: Colors.white,
+          backgroundColor: Color(0xFF80551C),
+          foregroundColor: Color(0xFFFFF4D9),
           elevation: 0,
           centerTitle: false,
-          iconTheme: IconThemeData(color: Color(0xFFFFE9B8)),
+          iconTheme: IconThemeData(color: Color(0xFFFFFAEC)),
         ),
         cardTheme: const CardThemeData(
-          color: Color(0xFFFBF6E9),
+          color: Color(0xFFFFF4D9),
           elevation: 1,
         ),
+        dividerColor: const Color(0xFFDCC9A2),
       );
     case 'night':
     default:
@@ -72,21 +74,28 @@ ThemeData buildTheme(String name) {
       return ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF071F17),
+        scaffoldBackgroundColor: const Color(0xFF09251D),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFD4AF37), // Gold
-          secondary: Color(0xFF1B4D3E), // Deep Emerald
-          surface: Color(0xFF0F3A2C),
-          onPrimary: Colors.black,
-          onSecondary: Colors.white,
-          onSurface: Colors.white,
+          primary: Color(0xFFE0BD45), // Gold
+          secondary: Color(0xFF103C30),
+          surface: Color(0xFF103C30),
+          onPrimary: Color(0xFF09251D),
+          onSecondary: Color(0xFFE4EBE6),
+          onSurface: Color(0xFFFFFDF5),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F3A2C),
+          backgroundColor: Color(0xFF103C30),
+          foregroundColor: Color(0xFFFFFDF5),
           elevation: 0,
           centerTitle: false,
-          iconTheme: IconThemeData(color: Color(0xFFD4AF37)),
+          iconTheme: IconThemeData(color: Color(0xFFE0BD45)),
         ),
+        cardTheme: const CardThemeData(
+          color: Color(0xFF103C30),
+          elevation: 1,
+        ),
+        dividerColor: const Color(0xFF285344),
+        hintColor: const Color(0xFF91A69B),
       );
   }
 }
