@@ -946,12 +946,14 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   /// Ornamental header above the page: the golden Bismillah cartouche from
-  /// the reference mushaf design, framed like a miniature with a thin gold
-  /// border on a warm surface — cream (#FFF8E8) in light mode, night slate
-  /// (#09251D) in dark mode. The cartouche PNG is opaque (baked-in golden
-  /// background), so in night mode it is darkened toward black-gold and the
-  /// slate mat keeps it from looking like a cream "sticker". The artwork is
-  /// never stretched (BoxFit.contain) and the total height stays exactly
+  /// the reference mushaf design. The cartouche PNG is opaque (baked-in
+  /// golden background), so the frame is kept fully transparent — no solid
+  /// mat, no shadow — letting the artwork sit directly on the page's
+  /// golden gradient instead of looking like a pasted "sticker" card. A
+  /// hairline gold border (subtle, mode-aware) frames it like a miniature.
+  /// In night mode the artwork is darkened toward black-gold so it blends
+  /// with the dark background. The artwork is never stretched
+  /// (BoxFit.contain) and the total height stays exactly
   /// [_kTopOrnamentHeight] so the scroll math is unaffected.
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
     final image = Image.asset(
@@ -959,35 +961,30 @@ class _MushafScreenState extends State<MushafScreen> {
       height: 94,
       fit: BoxFit.contain,
     );
+    // Darken the golden artwork whenever the page background is dark
+    // (night theme or black night-page mode) so it melts into the
+    // background instead of glowing like a sticker.
+    final darkArtwork =
+        nightDim || Provider.of<PreferencesService>(context, listen: false).nightPageMode;
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 5, 14, 3),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          // Warm mat visible around the opaque cartouche: cream in light
-          // mode, night slate in dark mode (replaces the old black box).
-          color: nightDim
-              ? const Color(0xFF09251D)
-              : const Color(0xFFFFF8E8),
+          // Transparent: no filled box behind the artwork.
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: nightDim
-                ? const Color(0xFFC5A33B)
-                : const Color(0xFFD7B65A),
-            width: 1.5,
+            color: (nightDim
+                    ? const Color(0xFFC5A33B)
+                    : const Color(0xFFD7B65A))
+                .withValues(alpha: 0.55),
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(4),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: nightDim
+            child: darkArtwork
                 ? ColorFiltered(
                     colorFilter: ColorFilter.mode(
                       Colors.black.withValues(alpha: 0.45),
@@ -1058,8 +1055,9 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Fixed ornament heights (px) framing the page image. Scroll-mode items
   /// size to their content, so these must stay exact: [_scrollItemHeight]
   /// adds them to the width-derived image height for the scroll math.
-  /// Top: 94px Bismillah cartouche + 8px gold-frame matting + 8px outer
-  /// padding (the 1.5px border paints inside the frame, adding no size).
+  /// Top: 94px Bismillah cartouche + 8px inner padding + 8px outer
+  /// padding (the 1px hairline border paints inside the frame, adding no
+  /// size; the frame itself is transparent).
   static const double _kTopOrnamentHeight = 110.0;
 
   /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
