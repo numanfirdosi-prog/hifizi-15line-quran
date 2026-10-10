@@ -201,7 +201,7 @@ class AboutScreen extends StatelessWidget {
           FutureBuilder<PackageInfo>(
             future: packageInfoFuture,
             builder: (context, snapshot) {
-              final version = snapshot.data?.version ?? '1.0.51';
+              final version = snapshot.data?.version ?? '1.0.55';
               return _section(
                 context,
                 isUrdu ? 'نیا کیا ہے' : "What's New",
