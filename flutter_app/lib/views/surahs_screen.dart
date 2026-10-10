@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../data/surah_intros.dart';
+import '../data/surah_intros_urdu.dart';
 import '../models/surah.dart';
 import '../services/voice_search_service.dart';
 import '../services/audio_recitation_service.dart';
@@ -110,6 +111,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     final audio = Provider.of<AudioRecitationService>(context, listen: false);
     final intro = surahIntros[surah.number] ?? '';
+    final urduIntro = surahIntrosUrdu[surah.number] ?? '';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -181,7 +183,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     visualDensity: VisualDensity.compact,
                   ),
                   Chip(
-                    label: Text('${surah.totalAyahs} verses'),
+                    label: Text(prefs.isUrdu
+                        ? '${surah.totalAyahs} آیات'
+                        : '${surah.totalAyahs} verses'),
                     backgroundColor:
                         cs.onSurface.withValues(alpha: 0.08),
                     labelStyle: TextStyle(
@@ -190,7 +194,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     visualDensity: VisualDensity.compact,
                   ),
                   Chip(
-                    label: Text('Page ${surah.startPage}'),
+                    label: Text(prefs.isUrdu
+                        ? 'صفحہ ${surah.startPage}'
+                        : 'Page ${surah.startPage}'),
                     backgroundColor:
                         cs.onSurface.withValues(alpha: 0.08),
                     labelStyle: TextStyle(
@@ -201,6 +207,24 @@ class _SurahsScreenState extends State<SurahsScreen> {
                 ],
               ),
               const SizedBox(height: 12),
+              if (urduIntro.isNotEmpty) ...[
+                Text(
+                  urduIntro,
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.9),
+                    fontSize: 14,
+                    height: 1.8,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Divider(
+                  color: cs.onSurface.withValues(alpha: 0.15),
+                  height: 1,
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
                 intro,
                 style: TextStyle(
@@ -215,7 +239,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
                   Expanded(
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.menu_book, size: 18),
-                      label: const Text('Read'),
+                      label: Text(prefs.isUrdu ? 'پڑھیں' : 'Read'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: cs.primary,
                         foregroundColor: cs.onPrimary,
@@ -256,6 +280,104 @@ class _SurahsScreenState extends State<SurahsScreen> {
     );
   }
 
+  /// Parah/Page jump dialog: Parah (1-30) + page-in-parah (1-20).
+  /// Computes the global mushaf page via juzList and opens it.
+  void _showParahPageDialog(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final isUrdu = prefs.isUrdu;
+    final parahCtrl = TextEditingController();
+    final pageCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String? error;
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: Text(isUrdu ? 'پارہ / صفحہ' : 'Parah / Page'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isUrdu
+                      ? 'ہر پارے میں 20 صفحات'
+                      : 'Each parah has 20 pages',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: parahCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: isUrdu ? 'پارہ (1-30)' : 'Parah (1-30)',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: pageCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: isUrdu
+                        ? 'پارے کا صفحہ (1-20)'
+                        : 'Page in Parah (1-20)',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    error!,
+                    style:
+                        const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(isUrdu ? 'منسوخ' : 'Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final parah = int.tryParse(parahCtrl.text.trim());
+                  final pageInParah = int.tryParse(pageCtrl.text.trim());
+                  if (parah == null ||
+                      parah < 1 ||
+                      parah > 30 ||
+                      pageInParah == null ||
+                      pageInParah < 1 ||
+                      pageInParah > 20) {
+                    setDialogState(() {
+                      error = isUrdu
+                          ? 'براہ کرم درست نمبر درج کریں'
+                          : 'Please enter valid numbers';
+                    });
+                    return;
+                  }
+                  final globalPage = (juzList[parah - 1].startPage +
+                          pageInParah -
+                          1)
+                      .clamp(1, 611);
+                  Navigator.of(ctx).pop();
+                  widget.onOpenPage(globalPage);
+                },
+                child: Text(isUrdu ? 'کھولیں' : 'Go'),
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((_) {
+      parahCtrl.dispose();
+      pageCtrl.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -283,6 +405,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
               fontWeight: FontWeight.bold,
               fontSize: 18),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.find_in_page),
+            tooltip: prefs.isUrdu ? 'پارہ / صفحہ' : 'Parah / Page',
+            onPressed: () => _showParahPageDialog(context),
+          ),
+        ],
       ),
       body: Column(
         children: [

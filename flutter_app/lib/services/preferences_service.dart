@@ -22,6 +22,7 @@ class PreferencesService extends ChangeNotifier {
   int _dailyTargetPages = 4;
   String _themeName = 'night'; // night | emerald | parchment
   String _scriptStyle = 'sans'; // sans | uthmani
+  String _language = 'ur'; // 'ur' | 'en' — UI language toggle (Settings)
   double _ayahScale = 1.0;
   String _readingMode = 'slide'; // slide | scroll | turn
   int _repeatMode = 0; // 0=off, 1/3/5, -1=infinite
@@ -61,6 +62,8 @@ class PreferencesService extends ChangeNotifier {
   int get dailyTargetPages => _dailyTargetPages;
   String get themeName => _themeName;
   String get scriptStyle => _scriptStyle;
+  String get language => _language; // 'ur' | 'en'
+  bool get isUrdu => _language == 'ur';
   double get ayahScale => _ayahScale;
   String get readingMode => _readingMode;
   int get repeatMode => _repeatMode;
@@ -102,6 +105,7 @@ class PreferencesService extends ChangeNotifier {
     _lastReadAt = _prefs.getString('nur_last_read_at') ?? '';
     _dailyTargetPages = _prefs.getInt('nur_daily_target_pages') ?? 4;
     _themeName = _prefs.getString('nur_theme_name') ?? 'night';
+    _language = _prefs.getString('nur_language') ?? 'ur';
     _scriptStyle = _prefs.getString('nur_script_style') ?? 'sans';
     // Migrate the retired 'nastaliq' (Gulzar) style to Noto Sans Arabic.
     final migratedStyle = _migrateScriptStyle(_scriptStyle);
@@ -277,6 +281,15 @@ class PreferencesService extends ChangeNotifier {
   Future<void> setThemeName(String name) async {
     _themeName = name;
     await _prefs.setString('nur_theme_name', name);
+    notifyListeners();
+  }
+
+  /// UI language toggle: 'ur' (Urdu) or 'en' (English). Quran translations
+  /// always stay bilingual regardless of this setting.
+  Future<void> setLanguage(String lang) async {
+    if (lang != 'ur' && lang != 'en') return;
+    _language = lang;
+    await _prefs.setString('nur_language', lang);
     notifyListeners();
   }
 

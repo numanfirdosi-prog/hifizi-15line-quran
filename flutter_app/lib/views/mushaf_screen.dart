@@ -936,12 +936,23 @@ class _MushafScreenState extends State<MushafScreen> {
   /// a thin gold top border, like the reference mushaf design.
   /// Ornamental header above the page: the golden Bismillah cartouche from
   /// the reference mushaf design. It glows on the golden background and
-  /// keeps its royal look on the black night-page background.
+  /// keeps its royal look on the black night-page background. The cartouche
+  /// PNG is opaque (baked-in golden background), so in night mode it is
+  /// darkened toward black-gold and sits on a black box instead of looking
+  /// like a cream "sticker".
   Widget _buildTopOrnament(int pageNum, bool nightDim) {
+    final image = Image.asset(
+      'assets/images/cartouche_bismillah.png',
+      height: 100,
+      fit: BoxFit.contain,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
       child: DecoratedBox(
         decoration: BoxDecoration(
+          // Black behind the opaque cartouche in night mode so any
+          // letterboxed area blends with the dark page background.
+          color: nightDim ? Colors.black : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -953,11 +964,15 @@ class _MushafScreenState extends State<MushafScreen> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
-          child: Image.asset(
-            'assets/images/cartouche_bismillah.png',
-            height: 86,
-            fit: BoxFit.contain,
-          ),
+          child: nightDim
+              ? ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.45),
+                    BlendMode.darken,
+                  ),
+                  child: image,
+                )
+              : image,
         ),
       ),
     );
@@ -1019,8 +1034,8 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Fixed ornament heights (px) framing the page image. Scroll-mode items
   /// size to their content, so these must stay exact: [_scrollItemHeight]
   /// adds them to the width-derived image height for the scroll math.
-  /// Top: 86px Bismillah cartouche + 10px padding.
-  static const double _kTopOrnamentHeight = 96.0;
+  /// Top: 100px Bismillah cartouche + 10px padding.
+  static const double _kTopOrnamentHeight = 110.0;
 
   /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
   static const double _kBottomOrnamentHeight = 64.0;

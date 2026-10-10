@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/static_content.dart';
+import '../services/preferences_service.dart';
 
 /// Email address that receives all bug reports from the app.
 const String supportEmail = 'numanfirdosi@gmail.com';
@@ -14,8 +17,11 @@ class FaqScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isUrdu = Provider.of<PreferencesService>(context).isUrdu;
+    final dir = isUrdu ? TextDirection.rtl : TextDirection.ltr;
     return Scaffold(
-      appBar: AppBar(title: const Text('Questions & FAQ')),
+      appBar:
+          AppBar(title: Text(isUrdu ? 'سوالات و جوابات' : 'Questions & FAQ')),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
@@ -25,7 +31,8 @@ class FaqScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               child: ExpansionTile(
                 title: Text(
-                  faq.q,
+                  isUrdu ? faq.qUr : faq.qEn,
+                  textDirection: dir,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -33,7 +40,11 @@ class FaqScreen extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Text(faq.a, style: theme.textTheme.bodyMedium),
+                    child: Text(
+                      isUrdu ? faq.aUr : faq.aEn,
+                      textDirection: dir,
+                      style: theme.textTheme.bodyMedium,
+                    ),
                   ),
                 ],
               ),
@@ -49,28 +60,33 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   Future<void> _reportIssue(BuildContext context) async {
+    final isUrdu =
+        Provider.of<PreferencesService>(context, listen: false).isUrdu;
     final controller = TextEditingController();
     final description = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Report an Issue'),
+        title: Text(isUrdu ? 'مسئلہ رپورٹ کریں' : 'Report an Issue'),
         content: TextField(
           controller: controller,
           maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Masle ki tafseel likhein…',
-            border: OutlineInputBorder(),
+          textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
+          decoration: InputDecoration(
+            hintText: isUrdu
+                ? 'مسئلے کی تفصیل لکھیں…'
+                : 'Describe the issue…',
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(isUrdu ? 'منسوخ کریں' : 'Cancel'),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('Send'),
+            child: Text(isUrdu ? 'بھیجیں' : 'Send'),
           ),
         ],
       ),
@@ -96,9 +112,11 @@ class AboutScreen extends StatelessWidget {
     if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Email app nahi khul saki. Barah-e-karam $supportEmail par email karein.'),
+          content: Text(isUrdu
+              ? 'ای میل ایپ نہیں کھل سکی۔ براہِ کرم $supportEmail پر ای میل کریں۔'
+              : 'Could not open the email app. Please email $supportEmail.'),
           action: SnackBarAction(
-            label: 'Copy',
+            label: isUrdu ? 'کاپی' : 'Copy',
             onPressed: () =>
                 Clipboard.setData(ClipboardData(text: supportEmail)),
           ),
@@ -111,8 +129,13 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isUrdu = Provider.of<PreferencesService>(context).isUrdu;
+    final dir = isUrdu ? TextDirection.rtl : TextDirection.ltr;
+    // Fetch once per build; shared by the version label and What's New.
+    final packageInfoFuture = PackageInfo.fromPlatform();
     return Scaffold(
-      appBar: AppBar(title: const Text('About & Licenses')),
+      appBar:
+          AppBar(title: Text(isUrdu ? 'ایپ کے بارے میں' : 'About the App')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -152,29 +175,68 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Version 1.0.31',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurface.withOpacity(0.6),
-                    ),
+                  FutureBuilder<PackageInfo>(
+                    future: packageInfoFuture,
+                    builder: (context, snapshot) {
+                      final version = snapshot.data?.version;
+                      return Text(
+                        version == null ? 'Version…' : 'Version $version',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-          _section(context, 'App ke baare me', aboutIntro),
-          _section(context, 'Khaas features', aboutFeatures),
-          _section(context, 'Data sources', aboutSources),
-          _section(context, 'Licenses', aboutLicenses),
+          _section(
+            context,
+            isUrdu ? 'ایپ کے بارے میں' : 'About the App',
+            isUrdu ? aboutIntroUr : aboutIntroEn,
+            textDirection: dir,
+          ),
+          FutureBuilder<PackageInfo>(
+            future: packageInfoFuture,
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '1.0.51';
+              return _section(
+                context,
+                isUrdu ? 'نیا کیا ہے' : "What's New",
+                aboutFeaturesForLang(version, isUrdu),
+                textDirection: dir,
+              );
+            },
+          ),
+          _section(
+            context,
+            isUrdu ? 'ذرائع' : 'Data Sources',
+            isUrdu ? aboutSourcesUr : aboutSourcesEn,
+            textDirection: dir,
+          ),
+          _section(
+            context,
+            isUrdu ? 'لائسنس' : 'Licenses',
+            isUrdu ? aboutLicensesUr : aboutLicensesEn,
+            textDirection: dir,
+          ),
           const SizedBox(height: 4),
           Card(
             color: cs.surface,
             child: ListTile(
               leading: Icon(Icons.bug_report_outlined, color: cs.primary),
-              title: const Text('Report an Issue'),
-              subtitle:
-                  const Text('Koi masla ho to humein email karein'),
+              title: Text(
+                isUrdu ? 'مسئلہ رپورٹ کریں' : 'Report an Issue',
+                textDirection: dir,
+              ),
+              subtitle: Text(
+                isUrdu
+                    ? 'کوئی مسئلہ ہو تو ہمیں ای میل کریں'
+                    : 'Found a problem? Email us',
+                textDirection: dir,
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _reportIssue(context),
             ),
@@ -184,7 +246,7 @@ class AboutScreen extends StatelessWidget {
             color: cs.surface,
             child: ListTile(
               leading: Icon(Icons.email_outlined, color: cs.primary),
-              title: const Text('Contact'),
+              title: Text(isUrdu ? 'رابطہ' : 'Contact', textDirection: dir),
               subtitle: const Text(supportEmail),
               trailing: IconButton(
                 icon: const Icon(Icons.copy_outlined),
@@ -192,8 +254,14 @@ class AboutScreen extends StatelessWidget {
                   Clipboard.setData(
                       const ClipboardData(text: supportEmail));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Email address copy ho gaya')),
+                    SnackBar(
+                      content: Text(
+                        isUrdu
+                            ? 'ای میل ایڈریس کاپی ہو گیا'
+                            : 'Email address copied',
+                        textDirection: dir,
+                      ),
+                    ),
                   );
                 },
               ),
@@ -204,7 +272,12 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _section(BuildContext context, String title, String body) {
+  Widget _section(
+    BuildContext context,
+    String title,
+    String body, {
+    TextDirection? textDirection,
+  }) {
     final theme = Theme.of(context);
     return Card(
       color: theme.colorScheme.surface,
@@ -216,13 +289,18 @@ class AboutScreen extends StatelessWidget {
           children: [
             Text(
               title,
+              textDirection: textDirection,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(height: 8),
-            Text(body, style: theme.textTheme.bodyMedium),
+            Text(
+              body,
+              textDirection: textDirection,
+              style: theme.textTheme.bodyMedium,
+            ),
           ],
         ),
       ),
@@ -238,58 +316,79 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final isUrdu = Provider.of<PreferencesService>(context).isUrdu;
+    final dir = isUrdu ? TextDirection.rtl : TextDirection.ltr;
     return Scaffold(
-      appBar: AppBar(title: const Text('Privacy Policy')),
+      appBar:
+          AppBar(title: Text(isUrdu ? 'پرائیویسی پالیسی' : 'Privacy Policy')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _section(
             context,
             icon: Icons.smartphone,
-            title: '100% On-Device App',
-            body:
-                'Nur-ul-Quran me koi account nahi banta, koi tracking ya analytics nahi hai. '
-                'Aapka koi zaati data kisi server par bheja ya store nahi kiya jata.',
+            title: isUrdu ? '100٪ آن ڈیوائس ایپ' : '100% On-Device App',
+            body: isUrdu
+                ? 'نور القرآن میں کوئی اکاؤنٹ نہیں بنتا، کوئی ٹریکنگ یا اینالیٹکس نہیں ہے۔ '
+                    'آپ کا کوئی ذاتی ڈیٹا کسی سرور پر بھیجا یا محفوظ نہیں کیا جاتا۔'
+                : 'Nur-ul-Quran has no accounts, no tracking and no analytics. '
+                    'None of your personal data is sent to or stored on any server.',
+            textDirection: dir,
           ),
           _section(
             context,
             icon: Icons.location_on_outlined,
-            title: 'Location',
-            body:
-                'Aapki location sirf aapke phone par namaz ke auqaat aur Qiblah ki direction '
-                'calculate karne ke liye istemal hoti hai. Yeh kabhi kisi server ko nahi bheji jati.',
+            title: isUrdu ? 'لوکیشن' : 'Location',
+            body: isUrdu
+                ? 'آپ کی لوکیشن صرف آپ کے فون پر نماز کے اوقات اور قبلہ کی سمت '
+                    'حساب کرنے کے لیے استعمال ہوتی ہے۔ یہ کبھی کسی سرور کو نہیں بھیجی جاتی۔'
+                : 'Your location is used only on your phone to calculate prayer times '
+                    'and the Qibla direction. It is never sent to any server.',
+            textDirection: dir,
           ),
           _section(
             context,
             icon: Icons.cloud_download_outlined,
-            title: 'Internet ka Istemal',
-            body:
-                'Quran ke page images aur audio tilawat sirf tab internet se load hote hain '
-                'jab aap unhe dekhte ya sunte hain. Ek dafa load hone ke baad pages offline bhi kaam karte hain.',
+            title: isUrdu ? 'انٹرنیٹ کا استعمال' : 'Internet Usage',
+            body: isUrdu
+                ? 'قرآن کے پیج امیجز اور آڈیو تلاوت صرف تب انٹرنیٹ سے لوڈ ہوتے ہیں '
+                    'جب آپ انہیں دیکھتے یا سنتے ہیں۔ ایک بار لوڈ ہونے کے بعد صفحات آف لائن بھی کام کرتے ہیں۔'
+                : 'Quran page images and audio recitation load from the internet only when '
+                    'you view or listen to them. Once loaded, pages also work offline.',
+            textDirection: dir,
           ),
           _section(
             context,
             icon: Icons.bookmark_outline,
-            title: 'Aapka Data',
-            body:
-                'Bookmarks, notes, drawings, preferences aur backups — sab kuch sirf aapke '
-                'device par mehfooz rehta hai. App uninstall karne par yeh data delete ho jata hai.',
+            title: isUrdu ? 'آپ کا ڈیٹا' : 'Your Data',
+            body: isUrdu
+                ? 'بک مارکس، نوٹس، ڈرائنگ، ترجیحات اور بیک اپ — سب کچھ صرف آپ کے '
+                    'ڈیوائس پر محفوظ رہتا ہے۔ ایپ ان انسٹال کرنے پر یہ ڈیٹا حذف ہو جاتا ہے۔'
+                : 'Bookmarks, notes, drawings, preferences and backups — everything stays '
+                    'safe only on your device. Uninstalling the app deletes this data.',
+            textDirection: dir,
           ),
           _section(
             context,
             icon: Icons.email_outlined,
-            title: 'Rabta',
-            body:
-                'Agar aap "Report an Issue" se email bhejte hain to sirf wahi tafseel humein milti hai '
-                'jo aap khud likhte hain. Koi khudkaar data jama nahi kiya jata.',
+            title: isUrdu ? 'رابطہ' : 'Contact',
+            body: isUrdu
+                ? 'اگر آپ "Report an Issue" سے ای میل بھیجتے ہیں تو صرف وہی تفصیل ہمیں ملتی ہے '
+                    'جو آپ خود لکھتے ہیں۔ کوئی خودکار ڈیٹا جمع نہیں کیا جاتا۔'
+                : 'If you send an email via "Report an Issue", we only receive the details '
+                    'you write yourself. No data is collected automatically.',
+            textDirection: dir,
           ),
           const SizedBox(height: 8),
           Text(
-            'Sawal ho to $supportEmail par rabta karein.',
+            isUrdu
+                ? 'کوئی سوال ہو تو $supportEmail پر رابطہ کریں۔'
+                : 'Questions? Contact us at $supportEmail.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: cs.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
+            textDirection: dir,
           ),
         ],
       ),
@@ -301,6 +400,7 @@ class PrivacyScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required String body,
+    TextDirection? textDirection,
   }) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -320,13 +420,18 @@ class PrivacyScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
+                    textDirection: textDirection,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: cs.primary,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(body, style: theme.textTheme.bodyMedium),
+                  Text(
+                    body,
+                    textDirection: textDirection,
+                    style: theme.textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),

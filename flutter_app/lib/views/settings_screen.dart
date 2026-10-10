@@ -120,16 +120,70 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  /// Formats a daily reading target: under 20 pages shows pages, 20+
+  /// shows parahs (1 parah = 20 pages), e.g. 25 -> "1 parah aur 5 pages".
+  String _formatReadingGoal(int pages, bool urdu) {
+    if (pages < 20) {
+      return urdu ? '$pages صفحات روزانہ' : '$pages pages / day';
+    }
+    final parah = pages ~/ 20;
+    final rem = pages % 20;
+    final parahWord = urdu ? 'پارہ' : 'parah';
+    if (rem == 0) {
+      return urdu ? '$parah $parahWord روزانہ' : '$parah $parahWord / day';
+    }
+    return urdu
+        ? '$parah $parahWord اور $rem صفحات روزانہ'
+        : '$parah $parahWord and $rem pages / day';
+  }
+
+  Widget _langOption(
+    BuildContext context, {
+    required String lang,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFF144234) : const Color(0xFF0B2D22),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? cs.primary : Colors.white12,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: selected ? cs.primary : Colors.white70,
+                fontSize: 15,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
     final cs = Theme.of(context).colorScheme;
+    final ur = prefs.isUrdu;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'تنظیمات (Settings & Bookmarks)',
+          ur ? 'تنظیمات' : 'Settings',
           style: TextStyle(
               color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
         ),
@@ -148,7 +202,7 @@ class SettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Asr Juristic Method / عصر کا طریقہ',
+                    ur ? 'عصر کا فقہی طریقہ' : 'Asr Juristic Method',
                     style: TextStyle(
                         color: cs.primary,
                         fontWeight: FontWeight.bold,
@@ -156,7 +210,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: Text('Hanafi / حنفی (Double shadow factor)',
+                    title: Text(ur ? 'حنفی (دوگنا سایہ)' : 'Hanafi (Double shadow factor)',
                         style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'Hanafi',
                     groupValue: prefs.asrMethod,
@@ -170,7 +224,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   RadioListTile<String>(
                     title: Text(
-                        'Shafi\'i / Maliki / Hanbali / شافعی (Single shadow)',
+                        ur ? 'شافعی / مالکی / حنبلی (اکہرا سایہ)' : 'Shafi\'i / Maliki / Hanbali (Single shadow)',
                         style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'Standard',
                     groupValue: prefs.asrMethod,
@@ -197,11 +251,12 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 SwitchListTile(
-                  title: Text('Play Azan Sound',
+                  title: Text(ur ? 'اذان کی آواز' : 'Play Azan Sound',
                       style: TextStyle(
                           color: cs.onSurface, fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                      'Play full Azan audio when prayer time starts',
+                      ur ? 'نماز کا وقت شروع ہونے پر مکمل اذان چلائیں'
+                         : 'Play full Azan audio when prayer time starts',
                       style: TextStyle(color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                   value: prefs.azanSoundEnabled,
                   activeColor: cs.primary,
@@ -212,11 +267,12 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 Divider(color: cs.onSurface.withValues(alpha: 0.12), height: 1),
                 SwitchListTile(
-                  title: Text('Lockscreen Exact Alarm',
+                  title: Text(ur ? 'لاک اسکرین اذان الارم' : 'Lockscreen Exact Alarm',
                       style: TextStyle(
                           color: cs.onSurface, fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                      'Wake up locked phone & display prayer alarm',
+                      ur ? 'بند فون کو جگائیں اور نماز کا الارم دکھائیں'
+                         : 'Wake up locked phone & display prayer alarm',
                       style: TextStyle(color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                   value: prefs.lockscreenAlarmEnabled,
                   activeColor: cs.primary,
@@ -244,7 +300,7 @@ class SettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Reading / مطالعہ',
+                    ur ? 'مطالعہ' : 'Reading',
                     style: TextStyle(
                         color: cs.primary,
                         fontWeight: FontWeight.bold,
@@ -252,11 +308,11 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Reading Mode / مطالعے کا انداز',
+                    ur ? 'مطالعے کا انداز' : 'Reading Mode',
                     style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   RadioListTile<String>(
-                    title: Text('Page Slide / صفحہ بہ صفحہ',
+                    title: Text(ur ? 'صفحہ بہ صفحہ' : 'Page Slide',
                         style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'slide',
                     groupValue: prefs.readingMode,
@@ -266,7 +322,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   RadioListTile<String>(
-                    title: Text('Continuous Scroll / مسلسل اسکرول',
+                    title: Text(ur ? 'مسلسل اسکرول' : 'Continuous Scroll',
                         style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'scroll',
                     groupValue: prefs.readingMode,
@@ -276,7 +332,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   RadioListTile<String>(
-                    title: Text('Page Turn / ورق پلٹنا',
+                    title: Text(ur ? 'ورق پلٹنا' : 'Page Turn',
                         style: TextStyle(color: cs.onSurface, fontSize: 14)),
                     value: 'turn',
                     groupValue: prefs.readingMode,
@@ -288,7 +344,7 @@ class SettingsScreen extends StatelessWidget {
                   Divider(color: cs.onSurface.withValues(alpha: 0.12)),
                   const SizedBox(height: 4),
                   Text(
-                    'Script Style / رسم الخط',
+                    ur ? 'رسم الخط' : 'Script Style',
                     style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
@@ -313,7 +369,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Theme / تھیم',
+                    ur ? 'تھیم' : 'Theme',
                     style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
@@ -352,7 +408,7 @@ class SettingsScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Ayah Text Size / آیت کا سائز',
+                        ur ? 'آیت کے متن کا سائز' : 'Ayah Text Size',
                         style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       Text(
@@ -389,6 +445,68 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // Language Section (UI language toggle)
+          Card(
+            color: cs.surface,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ur ? 'زبان' : 'Language',
+                    style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    ur
+                        ? 'ایپ کی زبان منتخب کریں'
+                        : 'Choose the app language',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _langOption(
+                        context,
+                        lang: 'ur',
+                        label: 'اردو',
+                        selected: prefs.language == 'ur',
+                        onTap: () => prefs.setLanguage('ur'),
+                      ),
+                      const SizedBox(width: 8),
+                      _langOption(
+                        context,
+                        lang: 'en',
+                        label: 'English',
+                        selected: prefs.language == 'en',
+                        onTap: () => prefs.setLanguage('en'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    ur
+                        ? 'نوٹ: قرآن کا ترجمہ ہمیشہ اردو اور انگریزی دونوں میں دکھایا جائے گا۔'
+                        : 'Note: Quran translations are always shown in both Urdu and English.',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Audio Section (default qari, repeat, speed)
           Card(
             color: cs.surface,
@@ -411,7 +529,7 @@ class SettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Audio / تلاوت',
+                        ur ? 'تلاوت' : 'Audio',
                         style: TextStyle(
                             color: cs.primary,
                             fontWeight: FontWeight.bold,
@@ -419,7 +537,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Default Qari / قاری کا انتخاب',
+                        ur ? 'قاری کا انتخاب' : 'Default Qari',
                         style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 4),
@@ -444,7 +562,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Repeat / تکرار',
+                        ur ? 'تکرار' : 'Repeat',
                         style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 6),
@@ -471,7 +589,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Playback Speed / رفتار',
+                        ur ? 'چلانے کی رفتار' : 'Playback Speed',
                         style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                       ),
                       const SizedBox(height: 6),
@@ -514,19 +632,19 @@ class SettingsScreen extends StatelessWidget {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: Text(
-                      'Reading Goal / روزانہ ہدف',
-                      style: TextStyle(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15),
-                    ),
+                  Text(
+                    ur ? 'روزانہ ہدف' : 'Reading Goal',
+                    style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15),
                   ),
+                  const SizedBox(height: 8),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
                         icon: Icon(Icons.remove,
@@ -537,7 +655,7 @@ class SettingsScreen extends StatelessWidget {
                             : null,
                       ),
                       Text(
-                        '${prefs.dailyTargetPages} pages / day',
+                        _formatReadingGoal(prefs.dailyTargetPages, ur),
                         style: TextStyle(
                             color: cs.onSurface,
                             fontWeight: FontWeight.bold,
@@ -546,7 +664,7 @@ class SettingsScreen extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.add,
                             color: cs.onSurface.withValues(alpha: 0.7), size: 20),
-                        onPressed: prefs.dailyTargetPages < 20
+                        onPressed: prefs.dailyTargetPages < 611
                             ? () => prefs
                                 .setDailyTargetPages(prefs.dailyTargetPages + 1)
                             : null,
@@ -575,14 +693,14 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          'علامات / محفوظ شدہ صفحات (Bookmarks)',
+                          ur ? 'محفوظ شدہ صفحات' : 'Bookmarks',
                           style: TextStyle(
                               color: cs.primary,
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
                         ),
                       ),
-                      Text('${prefs.bookmarks.length} saved',
+                      Text(ur ? '${prefs.bookmarks.length} محفوظ شدہ' : '${prefs.bookmarks.length} saved',
                           style: TextStyle(
                               color: cs.onSurface.withValues(alpha: 0.54), fontSize: 12)),
                     ],
@@ -592,7 +710,8 @@ class SettingsScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                          'No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.',
+                          ur ? 'ابھی کوئی صفحہ محفوظ نہیں ہے۔ کسی بھی صفحے پر بک مارک آئیکن دبائیں۔'
+                             : 'No bookmarked pages yet. Tap the bookmark icon on any Mushaf page.',
                           style:
                               TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13)),
                     )
@@ -629,19 +748,21 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'About Nur-ul-Quran (نور القرآن)',
-                  style: TextStyle(
-                      color: cs.primary,
+                  ur ? 'نور القرآن کے بارے میں' : 'About Nur-ul-Quran (نور القرآن)',
+                  style: const TextStyle(
+                      color: Color(0xFFD4AF37),
                       fontWeight: FontWeight.bold,
                       fontSize: 14),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
-                  '15-Line South Asian / Indo-Pak Hifzi Mushaf (القرآن الكريم). 100% offline, exact astronomical prayer times with lockscreen Azan, Kaaba Qiblah compass, and multi-language voice search.',
-                  style: TextStyle(
+                  ur
+                      ? '15 سطری جنوبی ایشیائی حفظی مصحف (القرآن الكريم)۔ 100% آف لائن، لاک اسکرین اذان کے ساتھ درست فلکیاتی نماز کے اوقات، قبلہ کمپاس اور کثیر لسانی تلاش۔'
+                      : '15-Line South Asian / Indo-Pak Hifzi Mushaf (القرآن الكريم). 100% offline, exact astronomical prayer times with lockscreen Azan, Kaaba Qiblah compass, and multi-language voice search.',
+                  style: const TextStyle(
                       color: Colors.white70, fontSize: 12, height: 1.4),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 FutureBuilder<PackageInfo>(
                   future: _packageInfoFuture,
                   builder: (context, snapshot) {
@@ -650,7 +771,7 @@ class SettingsScreen extends StatelessWidget {
                       version == null || version.isEmpty
                           ? 'Version…'
                           : 'Version $version',
-                      style: TextStyle(color: cs.primary, fontSize: 11),
+                      style: const TextStyle(color: Color(0xFFD4AF37), fontSize: 11),
                     );
                   },
                 ),

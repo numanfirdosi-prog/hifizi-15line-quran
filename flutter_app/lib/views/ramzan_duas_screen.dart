@@ -164,6 +164,12 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
             ),
             const SizedBox(height: 4),
             Text(dua.translation, style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 4),
+            Text(
+              dua.translationUrdu,
+              textDirection: TextDirection.rtl,
+              style: theme.textTheme.bodyMedium,
+            ),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
@@ -174,7 +180,7 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
                   await Clipboard.setData(
                     ClipboardData(
                       text:
-                          '${dua.arabic}\n${dua.transliteration}\n${dua.translation}',
+                          '${dua.arabic}\n${dua.transliteration}\n${dua.translation}\n${dua.translationUrdu}',
                     ),
                   );
                   if (context.mounted) {

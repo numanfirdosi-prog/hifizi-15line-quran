@@ -191,10 +191,16 @@ class _PrayerScreenState extends State<PrayerScreen> {
               children: [
                 ListTile(
                   leading: Icon(Icons.my_location, color: cs.primary),
-                  title: Text('Use Device GPS (Live Location)',
+                  title: Text(
+                      prefs.isUrdu
+                          ? 'ڈیوائس GPS استعمال کریں (لائیو لوکیشن)'
+                          : 'Use Device GPS (Live Location)',
                       style: TextStyle(
                           color: cs.onSurface, fontWeight: FontWeight.bold)),
-                  subtitle: Text('Most accurate Qiblah & prayer times',
+                  subtitle: Text(
+                      prefs.isUrdu
+                          ? 'سب سے درست قبلہ اور نماز کے اوقات'
+                          : 'Most accurate Qiblah & prayer times',
                       style: TextStyle(
                           color: cs.onSurface.withValues(alpha: 0.54))),
                   trailing: isGps
@@ -328,13 +334,31 @@ class _PrayerScreenState extends State<PrayerScreen> {
               color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         actions: [
-          TextButton.icon(
-            icon: Icon(Icons.location_on, color: cs.primary, size: 18),
-            label: Text(
-              prefs.selectedCity.name.split('/')[0].trim(),
-              style: TextStyle(color: cs.onSurface, fontSize: 13),
+          Tooltip(
+            message: prefs.isUrdu ? 'شہر بدلیں' : 'Change city',
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: cs.primary.withValues(alpha: 0.4)),
+              ),
+              child: TextButton.icon(
+                icon: Icon(Icons.location_on, color: cs.primary, size: 18),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      prefs.selectedCity.name.split('/')[0].trim(),
+                      style: TextStyle(color: cs.onSurface, fontSize: 13),
+                    ),
+                    Icon(Icons.arrow_drop_down,
+                        color: cs.primary, size: 18),
+                  ],
+                ),
+                onPressed: () => _showCityPickerDialog(prefs),
+              ),
             ),
-            onPressed: () => _showCityPickerDialog(prefs),
           ),
         ],
       ),
@@ -369,7 +393,9 @@ class _PrayerScreenState extends State<PrayerScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Next: ${nextPrayer.nameEn} (${nextPrayer.nameUrdu})',
+                          prefs.isUrdu
+                              ? 'اگلی نماز: ${nextPrayer.nameUrdu}'
+                              : 'Next: ${nextPrayer.nameEn}',
                           style: TextStyle(
                               color: cs.primary,
                               fontSize: 16,
@@ -377,7 +403,9 @@ class _PrayerScreenState extends State<PrayerScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Adhan at ${nextPrayer.time.time12}',
+                          prefs.isUrdu
+                              ? 'اذان کا وقت ${nextPrayer.time.time12}'
+                              : 'Adhan at ${nextPrayer.time.time12}',
                           style: TextStyle(
                               color: cs.onSurface.withValues(alpha: 0.7),
                               fontSize: 13),
@@ -427,7 +455,10 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     Icon(Icons.notifications_active,
                         color: cs.primary, size: 20),
                     const SizedBox(width: 8),
-                    Text('Lockscreen Azan Alarm',
+                    Text(
+                        prefs.isUrdu
+                            ? 'لاک اسکرین اذان الارم'
+                            : 'Lockscreen Azan Alarm',
                         style: TextStyle(color: cs.onSurface, fontSize: 13)),
                   ],
                 ),
@@ -440,15 +471,17 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     visualDensity: VisualDensity.compact,
                   ),
                   icon: const Icon(Icons.volume_up, size: 16),
-                  label: const Text('Test Azan',
+                  label: Text(
+                      prefs.isUrdu ? 'اذان سن کر دیکھیں' : 'Test Azan',
                       style:
                           TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   onPressed: () {
                     AzanAlarmService().playTestAzan();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Playing test Azan sound (locks & notifications active)...'),
+                      SnackBar(
+                        content: Text(prefs.isUrdu
+                            ? 'ٹیسٹ اذان چل رہی ہے…'
+                            : 'Playing test Azan sound...'),
                         duration: Duration(seconds: 3),
                       ),
                     );
@@ -486,15 +519,15 @@ class _PrayerScreenState extends State<PrayerScreen> {
                       children: [
                         Text(
                           name,
-                          style: TextStyle(
-                              color: cs.onSurface,
+                          style: const TextStyle(
+                              color: Color(0xFFFFF8E7),
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
                         ),
                         Text(
                           urdu,
-                          style: TextStyle(
-                              color: cs.primary,
+                          style: const TextStyle(
+                              color: Color(0xFFD4AF37),
                               fontSize: 12,
                               fontFamily: 'serif'),
                         ),
@@ -503,8 +536,8 @@ class _PrayerScreenState extends State<PrayerScreen> {
                   ),
                   Text(
                     entry.time12,
-                    style: TextStyle(
-                      color: cs.onSurface,
+                    style: const TextStyle(
+                      color: Color(0xFFFFF8E7),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),

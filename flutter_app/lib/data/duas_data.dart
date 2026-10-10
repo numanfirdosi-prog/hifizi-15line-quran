@@ -6,6 +6,7 @@ class Dua {
   final String arabic;
   final String transliteration;
   final String translation;
+  final String translationUrdu;
 
   const Dua({
     required this.id,
@@ -15,6 +16,7 @@ class Dua {
     required this.arabic,
     required this.transliteration,
     required this.translation,
+    required this.translationUrdu,
   });
 }
 
@@ -27,6 +29,8 @@ const List<Dua> duas = [
     arabic: 'وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ',
     transliteration: 'Wa bisawmi ghadin nawaytu min shahri Ramadan.',
     translation: 'I intend to keep the fast tomorrow for the month of Ramadan.',
+    translationUrdu:
+        'میں ماہِ رمضان کا روزہ کل رکھنے کی نیت کرتا/کرتی ہوں۔',
   ),
   Dua(
     id: 'iftar',
@@ -39,6 +43,8 @@ const List<Dua> duas = [
         'Allahumma inni laka sumtu wa bika aamantu wa alayka tawakkaltu wa ala rizqika aftartu.',
     translation:
         'O Allah, I fasted for You, I believe in You, I trust in You, and with Your sustenance I break my fast.',
+    translationUrdu:
+        'اے اللہ! میں نے تیرے لیے روزہ رکھا، تجھ پر ایمان لایا، تجھ پر بھروسا کیا، اور تیرے ہی رزق سے روزہ افطار کرتا/کرتی ہوں۔',
   ),
   Dua(
     id: 'iftar-after',
@@ -51,6 +57,8 @@ const List<Dua> duas = [
         'Dhahabaz-zama\'u wabtallatil-uruqu wa thabatal-ajru in sha Allah.',
     translation:
         'The thirst is gone, the veins are moistened, and the reward is confirmed, if Allah wills.',
+    translationUrdu:
+        'پیاس بجھ گئی، رگیں تر ہو گئیں، اور اجر ثابت ہو گیا، ان شاء اللہ۔',
   ),
   Dua(
     id: 'ashra-1',
@@ -61,6 +69,8 @@ const List<Dua> duas = [
     transliteration: 'Rabbighfir warham wa anta khayrur-rahimeen.',
     translation:
         'My Lord, forgive and have mercy, for You are the best of the merciful. (23:118)',
+    translationUrdu:
+        'اے میرے رب! بخش دے اور رحم فرما، کیونکہ تو سب سے بہتر رحم کرنے والا ہے۔ (23:118)',
   ),
   Dua(
     id: 'ashra-2',
@@ -71,6 +81,8 @@ const List<Dua> duas = [
     transliteration: 'Astaghfirullaha rabbi min kulli dhanbin wa atubu ilayh.',
     translation:
         'I seek forgiveness from Allah my Lord for every sin, and I turn to Him in repentance.',
+    translationUrdu:
+        'میں اپنے رب اللہ سے ہر گناہ کی معافی مانگتا/مانگتی ہوں اور اس کی طرف رجوع کرتا/کرتی ہوں۔',
   ),
   Dua(
     id: 'ashra-3',
@@ -80,6 +92,7 @@ const List<Dua> duas = [
     arabic: 'اللَّهُمَّ أَجِرْنِي مِنَ النَّارِ',
     transliteration: 'Allahumma ajirni minan-nar.',
     translation: 'O Allah, save me from the Fire.',
+    translationUrdu: 'اے اللہ! مجھے آگ سے بچا۔',
   ),
   Dua(
     id: 'qadr',
@@ -89,6 +102,8 @@ const List<Dua> duas = [
     arabic: 'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
     transliteration: 'Allahumma innaka afuwwun tuhibbul-afwa fa\'fu anni.',
     translation: 'O Allah, You are Pardoning and love to pardon, so pardon me.',
+    translationUrdu:
+        'اے اللہ! بے شک تو بہت معاف کرنے والا ہے اور معاف کرنا پسند کرتا ہے، پس مجھے معاف فرما۔',
   ),
   Dua(
     id: 'taraweeh',
@@ -96,10 +111,12 @@ const List<Dua> duas = [
     category: 'Special',
     tag: 'TARAWEEH',
     arabic:
-        'سُبْحَانَ ذِي الْمُلْكِ وَالْمَلَكُوتِ سُبْحَانَ ذِي الْعِزَّةِ وَالْعَظَمَةِ',
+        'سُبْحَانَ ذِي الْمُلْكِ وَالْمَلَكُوتِ سُبْحَانَ ذِي الْعِزَّةِ وَالْعَظَمَةِ وَالْهَيْبَةِ وَالْقُدْرَةِ وَالْكِبْرِيَاءِ وَالْجَبَرُوتِ سُبْحَانَ الْمَلِكِ الْحَيِّ الَّذِي لَا يَنَامُ وَلَا يَمُوتُ سُبُّوحٌ قُدُّوسٌ رَبُّنَا وَرَبُّ الْمَلَائِكَةِ وَالرُّوحِ اللَّهُمَّ أَجِرْنَا مِنَ النَّارِ يَا مُجِيرُ يَا مُجِيرُ يَا مُجِيرُ',
     transliteration:
-        'Subhana zil-mulki wal-malakut, subhana zil-izzati wal-azamah.',
+        'Subhana zil-mulki wal-malakut, subhana zil-izzati wal-azamati wal-haybati wal-qudrati wal-kibriyā’i wal-jabarut. Subhanal-malikil-hayyil-lazi la yanamu wa la yamut. Subbuhun quddusun rabbuna wa rabbul-mala’ikati war-ruh. Allahumma ajirna minan-nar, ya Mujiru ya Mujiru ya Mujir.',
     translation:
-        'Glory be to the Owner of the Kingdom and Dominion, glory be to the Owner of Honour and Greatness.',
+        'Glory be to the Owner of the Kingdom and the Dominion; glory be to the Owner of Honour, Greatness, Awe, Power, Pride and Might. Glory be to the Living King who neither sleeps nor dies. Most Glorious, Most Holy — our Lord and the Lord of the angels and the Spirit. O Allah, save us from the Fire; O Giver of Refuge, O Giver of Refuge, O Giver of Refuge.',
+    translationUrdu:
+        'پاک ہے وہ جو بادشاہت اور (آسمانی) سلطنت کا مالک ہے؛ پاک ہے وہ جو عزت، عظمت، ہیبت، قدرت، کبریائی اور جبروت کا مالک ہے۔ پاک ہے وہ زندہ بادشاہ جو نہ سوتا ہے نہ مرتا ہے۔ نہایت پاک، نہایت مقدس — ہمارا رب اور فرشتوں اور روح کا رب۔ اے اللہ! ہمیں آگ سے پناہ دے؛ اے پناہ دینے والے، اے پناہ دینے والے، اے پناہ دینے والے۔',
   ),
 ];
