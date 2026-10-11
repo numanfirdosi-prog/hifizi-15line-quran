@@ -178,7 +178,7 @@ class _KhatmPlannerScreenState extends State<KhatmPlannerScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
-                childAspectRatio: 1.02,
+                childAspectRatio: 0.9,
               ),
               itemCount: 30,
               itemBuilder: (context, i) {

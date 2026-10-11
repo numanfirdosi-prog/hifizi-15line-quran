@@ -394,10 +394,9 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'اوقات الصلوٰۃ (Prayer Times)',
-          style: TextStyle(
-              color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         actions: [
           Tooltip(

@@ -47,7 +47,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Bookmarks & Saved'),
+          titleSpacing: 0,
+          title: const Text(
+            'Bookmarks & Saved',
+            style: TextStyle(fontSize: 17),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.file_download_outlined),
