@@ -76,7 +76,7 @@ class DrawingStroke {
     }
     return DrawingStroke(
       tool: (m['tool'] as String?) ?? 'pen',
-      colorHex: (m['color'] as String?) ?? 'FFD54F',
+      colorHex: (m['color'] as String?) ?? 'D4AF37',
       width: ((m['width'] as num?)?.toDouble() ?? 0.005).clamp(0.001, 0.2),
       points: pts,
       rect: r,
@@ -136,14 +136,14 @@ double _distToSegment(Offset p, Offset a, Offset b) {
 class PageDrawingService extends ChangeNotifier {
   static const String prefsKey = 'nur_page_drawings';
 
-  /// The 6 drawing/highlighter colors offered in the color picker (matching modern highlighter palette).
+  /// The 6 drawing colors offered in the color picker.
   static const List<String> paletteHexes = [
-    'FFD54F', // Warm Yellow (default)
-    'EF5350', // Coral Red
-    'F06292', // Rose Pink
-    '26C6DA', // Cyan Blue
-    'AB47BC', // Lavender Purple
-    '66BB6A', // Fresh Green
+    'D4AF37', // gold (default)
+    'E53935', // red
+    '43A047', // green
+    '1E88E5', // blue
+    '8E24AA', // purple
+    '212121', // black
   ];
 
   final Map<String, List<DrawingStroke>> _drawings = {};
@@ -158,12 +158,12 @@ class PageDrawingService extends ChangeNotifier {
   String get selectedColorHex => _selectedColorHex;
   bool get isDrawingMode => _selectedTool != null;
 
-  Color get selectedColor => parseHex(_selectedColorHex);
+  Color get selectedColor => _parseHex(_selectedColorHex);
 
-  static Color parseHex(String hex) {
+  static Color _parseHex(String hex) {
     var h = hex.replaceAll('#', '');
     if (h.length == 6) h = 'FF$h';
-    return Color(int.tryParse(h, radix: 16) ?? 0xFFFFD54F);
+    return Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
   }
 
   /// Loads persisted drawings. Safe to call more than once.
