@@ -2539,9 +2539,10 @@ class _HairlineRule extends StatelessWidget {
   }
 }
 
-/// Neutral top ornament for pages whose edition page has no Bismillah: a
-/// symmetrical diamond medallion on a gold hairline — elegant framing with
-/// restrained gold detailing and no calligraphy.
+/// Premium neutral top ornament for pages whose edition page has no Bismillah:
+/// a symmetrical eight-pointed star (khatam) medallion flanked by layered
+/// gold rules with diamond accents — elegant framing with restrained gold
+/// detailing and no calligraphy, so the header never looks empty.
 class _NeutralTopOrnament extends StatelessWidget {
   final Color gold;
   const _NeutralTopOrnament({required this.gold});
@@ -2549,45 +2550,132 @@ class _NeutralTopOrnament extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 44),
       child: Row(
         children: [
-          Expanded(
-            child: Container(
-              height: 1.5,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    gold.withValues(alpha: 0.65),
-                  ],
-                ),
-              ),
-            ),
+          Expanded(child: _sideRules(true)),
+          const SizedBox(width: 8),
+          _diamond(5),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: CustomPaint(painter: _StarMedallionPainter(gold: gold)),
           ),
           const SizedBox(width: 10),
-          Transform.rotate(
-            angle: pi / 4,
-            child: Container(width: 7, height: 7, color: gold),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              height: 1.5,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    gold.withValues(alpha: 0.65),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+          _diamond(5),
+          const SizedBox(width: 8),
+          Expanded(child: _sideRules(false)),
         ],
       ),
     );
   }
+
+  /// Double gold hairline fading out toward the page edge; the lower line is
+  /// shorter for a classic stepped divider look.
+  Widget _sideRules(bool isLeft) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 1.2,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: isLeft ? Alignment.centerLeft : Alignment.centerRight,
+              end: isLeft ? Alignment.centerRight : Alignment.centerLeft,
+              colors: [
+                Colors.transparent,
+                gold.withValues(alpha: 0.75),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          height: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: isLeft ? Alignment.centerLeft : Alignment.centerRight,
+              end: isLeft ? Alignment.centerRight : Alignment.centerLeft,
+              colors: [
+                Colors.transparent,
+                gold.withValues(alpha: 0.45),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _diamond(double s) => Transform.rotate(
+        angle: pi / 4,
+        child: Container(
+          width: s,
+          height: s,
+          color: gold.withValues(alpha: 0.85),
+        ),
+      );
+}
+
+/// Eight-pointed star (khatam) medallion: outer ring, inner ring, and two
+/// overlapping squares forming the star, with a solid diamond at the center.
+/// Purely geometric — no calligraphy.
+class _StarMedallionPainter extends CustomPainter {
+  final Color gold;
+  const _StarMedallionPainter({required this.gold});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 1.5;
+    final ring = Paint()
+      ..color = gold.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+    // Outer and inner rings.
+    canvas.drawCircle(c, r, ring);
+    canvas.drawCircle(
+        c,
+        r * 0.84,
+        ring
+          ..strokeWidth = 0.8
+          ..color = gold.withValues(alpha: 0.6));
+    // Eight-pointed star: two overlapping squares.
+    final starPaint = Paint()
+      ..color = gold.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+    final sr = r * 0.60;
+    for (var k = 0; k < 2; k++) {
+      final path = Path();
+      for (var i = 0; i < 4; i++) {
+        final a = -pi / 2 + k * pi / 4 + i * pi / 2;
+        final p = Offset(c.dx + sr * cos(a), c.dy + sr * sin(a));
+        if (i == 0) {
+          path.moveTo(p.dx, p.dy);
+        } else {
+          path.lineTo(p.dx, p.dy);
+        }
+      }
+      path.close();
+      canvas.drawPath(path, starPaint);
+    }
+    // Solid diamond at the center.
+    final dot = Path()
+      ..moveTo(c.dx, c.dy - 3.2)
+      ..lineTo(c.dx + 3.2, c.dy)
+      ..lineTo(c.dx, c.dy + 3.2)
+      ..lineTo(c.dx - 3.2, c.dy)
+      ..close();
+    canvas.drawPath(
+        dot, Paint()..color = gold..style = PaintingStyle.fill);
+  }
+
+  @override
+  bool shouldRepaint(covariant _StarMedallionPainter oldDelegate) =>
+      oldDelegate.gold != gold;
 }
 
 /// Manzil badge: an ornamental golden frame with the Manzil number.
