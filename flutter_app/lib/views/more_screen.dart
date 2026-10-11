@@ -89,6 +89,34 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
+  Widget _sectionHeader(BuildContext context, String label) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 2),
+      child: Row(
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: cs.primary,
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.4,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Divider(
+              color: cs.primary.withOpacity(0.25),
+              thickness: 1,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -107,34 +135,14 @@ class MoreScreen extends StatelessWidget {
       body: ListView(
         children: [
           const SizedBox(height: 8),
+          // ---- Read ----
+          _sectionHeader(context, 'Read'),
           _tile(
             context,
             icon: Icons.format_list_bulleted,
             title: 'Surahs',
             subtitle: 'سورتیں',
             onTap: () => onSelectTab(2),
-          ),
-          _tile(
-            context,
-            icon: Icons.headphones_outlined,
-            title: 'Audio Studio',
-            subtitle: 'آڈیو اسٹوڈیو',
-            onTap: () => _push(context, AudioStudioScreen()),
-          ),
-          _tile(
-            context,
-            icon: Icons.format_list_numbered,
-            title: 'Juz Index',
-            subtitle: 'پارہ انڈیکس',
-            onTap: () => _pushJumpable(context, (open) => JuzIndexScreen(onOpenPage: open)),
-          ),
-          _tile(
-            context,
-            icon: Icons.calendar_month_outlined,
-            title: 'Khatm Planner',
-            subtitle: 'تیس دن کا ختم شیڈول',
-            onTap: () =>
-                _pushJumpable(context, (open) => KhatmPlannerScreen(onOpenPage: open)),
           ),
           _tile(
             context,
@@ -146,11 +154,42 @@ class MoreScreen extends StatelessWidget {
           ),
           _tile(
             context,
+            icon: Icons.format_list_numbered,
+            title: 'Juz Index',
+            subtitle: 'پارہ انڈیکس',
+            onTap: () => _pushJumpable(context, (open) => JuzIndexScreen(onOpenPage: open)),
+          ),
+          _tile(
+            context,
             icon: Icons.bookmark_outline,
             title: 'Bookmarks & Saved',
             subtitle: 'نشانات اور محفوظ آیات',
             onTap: () =>
                 _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
+          ),
+          _tile(
+            context,
+            icon: Icons.calendar_month_outlined,
+            title: 'Khatm Planner',
+            subtitle: 'تیس دن کا ختم شیڈول',
+            onTap: () =>
+                _pushJumpable(context, (open) => KhatmPlannerScreen(onOpenPage: open)),
+          ),
+          // ---- Worship ----
+          _sectionHeader(context, 'Worship'),
+          _tile(
+            context,
+            icon: Icons.access_time,
+            title: 'Prayer Times & Azan',
+            subtitle: 'اوقات الصلوٰۃ',
+            onTap: () => onSelectTab(3),
+          ),
+          _tile(
+            context,
+            icon: Icons.explore_outlined,
+            title: 'Qiblah Compass',
+            subtitle: 'قبلہ کمپاس',
+            onTap: () => _push(context, const QiblahScreen()),
           ),
           _tile(
             context,
@@ -162,26 +201,20 @@ class MoreScreen extends StatelessWidget {
           ),
           _tile(
             context,
+            icon: Icons.headphones_outlined,
+            title: 'Audio Studio',
+            subtitle: 'آڈیو اسٹوڈیو',
+            onTap: () => _push(context, AudioStudioScreen()),
+          ),
+          // ---- App ----
+          _sectionHeader(context, 'App'),
+          _tile(
+            context,
             icon: Icons.cloud_download_outlined,
             title: 'Offline Download Center',
             subtitle: 'آف لائن ڈاؤن لوڈ',
             onTap: () => _push(context, OfflineDownloadScreen()),
           ),
-          _tile(
-            context,
-            icon: Icons.explore_outlined,
-            title: 'Qiblah Compass',
-            subtitle: 'قبلہ کمپاس',
-            onTap: () => _push(context, const QiblahScreen()),
-          ),
-          _tile(
-            context,
-            icon: Icons.access_time,
-            title: 'Prayer Times & Azan',
-            subtitle: 'اوقات الصلوٰۃ',
-            onTap: () => onSelectTab(3),
-          ),
-          const Divider(height: 1),
           _tile(
             context,
             icon: Icons.settings_outlined,
@@ -196,6 +229,9 @@ class MoreScreen extends StatelessWidget {
             subtitle: 'بیک اپ اور بحالی',
             onTap: () => _push(context, BackupRestoreScreen()),
           ),
+          const CheckUpdateTile(),
+          // ---- Help ----
+          _sectionHeader(context, 'Help'),
           _tile(
             context,
             icon: Icons.help_outline,
@@ -217,7 +253,6 @@ class MoreScreen extends StatelessWidget {
             subtitle: 'رازداری کی پالیسی',
             onTap: () => _push(context, PrivacyScreen()),
           ),
-          const CheckUpdateTile(),
           const SizedBox(height: 24),
         ],
       ),

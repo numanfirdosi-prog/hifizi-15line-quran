@@ -19,6 +19,12 @@ class NurAudioHandler extends BaseAudioHandler {
     _sync();
   }
 
+  /// Detaches the service listener so a discarded handler can't keep the
+  /// service (or itself) alive or push stale state.
+  void dispose() {
+    _service.removeListener(_sync);
+  }
+
   void _sync() {
     final s = _service;
     final isAyah = s.ayahMode;
@@ -79,6 +85,26 @@ class NurAudioHandler extends BaseAudioHandler {
   @override
   Future<void> seek(Duration position) =>
       _service.player.seek(position);
+
+  /// ±10s seek for lock-screen / headset fast-forward & rewind actions.
+  @override
+  Future<void> fastForward() => _seekRelative(const Duration(seconds: 10));
+
+  @override
+  Future<void> rewind() => _seekRelative(const Duration(seconds: -10));
+
+  Future<void> _seekRelative(Duration delta) async {
+    try {
+      final player = _service.player;
+      final dur = player.duration ?? Duration.zero;
+      var target = player.position + delta;
+      if (target < Duration.zero) target = Duration.zero;
+      if (dur > Duration.zero && target > dur) target = dur;
+      await player.seek(target);
+    } catch (e) {
+      debugPrint('[NurAudioHandler] relative seek failed: $e');
+    }
+  }
 
   @override
   Future<void> skipToNext() async {

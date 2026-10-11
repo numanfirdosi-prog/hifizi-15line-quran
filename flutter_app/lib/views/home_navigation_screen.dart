@@ -193,18 +193,26 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
             : NavigationBarTheme(
                 data: NavigationBarThemeData(
                   backgroundColor: cs.surface,
-                  indicatorColor: cs.primary.withValues(alpha: 0.2),
+                  // Gold selection pill — the premium accent for the
+                  // active destination.
+                  indicatorColor: cs.primary.withValues(alpha: 0.22),
                   labelTextStyle:
                       MaterialStateProperty.resolveWith<TextStyle>((states) {
+                    // Urdu destination labels use the bundled Noto Nastaliq
+                    // Urdu font; the tall line height keeps glyphs from
+                    // clipping inside the bar.
+                    const urduLabel = TextStyle(
+                      fontFamily: 'Noto Nastaliq Urdu',
+                      fontSize: 12,
+                      height: 2.0,
+                    );
                     if (states.contains(MaterialState.selected)) {
-                      return TextStyle(
+                      return urduLabel.copyWith(
                           color: cs.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11);
+                          fontWeight: FontWeight.bold);
                     }
-                    return TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.6),
-                        fontSize: 11);
+                    return urduLabel.copyWith(
+                        color: cs.onSurface.withValues(alpha: 0.6));
                   }),
                   iconTheme: MaterialStateProperty.resolveWith<IconThemeData>(
                       (states) {
@@ -215,7 +223,16 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                         color: cs.onSurface.withValues(alpha: 0.6), size: 22);
                   }),
                 ),
-                child: NavigationBar(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: cs.primary.withValues(alpha: 0.25),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: NavigationBar(
                   selectedIndex: _currentIndex,
                   onDestinationSelected: (idx) {
                     setState(() {
@@ -249,6 +266,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                       label: 'مزید',
                     ),
                   ],
+                  ),
                 ),
               ),
       ),

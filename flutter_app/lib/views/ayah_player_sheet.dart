@@ -85,253 +85,342 @@ class _AyahPlayerSheet extends StatelessWidget {
       builder: (context, audio, prefs, _) {
         final s = audio.currentSurah.clamp(1, 114);
         final v = audio.currentAyah;
-        final surahName = allSurahs[s - 1].nameEn;
-        return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
+        final surah = allSurahs[s - 1];
+        return ConstrainedBox(
+          // Cap the sheet height so long translations scroll inside the
+          // content area instead of pushing the pinned controls off-screen.
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.92,
           ),
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 12,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+              border: Border(
+                top: BorderSide(
+                    color: cs.primary.withValues(alpha: 0.35), width: 1),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '$surahName • $s:$v',
-                      style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+            ),
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag handle.
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.onSurface.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Header: Surah name + ayah number, share, close.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Surah ${surah.nameEn}',
+                            style: TextStyle(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Ayah $v of ${surah.totalAyahs}',
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.share,
+                          color: cs.onSurface.withValues(alpha: 0.6)),
+                      tooltip: 'Share ayah',
+                      onPressed: () =>
+                          shareAyah(context, surah: s, ayah: v),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close,
+                          color: cs.onSurface.withValues(alpha: 0.6)),
+                      tooltip: 'Close (audio keeps playing)',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Playback progress (gold) + state.
+                StreamBuilder<double>(
+                  stream: audio.ayahProgressStream,
+                  initialData: 0.0,
+                  builder: (context, psnap) => ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: (psnap.data ?? 0.0).clamp(0.0, 1.0),
+                      minHeight: 3,
+                      backgroundColor:
+                          cs.onSurface.withValues(alpha: 0.12),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(cs.primary),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${audio.isPlaying ? 'Playing' : 'Paused'} • ${audio.selectedQari.name}',
+                    style: TextStyle(
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Scrollable content: Arabic, Urdu (RTL), English.
+                // Flexible (not fixed) so short ayat shrink-wrap while long
+                // translations scroll — never clipped behind the controls.
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: StatefulBuilder(
+                      builder: (sctx, setState) =>
+                          FutureBuilder<List<dynamic>>(
+                        future: _playerDataFuture,
+                        builder: (context, snap) {
+                          // Load failure: show an error with Retry instead of
+                          // spinning forever on the poisoned cached future.
+                          if (snap.hasError) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.error_outline,
+                                        color: cs.error, size: 36),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Quran ka text load nahi ho saka',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          color: cs.onSurface, fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    FilledButton(
+                                      onPressed: () {
+                                        // Drop the failed cached futures so the
+                                        // retry actually re-fires them.
+                                        _quranTextFuture = loadQuranText();
+                                        _urduFuture =
+                                            loadUrduKanzulIman();
+                                        _playerDataFuture =
+                                            Future.wait<dynamic>([
+                                          _quranTextFuture!,
+                                          _urduFuture!,
+                                        ]);
+                                        setState(() {});
+                                      },
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          final list =
+                              snap.data?[0] as List<QuranTextEntry>?;
+                          final urduMap =
+                              snap.data?[1] as Map<String, String>?;
+                          final entry = _find(list, s, v);
+                          final urdu = urduMap?['$s:$v'] ?? '';
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: cs.primary.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: cs.primary.withValues(alpha: 0.5)),
+                            ),
+                            child: entry == null
+                                ? Center(
+                                    child: CircularProgressIndicator(
+                                        color: cs.primary),
+                                  )
+                                : Column(
+                                    children: [
+                                      Text(
+                                        entry.ar,
+                                        textAlign: TextAlign.center,
+                                        textDirection: TextDirection.rtl,
+                                        style: arabicStyle(
+                                          prefs.scriptStyle,
+                                          fontSize: 26,
+                                          color: cs.onSurface,
+                                          scale: prefs.ayahScale,
+                                          height: 2.0,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      if (urdu.isNotEmpty) ...[
+                                        Text(
+                                          urdu,
+                                          textAlign: TextAlign.center,
+                                          textDirection: TextDirection.rtl,
+                                          style: urduStyle(
+                                            fontSize: 18,
+                                            color: cs.onSurface
+                                                .withValues(alpha: 0.9),
+                                            scale: prefs.ayahScale,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'ترجمہ: کنزالایمان (احمد رضا خان)',
+                                          textAlign: TextAlign.center,
+                                          textDirection: TextDirection.rtl,
+                                          style: urduStyle(
+                                            fontSize: 12,
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                      Text(
+                                        entry.en,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: cs.onSurface
+                                              .withValues(alpha: 0.85),
+                                          fontSize: 14,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'English: Saheeh International',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: cs.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          );
+                        },
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.share,
-                        color: cs.onSurface.withValues(alpha: 0.6)),
-                    tooltip: 'Share ayah',
-                    onPressed: () =>
-                        shareAyah(context, surah: s, ayah: v),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.close,
-                        color: cs.onSurface.withValues(alpha: 0.6)),
-                    tooltip: 'Close (audio keeps playing)',
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Highlighted current ayah
-              Flexible(
-                child: SingleChildScrollView(
-                  child: StatefulBuilder(
-                    builder: (sctx, setState) =>
-                        FutureBuilder<List<dynamic>>(
-                      future: _playerDataFuture,
-                      builder: (context, snap) {
-                        // Load failure: show an error with Retry instead of
-                        // spinning forever on the poisoned cached future.
-                        if (snap.hasError) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 24),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.error_outline,
-                                      color: cs.error, size: 36),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Quran ka text load nahi ho saka',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: cs.onSurface, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FilledButton(
-                                    onPressed: () {
-                                      // Drop the failed cached futures so the
-                                      // retry actually re-fires them.
-                                      _quranTextFuture = loadQuranText();
-                                      _urduFuture =
-                                          loadUrduKanzulIman();
-                                      _playerDataFuture =
-                                          Future.wait<dynamic>([
-                                        _quranTextFuture!,
-                                        _urduFuture!,
-                                      ]);
-                                      setState(() {});
-                                    },
-                                    child: const Text('Retry'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        final list =
-                            snap.data?[0] as List<QuranTextEntry>?;
-                        final urduMap =
-                            snap.data?[1] as Map<String, String>?;
-                        final entry = _find(list, s, v);
-                        final urdu = urduMap?['$s:$v'] ?? '';
-                        return Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cs.primary.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: cs.primary.withValues(alpha: 0.5)),
-                          ),
-                          child: entry == null
-                              ? Center(
-                                  child: CircularProgressIndicator(
-                                      color: cs.primary),
-                                )
-                              : Column(
-                                children: [
-                                  Text(
-                                    entry.ar,
-                                    textAlign: TextAlign.center,
-                                    textDirection: TextDirection.rtl,
-                                    style: arabicStyle(
-                                      prefs.scriptStyle,
-                                      fontSize: 26,
-                                      color: cs.onSurface,
-                                      scale: prefs.ayahScale,
-                                      height: 2.0,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  if (urdu.isNotEmpty) ...[
-                                    Text(
-                                      urdu,
-                                      textAlign: TextAlign.center,
-                                      textDirection: TextDirection.rtl,
-                                      style: urduStyle(
-                                        fontSize: 18,
-                                        color: cs.onSurface
-                                            .withValues(alpha: 0.9),
-                                        scale: prefs.ayahScale,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'ترجمہ: کنزالایمان (احمد رضا خان)',
-                                      textAlign: TextAlign.center,
-                                      textDirection: TextDirection.rtl,
-                                      style: urduStyle(
-                                        fontSize: 12,
-                                        color: cs.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  Text(
-                                    entry.en,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: cs.onSurface
-                                          .withValues(alpha: 0.85),
-                                      fontSize: 14,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      );
-                      },
-                    ),
-                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    iconSize: 32,
-                    tooltip: 'Previous ayah',
-                    icon: Icon(Icons.skip_previous, color: cs.primary),
-                    onPressed: () => audio.playPrevAyah(),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    iconSize: 56,
-                    tooltip: audio.isPlaying ? 'Pause' : 'Play',
-                    icon: Icon(
-                      audio.isPlaying
+                const SizedBox(height: 12),
+                // Pinned controls: always visible, never scrolled away.
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _playerControl(
+                      context,
+                      icon: Icons.skip_previous,
+                      tooltip: 'Previous ayah',
+                      iconSize: 32,
+                      onTap: () => audio.playPrevAyah(),
+                    ),
+                    const SizedBox(width: 8),
+                    _playerControl(
+                      context,
+                      icon: audio.isPlaying
                           ? Icons.pause_circle_filled
                           : Icons.play_circle_filled,
-                      color: cs.primary,
+                      tooltip: audio.isPlaying ? 'Pause' : 'Play',
+                      iconSize: 48,
+                      onTap: () =>
+                          audio.isPlaying ? audio.pause() : audio.resume(),
                     ),
-                    onPressed: () =>
-                        audio.isPlaying ? audio.pause() : audio.resume(),
+                    const SizedBox(width: 8),
+                    _playerControl(
+                      context,
+                      icon: Icons.skip_next,
+                      tooltip: 'Next ayah',
+                      iconSize: 32,
+                      onTap: () => audio.playNextAyah(),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    audio.stop();
+                    Navigator.of(context).pop();
+                  },
+                  icon: const Icon(Icons.stop, size: 18),
+                  label: const Text('Stop & Close'),
+                  style: TextButton.styleFrom(
+                    foregroundColor:
+                        cs.onSurface.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    iconSize: 32,
-                    tooltip: 'Next ayah',
-                    icon: Icon(Icons.skip_next, color: cs.primary),
-                    onPressed: () => audio.playNextAyah(),
+                ),
+                const SizedBox(height: 4),
+                _RepeatRangeRow(surah: s),
+                const SizedBox(height: 4),
+                Text(
+                  'Ayah-by-ayah • plays until you press stop',
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.5),
+                    fontSize: 11,
                   ),
-                ],
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  audio.stop();
-                  Navigator.of(context).pop();
-                },
-                icon: const Icon(Icons.stop, size: 18),
-                label: const Text('Stop & Close'),
-                style: TextButton.styleFrom(
-                  foregroundColor:
-                      cs.onSurface.withValues(alpha: 0.7),
                 ),
-              ),
-              const SizedBox(height: 4),
-              _RepeatRangeRow(surah: s),
-              const SizedBox(height: 4),
-              Text(
-                audio.selectedQari.name,
-                style: TextStyle(
-                  color: cs.onSurface.withValues(alpha: 0.6),
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                'Ayah-by-ayah • plays until you press stop',
-                style: TextStyle(
-                  color: cs.onSurface.withValues(alpha: 0.5),
-                  fontSize: 11,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
+
+  /// One player control with a guaranteed 48dp minimum touch target.
+  Widget _playerControl(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required double iconSize,
+    required VoidCallback onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: Tooltip(
+        message: tooltip,
+        child: ConstrainedBox(
+          constraints:
+              const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: Center(
+            child: Icon(icon, color: cs.primary, size: iconSize),
+          ),
+        ),
+      ),
+    );
+  }
+
 }
 
 /// Repeat-range picker: loops ayahs [start]..[end] of the current surah.

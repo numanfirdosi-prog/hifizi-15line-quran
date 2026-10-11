@@ -6,10 +6,12 @@ import '../services/audio_recitation_service.dart';
 import '../services/qari_audio_storage.dart';
 import '../services/qari_download_service.dart';
 
-/// Pre-downloads mushaf page images into the image cache so they work
-/// offline. Audio quick-set buttons stream only: the player caches audio in
-/// its own internal store (not the image cache), so pre-downloading here
-/// would not make audio available offline.
+/// Offline status and downloads.
+///
+/// Mushaf pages are bundled in the app (fully offline — nothing to
+/// download). Qari audio packs can be downloaded per reciter for offline
+/// playback; audio quick-set buttons stream only, since the player's own
+/// cache does not serve the offline audio path.
 class OfflineDownloadScreen extends StatefulWidget {
   const OfflineDownloadScreen({super.key});
 
@@ -48,6 +50,43 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          // Mushaf pages: genuinely offline — all 611 pages are bundled in
+          // the app package, so no download is needed or offered here.
+          Card(
+            color: theme.colorScheme.surface,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.offline_pin,
+                    color: theme.colorScheme.primary,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mushaf Pages',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'All 611 pages are built into the app and work fully offline — no download needed.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           // Qari audio packs (full offline downloads).
           const _QariAudioSection(),
           const SizedBox(height: 12),
@@ -118,28 +157,6 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          // Note card.
-          Card(
-            color: theme.colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Pages are also cached automatically as you view them.',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -184,9 +201,12 @@ class _QariAudioSectionState extends State<_QariAudioSection> {
     });
   }
 
+  static String _mb(int b) => '${(b / 1048576).toStringAsFixed(1)} MB';
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final totalBytes = _bytes.values.fold<int>(0, (sum, b) => sum + b);
     return Card(
       color: theme.colorScheme.surface,
       child: Padding(
@@ -207,6 +227,15 @@ class _QariAudioSectionState extends State<_QariAudioSection> {
               'for offline playback — everywhere audio plays. '
               'Best downloaded over Wi-Fi.',
             ),
+            const SizedBox(height: 4),
+            if (!_loading)
+              Text(
+                'Audio storage used: ${_mb(totalBytes)}',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             const SizedBox(height: 12),
             if (_loading)
               const Center(

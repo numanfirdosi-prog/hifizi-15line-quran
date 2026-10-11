@@ -154,7 +154,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
                             isFacingKaaba ? Colors.greenAccent : cs.primary,
                         width: 3,
                       ),
-                      color: const Color(0xFF0B2D22),
+                      color: cs.surface,
                       boxShadow: [
                         BoxShadow(
                           color: isFacingKaaba

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../data/duas_data.dart';
 import '../data/juz_data.dart';
@@ -80,6 +81,12 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
                             }
                           },
                           child: const Text('Copy Reflection'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => Share.share(reflection,
+                              subject: "Today's Reflection — Nur-ul-Quran"),
+                          icon: const Icon(Icons.share, size: 16),
+                          label: const Text('Share'),
                         ),
                         TextButton(
                           onPressed: () =>
@@ -173,22 +180,36 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.copy),
-                label: const Text('Copy Dua'),
-                onPressed: () async {
-                  await Clipboard.setData(
-                    ClipboardData(
-                      text:
-                          '${dua.arabic}\n${dua.transliteration}\n${dua.translation}\n${dua.translationUrdu}',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.share, size: 16),
+                    label: const Text('Share'),
+                    onPressed: () => Share.share(
+                      '${dua.title}\n\n${dua.arabic}\n\n${dua.transliteration}\n\n${dua.translation}\n\n${dua.translationUrdu}',
+                      subject: '${dua.title} — Nur-ul-Quran',
                     ),
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Dua copied')),
-                    );
-                  }
-                },
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.copy),
+                    label: const Text('Copy Dua'),
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(
+                          text:
+                              '${dua.arabic}\n${dua.transliteration}\n${dua.translation}\n${dua.translationUrdu}',
+                        ),
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Dua copied')),
+                        );
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
           ],

@@ -586,6 +586,23 @@ class AzanAlarmService {
     }
   }
 
+  /// Android 13+: posting any notification — including the prayer reminder
+  /// fallback — needs the runtime notification permission, or reminders
+  /// silently never appear. Requests it and returns whether it is granted.
+  Future<bool> ensureNotificationPermission() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      var status = await Permission.notification.status;
+      if (!status.isGranted) {
+        status = await Permission.notification.request();
+      }
+      return status.isGranted;
+    } catch (_) {
+      // Unknown state — let the scheduling attempt proceed.
+      return true;
+    }
+  }
+
   Future<void> cancelAllAlarms() async {
     for (final id in _prayerKeysById.keys) {
       if (Platform.isAndroid) {

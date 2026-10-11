@@ -57,6 +57,14 @@ class _MushafScreenState extends State<MushafScreen> {
   late final AudioRecitationService _audio;
   bool _followingAyah = false;
 
+  // Pages whose edition page carries a Bismillah (every surah start except
+  // At-Tawbah, which has none): only these show the Bismillah cartouche in
+  // the top ornament. All other pages get a neutral symmetric ornament, so
+  // no decorative Bismillah appears where the edition has none.
+  late final Future<Set<int>> _bismillahPagesFuture;
+  // Surah number -> first mushaf page, for the Surah/Manzil jump dialogs.
+  Map<int, int>? _surahFirstPage;
+
   // Page drawing (pen/brush/highlighter/rectangle/eraser): the stroke
   // currently being drawn (not yet persisted) and its page.
   DrawingStroke? _inProgressStroke;
@@ -85,6 +93,30 @@ class _MushafScreenState extends State<MushafScreen> {
     _firstVerseIndex = loadPageFirstVerseIndex();
     _segmentsFuture = loadPageAyahSegments();
     _versePageIndexFuture = loadVersePageIndex();
+    // Derive the Bismillah pages from the segment data: a page shows the
+    // Bismillah cartouche iff it contains a surah's first ayah (At-Tawbah
+    // has no Bismillah in the edition).
+    _bismillahPagesFuture = _segmentsFuture.then((segs) {
+      final pages = <int>{};
+      segs.forEach((page, list) {
+        for (final s in list) {
+          if (s.ayah == 1 && s.surah != 9) {
+            pages.add(page);
+            break;
+          }
+        }
+      });
+      return pages;
+    });
+    // Surah -> first page, for the jump dialogs (via each surah's first ayah).
+    _versePageIndexFuture.then((index) {
+      final map = <int, int>{};
+      for (var s = 1; s <= 114; s++) {
+        final p = index['$s:1'];
+        if (p != null) map[s] = p;
+      }
+      if (mounted) setState(() => _surahFirstPage = map);
+    });
     _audio = Provider.of<AudioRecitationService>(context, listen: false);
     _audio.addListener(_followAyah);
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowTapHint());
@@ -210,12 +242,6 @@ class _MushafScreenState extends State<MushafScreen> {
   // scale with any screen size.
   // ------------------------------------------------------------------
 
-  static Color _parseHexColor(String hex) {
-    var h = hex.replaceAll('#', '');
-    if (h.length == 6) h = 'FF$h';
-    return Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
-  }
-
   String _toolLabel(String tool) {
     switch (tool) {
       case 'rectangle':
@@ -282,6 +308,14 @@ class _MushafScreenState extends State<MushafScreen> {
       builder: (context, draw, _) {
         final tool = draw.selectedTool;
         if (tool == null || tool == 'highlighter') return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        // Floating overlay chip: dark in light mode, theme surface in dark
+        // mode, so it stays readable over both the white and inverted page.
+        final chipBg = isDark
+            ? cs.surface
+            : Color.lerp(cs.surface, Colors.black, 0.72)!;
+        final chipFg = isDark ? cs.onSurface : cs.surface;
         return Positioned(
           top: 8,
           right: 8,
@@ -292,20 +326,20 @@ class _MushafScreenState extends State<MushafScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
+                  color: chipBg.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   _toolLabel(tool),
-                  style: const TextStyle(
-                      color: Colors.white,
+                  style: TextStyle(
+                      color: chipFg,
                       fontSize: 12,
                       fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 6),
               Material(
-                color: Colors.black.withValues(alpha: 0.6),
+                color: chipBg.withValues(alpha: 0.92),
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
@@ -313,9 +347,9 @@ class _MushafScreenState extends State<MushafScreen> {
                     _cancelInProgress();
                     draw.exitDrawing();
                   },
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.close, color: Colors.white, size: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Icon(Icons.close, color: chipFg, size: 16),
                   ),
                 ),
               ),
@@ -762,9 +796,46 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  /// Subtle circular page-navigation button with a guaranteed 48dp touch
+  /// target. Translucent so the page shows through; dimmed at the bounds.
+  Widget _pageNavButton({
+    required IconData icon,
+    required String tooltip,
+    required bool enabled,
+    required Color buttonColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Opacity(
+      opacity: enabled ? 0.92 : 0.28,
+      child: Material(
+        color: buttonColor.withValues(alpha: 0.78),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: enabled ? onTap : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: Center(
+              child: Tooltip(
+                message: tooltip,
+                child: Icon(icon, color: iconColor, size: 30),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Opens the reader settings bottom sheet (3-dot menu).
   void _showReaderSettings(BuildContext context) {
-    showReaderSettingsSheet(context, onJumpToPage: _jumpToPage);
+    showReaderSettingsSheet(
+      context,
+      onJumpToPage: _jumpToPage,
+      surahFirstPage: _surahFirstPage,
+    );
   }
 
   /// Jumps directly to any page in the Mushaf (1..611) across all reading modes.
@@ -828,11 +899,12 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   /// The page image (with night tint overlay), without the InteractiveViewer
-  /// wrapper. The reader is decorated top and bottom: the golden Bismillah
-  /// cartouche above the page and a star medallion with the page number
-  /// below, over a rich golden arabesque pattern — so the screen never looks
-  /// empty. The image box keeps the exact page-image aspect (_kPageAspect)
-  /// so ayah tap coordinates map 1:1 to the image.
+  /// wrapper. The reader is decorated top and bottom: a Bismillah cartouche
+  /// above the page where the edition carries one (a neutral symmetric gold
+  /// ornament elsewhere) and the Manzil badge below, over a rich golden
+  /// arabesque pattern — so the screen never looks empty. The image box
+  /// keeps the exact page-image aspect (_kPageAspect) so ayah tap
+  /// coordinates map 1:1 to the image.
   ///
   /// In scroll mode ([scrollMode]) the column height is unbounded, so the
   /// image box sizes purely from the list width (exact aspect) and the
@@ -850,9 +922,14 @@ class _MushafScreenState extends State<MushafScreen> {
     // highlight/drawing overlays painted above it.
     final nightPage =
         Provider.of<PreferencesService>(context, listen: false).nightPageMode;
-    // Royal golden background like the reference mushaf: a luminous gold
-    // gradient with a denser arabesque pattern. Night page mode stays pure
-    // black; dark theme uses a deep bronze gradient.
+    final cs = Theme.of(context).colorScheme;
+    final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+    // Theme gold token: primary in Night Slate, secondary in the light themes.
+    final gold = isDarkTheme ? cs.primary : cs.secondary;
+    // Royal golden background derived from the theme tokens (never
+    // hardcoded): a luminous gold wash in light mode, a deep bronze in dark
+    // mode. Night page mode stays pure black. The wash blends with the page
+    // edges so tall screens never show an empty-looking gap.
     final bgDecoration = nightPage
         ? const BoxDecoration(color: Colors.black)
         : BoxDecoration(
@@ -860,15 +937,15 @@ class _MushafScreenState extends State<MushafScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: nightDim
-                  ? const [
-                      Color(0xFF6E5E2F),
-                      Color(0xFF8A7A4A),
-                      Color(0xFF6E5E2F)
+                  ? [
+                      Color.lerp(gold, Colors.black, 0.74)!,
+                      Color.lerp(gold, Colors.black, 0.62)!,
+                      Color.lerp(gold, Colors.black, 0.74)!,
                     ]
-                  : const [
-                      Color(0xFFF8E7B4),
-                      Color(0xFFF0D89E),
-                      Color(0xFFE4C47C)
+                  : [
+                      Color.lerp(gold, cs.surface, 0.60)!,
+                      Color.lerp(gold, cs.surface, 0.70)!,
+                      Color.lerp(gold, cs.surface, 0.58)!,
                     ],
             ),
           );
@@ -879,7 +956,13 @@ class _MushafScreenState extends State<MushafScreen> {
         // blends with the page instead of looking like an empty gap.
         decoration: bgDecoration,
         child: CustomPaint(
-          painter: _OrnamentPatternPainter(nightDim: nightDim || nightPage),
+          painter: _OrnamentPatternPainter(
+            pattern: nightPage
+                ? Colors.white
+                : (nightDim
+                    ? Color.lerp(gold, Colors.black, 0.30)!
+                    : Color.lerp(gold, Colors.black, 0.28)!),
+          ),
           child: Column(
             children: [
               SizedBox(
@@ -887,7 +970,7 @@ class _MushafScreenState extends State<MushafScreen> {
                 // content, so these must be exact — _scrollItemHeight
                 // depends on them.
                 height: _kTopOrnamentHeight,
-                child: _buildTopOrnament(pageNum, nightDim),
+                child: _buildTopOrnament(pageNum),
               ),
               // The page-image box keeps the exact page aspect in both
               // modes: in scroll mode the column height is unbounded, so
@@ -963,7 +1046,7 @@ class _MushafScreenState extends State<MushafScreen> {
               ),
               SizedBox(
                 height: _kBottomOrnamentHeight,
-                child: Center(child: _buildBottomOrnament(pageNum, nightDim)),
+                child: Center(child: _buildBottomOrnament(pageNum)),
               ),
               // Reserve space for the overlaying bottom control bar so the
               // Manzil badge isn't hidden behind it.
@@ -987,42 +1070,46 @@ class _MushafScreenState extends State<MushafScreen> {
     return scrollMode ? box : Expanded(child: box);
   }
 
-  /// Ornamental header above the page: the royal Islamic Bismillah unwan
-  /// cartouche in authentic Amiri Quran calligraphy with delicate ogee arches
-  /// and gold rosettes, naturally harmonizing with the page without looking
-  /// like a pasted sticker. Mode-aware: warm ivory/gold in light mode, deep
-  /// emerald/antique gold in dark mode.
-  Widget _buildTopOrnament(int pageNum, bool nightDim) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _BismillahHeader(nightDim: nightDim),
-        const SizedBox(height: 5),
-        // Subtle ornamental transition rule connecting banner to Quran page
-        Container(
-          height: 1.5,
-          margin: const EdgeInsets.symmetric(horizontal: 56),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                (nightDim
-                        ? const Color(0xFFC5A33B)
-                        : const Color(0xFFD7B65A))
-                    .withValues(alpha: 0.65),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ],
+  /// Ornamental header above the page. Pages whose edition page carries a
+  /// Bismillah (surah starts, except At-Tawbah) show the royal Bismillah
+  /// cartouche; every other page shows a neutral symmetric gold ornament —
+  /// never a decorative Bismillah where the edition has none. Both are
+  /// centered in the same fixed-height box for consistent positioning.
+  Widget _buildTopOrnament(int pageNum) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gold = isDark ? cs.primary : cs.secondary;
+    return FutureBuilder<Set<int>>(
+      future: _bismillahPagesFuture,
+      builder: (context, snap) {
+        // Safe default while loading: the neutral ornament (never flash a
+        // Bismillah where it doesn't belong).
+        final hasBismillah = snap.data?.contains(pageNum) ?? false;
+        return Column(
+          // Fill the fixed-height ornament box so the cartouche / neutral
+          // ornament stays vertically centered with balanced margins.
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (hasBismillah)
+              const _BismillahHeader()
+            else
+              _NeutralTopOrnament(gold: gold),
+            const SizedBox(height: 5),
+            // Subtle ornamental transition rule connecting banner to page.
+            _HairlineRule(gold: gold),
+          ],
+        );
+      },
     );
   }
 
-  /// Ornamental footer below the page: the Manzil badge in a golden frame,
-  /// like the reference design.
-  Widget _buildBottomOrnament(int pageNum, bool nightDim) {
+  /// Ornamental footer below the page: a thin golden divider tying the
+  /// footer to the header, plus the Manzil badge in a golden frame.
+  Widget _buildBottomOrnament(int pageNum) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gold = isDark ? cs.primary : cs.secondary;
     return FutureBuilder<Map<int, String>>(
       future: _firstVerseIndex,
       builder: (context, snap) {
@@ -1033,29 +1120,15 @@ class _MushafScreenState extends State<MushafScreen> {
           if (s != null) manzil = _manzilForSurah(s);
         }
         return Column(
-          mainAxisSize: MainAxisSize.min,
+          // Fill the fixed-height ornament box for balanced margins.
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Thin golden divider tying the footer to the royal header.
-            Container(
-              height: 1.5,
-              margin: const EdgeInsets.symmetric(horizontal: 72),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.transparent,
-                    (nightDim
-                            ? const Color(0xFFC5A33B)
-                            : const Color(0xFFD7B65A))
-                        .withValues(alpha: 0.65),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
+            _HairlineRule(gold: gold, horizontalMargin: 72),
             Padding(
               padding: const EdgeInsets.only(top: 8, bottom: 12),
-              child: Center(
-                  child: _ManzilBadge(manzil: manzil, nightDim: nightDim)),
+              child: Center(child: _ManzilBadge(manzil: manzil)),
             ),
           ],
         );
@@ -1079,7 +1152,8 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Fixed ornament heights (px) framing the page image. Scroll-mode items
   /// size to their content, so these must stay exact: [_scrollItemHeight]
   /// adds them to the width-derived image height for the scroll math.
-  /// Top: 48px Bismillah cartouche + 5px gap + 1.5px transition rule + padding.
+  /// Top: Bismillah cartouche (surah-start pages) or the neutral symmetric
+  /// ornament (all other pages) + transition rule, centered in the box.
   static const double _kTopOrnamentHeight = 96.0;
 
   /// Bottom: 2px divider + Manzil badge + padding, centered in a fixed box.
@@ -1338,19 +1412,21 @@ class _MushafScreenState extends State<MushafScreen> {
     final isNightTheme = Theme.of(context).brightness == Brightness.dark;
     final isDark = isNightTheme || prefs.nightPageMode;
 
-    // Reader control-bar palette: warm cream in light mode, deep espresso
-    // in dark mode, with restrained gold accents.
+    // Reader control-bar palette, derived from the theme tokens (never
+    // hardcoded): theme surfaces, theme gold accents (primary in Night
+    // Slate, secondary in the light themes), subtle gold-tinted borders.
+    // A dark bar is used in dark theme and in night-page mode.
     final barDark = isDark;
-    final barSurface =
-        barDark ? const Color(0xFF211906) : const Color(0xFFFFF4D9);
-    final barText =
-        barDark ? const Color(0xFFFFFDF5) : const Color(0xFF382719);
-    final barSubText =
-        barDark ? const Color(0xFFC9C4B7) : const Color(0xFF695641);
-    final barAccent =
-        barDark ? const Color(0xFFD8B63E) : const Color(0xFFA47727);
-    final barBorder =
-        barDark ? const Color(0xFFA8892B) : const Color(0xFFDCC9A2);
+    final barSurface = barDark
+        ? Color.lerp(cs.surface, Colors.black, 0.35)!
+        : cs.surface;
+    final barText = barDark
+        ? (isNightTheme ? cs.onSurface : cs.surface)
+        : cs.onSurface;
+    final barSubText = barText.withValues(alpha: 0.65);
+    final barAccent = isNightTheme ? cs.primary : cs.secondary;
+    final barBorder = barAccent.withValues(alpha: 0.45);
+    final barOnAccent = isNightTheme ? cs.onPrimary : cs.onSecondary;
     final isScroll = prefs.readingMode == 'scroll';
     final isTurn = prefs.readingMode == 'turn';
 
@@ -1385,6 +1461,45 @@ class _MushafScreenState extends State<MushafScreen> {
                   _buildPageItem(context, index + 1),
             ),
 
+          // Previous / next page chevrons. RTL reading: the next page is
+          // reached from the left edge, the previous page from the right —
+          // matching the mushaf page-turn direction. Hidden while a drawing
+          // tool is active so navigation can never steal a stroke, and they
+          // sit above the page gesture layer so taps never reach ayah
+          // hit-testing or start drawing.
+          if (!drawingActive) ...[
+            Positioned(
+              left: 2,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: _pageNavButton(
+                  icon: Icons.chevron_left,
+                  tooltip: 'Next page',
+                  enabled: _currentPage < totalPagesInMushaf,
+                  buttonColor: barSurface,
+                  iconColor: barText,
+                  onTap: () => _jumpToPage(_currentPage + 1),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 2,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: _pageNavButton(
+                  icon: Icons.chevron_right,
+                  tooltip: 'Previous page',
+                  enabled: _currentPage > 1,
+                  buttonColor: barSurface,
+                  iconColor: barText,
+                  onTap: () => _jumpToPage(_currentPage - 1),
+                ),
+              ),
+            ),
+          ],
+
           // Bookmark ribbon, top-right like the reference design. Hidden
           // while a drawing tool is active (the drawing-mode chip occupies
           // that corner instead).
@@ -1394,26 +1509,26 @@ class _MushafScreenState extends State<MushafScreen> {
               right: 16,
               child: GestureDetector(
                 onTap: () => prefs.toggleBookmark(_currentPage),
-                child: CustomPaint(
-                  painter: _RibbonPainter(
-                    isDark: isDark,
-                    isBookmarked: isBookmarked,
-                  ),
-                  child: Container(
-                    width: 44,
-                    height: 62,
-                    alignment: Alignment.topCenter,
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Icon(
-                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: isDark
-                          ? (isBookmarked
-                              ? const Color(0xFF09251D)
-                              : const Color(0xFFFFF5D6))
-                          : (isBookmarked
-                              ? const Color(0xFFFFF8E8)
-                              : const Color(0xFF49351B)),
-                      size: 22,
+                // 48dp minimum tap target around the 44-wide ribbon.
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  color: Colors.transparent,
+                  child: CustomPaint(
+                    painter: _RibbonPainter(
+                      fill: isBookmarked ? barAccent : barSurface,
+                      stroke: barAccent,
+                      shadowAlpha: isDark ? 0.45 : 0.22,
+                    ),
+                    child: Container(
+                      width: 44,
+                      height: 62,
+                      alignment: Alignment.topCenter,
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Icon(
+                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                        color: isBookmarked ? barOnAccent : barText,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ),
@@ -1428,12 +1543,10 @@ class _MushafScreenState extends State<MushafScreen> {
               left: 14,
               bottom: 84 + MediaQuery.of(context).padding.bottom,
               child: Material(
-                color: isDark ? const Color(0xFF103C30) : Colors.white,
+                color: barSurface,
                 shape: CircleBorder(
                   side: BorderSide(
-                    color: isDark
-                        ? const Color(0xFFC5A33B)
-                        : const Color(0xFFD7B65A),
+                    color: barBorder,
                     width: 1.4,
                   ),
                 ),
@@ -1449,12 +1562,10 @@ class _MushafScreenState extends State<MushafScreen> {
                         .exitDrawing();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     child: Icon(
                       Icons.close,
-                      color: isDark
-                          ? const Color(0xFFFFF5D6)
-                          : const Color(0xFF49351B),
+                      color: barText,
                       size: 24,
                     ),
                   ),
@@ -1466,12 +1577,10 @@ class _MushafScreenState extends State<MushafScreen> {
               right: 14,
               bottom: 84 + MediaQuery.of(context).padding.bottom,
               child: Material(
-                color: isDark ? const Color(0xFF103C30) : Colors.white,
+                color: barSurface,
                 shape: CircleBorder(
                   side: BorderSide(
-                    color: isDark
-                        ? const Color(0xFFC5A33B)
-                        : const Color(0xFFD7B65A),
+                    color: barBorder,
                     width: 1.4,
                   ),
                 ),
@@ -1484,14 +1593,12 @@ class _MushafScreenState extends State<MushafScreen> {
                     });
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     child: Icon(
                       _highlightsVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: isDark
-                          ? const Color(0xFFFFF5D6)
-                          : const Color(0xFF49351B),
+                      color: barText,
                       size: 24,
                     ),
                   ),
@@ -1504,12 +1611,10 @@ class _MushafScreenState extends State<MushafScreen> {
               left: 14,
               bottom: 84 + MediaQuery.of(context).padding.bottom,
               child: Material(
-                color: isDark ? const Color(0xFF103C30) : const Color(0xFF8B5E34),
+                color: barSurface,
                 shape: CircleBorder(
                   side: BorderSide(
-                    color: isDark
-                        ? const Color(0xFFC5A33B)
-                        : const Color(0xFFD7B65A),
+                    color: barBorder,
                     width: 1.2,
                   ),
                 ),
@@ -1518,10 +1623,10 @@ class _MushafScreenState extends State<MushafScreen> {
                   customBorder: const CircleBorder(),
                   onTap: () => _showDrawingMenu(_currentPage),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(11),
                     child: Icon(
                       Icons.add,
-                      color: isDark ? const Color(0xFFFFF5D6) : Colors.white,
+                      color: barAccent,
                       size: 26,
                     ),
                   ),
@@ -1732,6 +1837,60 @@ class _MushafScreenState extends State<MushafScreen> {
                                   ],
                                 ),
                               ),
+                              // 5. Undo
+                              _barControl(
+                                onTap: () =>
+                                    draw.undo(_currentPage),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.undo,
+                                      color: (draw.canUndo(_currentPage)
+                                              ? barText
+                                              : barText.withValues(
+                                                  alpha: 0.35))
+                                          .withValues(alpha: 0.85),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Undo',
+                                      style: TextStyle(
+                                        color: barText.withValues(alpha: 0.65),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 6. Redo
+                              _barControl(
+                                onTap: () =>
+                                    draw.redo(_currentPage),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.redo,
+                                      color: (draw.canRedo(_currentPage)
+                                              ? barText
+                                              : barText.withValues(
+                                                  alpha: 0.35))
+                                          .withValues(alpha: 0.85),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Redo',
+                                      style: TextStyle(
+                                        color: barText.withValues(alpha: 0.65),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         )
@@ -1815,9 +1974,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                                       prefs.repeatMode] ??
                                                   '',
                                               style: TextStyle(
-                                                color: barDark
-                                                    ? const Color(0xFF0A1F17)
-                                                    : const Color(0xFFFFFDF5),
+                                                color: barOnAccent,
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -2061,26 +2218,26 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
   }
 
   Widget _loadingView() {
+    final cs = Theme.of(context).colorScheme;
     final pct = (_total != null && _total! > 0)
         ? (_received / _total! * 100).round().clamp(0, 100)
         : null;
     return Container(
-      color: const Color(0xFFFAF7EE),
+      color: cs.surface,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(Color(0xFF4A3517)),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
             ),
             const SizedBox(height: 12),
             Text(
               pct != null
                   ? 'Loading Page ${widget.pageNum}... $pct%'
                   : 'Loading Page ${widget.pageNum}...',
-              style: const TextStyle(
-                  color: Color(0xFF4A3517), fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: cs.onSurface, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -2089,27 +2246,28 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
   }
 
   Widget _errorView() {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
-      color: const Color(0xFFFAF7EE),
+      color: cs.surface,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off, size: 64, color: Color(0xFF4A3517)),
+            Icon(Icons.cloud_off, size: 64, color: cs.primary),
             const SizedBox(height: 16),
             Text(
               'صفحہ ${widget.pageNum}',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF4A3517)),
+                  color: cs.onSurface),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Page load nahi ho saka — internet check karein',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.65)),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -2125,11 +2283,17 @@ class _ResilientPageImageState extends State<_ResilientPageImage> {
 }
 
 /// Bookmark ribbon painter: a vertical silk ribbon with a V-notch and
-/// gold trim, with distinct saved and unsaved states tailored to light/night mode.
+/// gold trim, with distinct saved and unsaved states. Fill/stroke colors
+/// come from the theme tokens via the caller.
 class _RibbonPainter extends CustomPainter {
-  final bool isDark;
-  final bool isBookmarked;
-  _RibbonPainter({required this.isDark, required this.isBookmarked});
+  final Color fill;
+  final Color stroke;
+  final double shadowAlpha;
+  _RibbonPainter({
+    required this.fill,
+    required this.stroke,
+    required this.shadowAlpha,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2148,24 +2312,18 @@ class _RibbonPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = Colors.black.withValues(alpha: isDark ? 0.45 : 0.22)
+        ..color = Colors.black.withValues(alpha: shadowAlpha)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
     // Fill ribbon color
-    final fillColor = isDark
-        ? (isBookmarked ? const Color(0xFFD8B63E) : const Color(0xFF103C30))
-        : (isBookmarked ? const Color(0xFFD7B65A) : const Color(0xFFFFF8E8));
-    canvas.drawPath(path, Paint()..color = fillColor);
+    canvas.drawPath(path, Paint()..color = fill);
 
     // Gold border/edge stroke
-    final strokeColor = isDark
-        ? (isBookmarked ? const Color(0xFFF0D575) : const Color(0xFFC5A33B))
-        : (isBookmarked ? const Color(0xFF9C7627) : const Color(0xFFD7B65A));
     canvas.drawPath(
       path,
       Paint()
-        ..color = strokeColor
+        ..color = stroke
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.3,
     );
@@ -2175,42 +2333,56 @@ class _RibbonPainter extends CustomPainter {
       const Offset(2.0, 0),
       Offset(2.0, h - 3),
       Paint()
-        ..color = strokeColor.withValues(alpha: 0.7)
+        ..color = stroke.withValues(alpha: 0.7)
         ..strokeWidth = 1.2,
     );
   }
 
   @override
   bool shouldRepaint(covariant _RibbonPainter old) =>
-      old.isDark != isDark || old.isBookmarked != isBookmarked;
+      old.fill != fill ||
+      old.stroke != stroke ||
+      old.shadowAlpha != shadowAlpha;
 }
 
 /// Royal Islamic Bismillah unwan cartouche header: authentic Amiri Quran
-/// calligraphy nestled within an illuminated frame, naturally integrated
-/// into the mushaf page without any sticker appearance.
+/// calligraphy nestled within an illuminated frame, blended with the page
+/// background (never a pasted-sticker look). All colors come from the theme
+/// tokens: gold detailing is the theme's gold (primary in Night Slate,
+/// secondary in the light themes), text is onSurface for clear contrast in
+/// both modes.
 class _BismillahHeader extends StatelessWidget {
-  final bool nightDim;
-  const _BismillahHeader({required this.nightDim});
+  const _BismillahHeader();
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        nightDim ? const Color(0xFFFFFDF5) : const Color(0xFF49351B);
-    final accentColor =
-        nightDim ? const Color(0xFFD8B63E) : const Color(0xFF9C7627);
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gold = isDark ? cs.primary : cs.secondary;
+    final textColor = cs.onSurface;
+    // Never wider than the screen: on very narrow devices the fixed
+    // 320px minimum would overflow horizontally.
+    final maxW = MediaQuery.of(context).size.width - 32;
 
     return Center(
       child: Container(
-        constraints: const BoxConstraints(
+        constraints: BoxConstraints(
           minHeight: 58,
-          minWidth: 320,
+          minWidth: min(320.0, maxW),
           maxWidth: 410,
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16),
         child: CustomPaint(
-          painter: _BismillahCartouchePainter(isDark: nightDim),
+          painter: _BismillahCartouchePainter(
+            surface: cs.surface,
+            border: gold,
+            innerBorder: cs.primary,
+            accent: gold,
+            isDark: isDark,
+          ),
           child: Padding(
-            padding: const EdgeInsets.only(left: 26, right: 26, top: 6, bottom: 14),
+            padding:
+                const EdgeInsets.only(left: 26, right: 26, top: 6, bottom: 14),
             child: Transform.translate(
               offset: const Offset(0, -3.5),
               child: Row(
@@ -2223,7 +2395,7 @@ class _BismillahHeader extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Amiri Quran',
                       fontSize: 15,
-                      color: accentColor,
+                      color: gold,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -2248,7 +2420,7 @@ class _BismillahHeader extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Amiri Quran',
                       fontSize: 15,
-                      color: accentColor,
+                      color: gold,
                     ),
                   ),
                 ],
@@ -2262,10 +2434,21 @@ class _BismillahHeader extends StatelessWidget {
 }
 
 /// Classical Islamic unwan cartouche frame with soft ogee-style rounded
-/// geometry, double gold hairlines, and floret accents.
+/// geometry, double gold hairlines, and floret accents. Colors are passed in
+/// from the theme tokens by [_BismillahHeader].
 class _BismillahCartouchePainter extends CustomPainter {
+  final Color surface;
+  final Color border;
+  final Color innerBorder;
+  final Color accent;
   final bool isDark;
-  _BismillahCartouchePainter({required this.isDark});
+  _BismillahCartouchePainter({
+    required this.surface,
+    required this.border,
+    required this.innerBorder,
+    required this.accent,
+    required this.isDark,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -2284,18 +2467,14 @@ class _BismillahCartouchePainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
     );
 
-    // Cartouche surface fill
-    final surfaceColor =
-        isDark ? const Color(0xFF103C30) : const Color(0xFFFFF8E8);
-    canvas.drawRRect(r, Paint()..color = surfaceColor);
+    // Cartouche surface fill (blends with the page background wash)
+    canvas.drawRRect(r, Paint()..color = surface);
 
     // Outer primary gold border
-    final borderColor =
-        isDark ? const Color(0xFFC5A33B) : const Color(0xFFD7B65A);
     canvas.drawRRect(
       r,
       Paint()
-        ..color = borderColor
+        ..color = border
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6,
     );
@@ -2305,12 +2484,10 @@ class _BismillahCartouchePainter extends CustomPainter {
       Rect.fromLTWH(4.0, 4.0, w - 8.0, h - 8.0),
       const Radius.circular(20),
     );
-    final accentColor =
-        isDark ? const Color(0xFFD8B63E) : const Color(0xFF9C7627);
     canvas.drawRRect(
       innerR,
       Paint()
-        ..color = accentColor.withValues(alpha: 0.7)
+        ..color = innerBorder.withValues(alpha: 0.7)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
@@ -2324,28 +2501,111 @@ class _BismillahCartouchePainter extends CustomPainter {
         ..lineTo(dx, cy + 3.5)
         ..lineTo(dx - 3.5, cy)
         ..close();
-      canvas.drawPath(diamond, Paint()..color = accentColor);
+      canvas.drawPath(diamond, Paint()..color = accent);
     }
   }
 
   @override
   bool shouldRepaint(covariant _BismillahCartouchePainter old) =>
-      old.isDark != isDark;
+      old.isDark != isDark ||
+      old.surface != surface ||
+      old.border != border ||
+      old.innerBorder != innerBorder ||
+      old.accent != accent;
 }
 
-/// Manzil badge: an ornamental golden frame with the Manzil number,
-/// refined with mode-aware surface and borders.
-class _ManzilBadge extends StatelessWidget {
-  final int manzil;
-  final bool nightDim;
-  const _ManzilBadge({required this.manzil, required this.nightDim});
+/// Thin symmetrical gold hairline rule with soft transparent ends — the
+/// shared ornamental divider for the page header and footer.
+class _HairlineRule extends StatelessWidget {
+  final Color gold;
+  final double horizontalMargin;
+  const _HairlineRule({required this.gold, this.horizontalMargin = 56});
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        nightDim ? const Color(0xFFFFFDF5) : const Color(0xFF49351B);
+    return Container(
+      height: 1.5,
+      margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            gold.withValues(alpha: 0.65),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Neutral top ornament for pages whose edition page has no Bismillah: a
+/// symmetrical diamond medallion on a gold hairline — elegant framing with
+/// restrained gold detailing and no calligraphy.
+class _NeutralTopOrnament extends StatelessWidget {
+  final Color gold;
+  const _NeutralTopOrnament({required this.gold});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 1.5,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    gold.withValues(alpha: 0.65),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Transform.rotate(
+            angle: pi / 4,
+            child: Container(width: 7, height: 7, color: gold),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              height: 1.5,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    gold.withValues(alpha: 0.65),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Manzil badge: an ornamental golden frame with the Manzil number.
+/// Colors come from the theme tokens for clear contrast in both modes.
+class _ManzilBadge extends StatelessWidget {
+  final int manzil;
+  const _ManzilBadge({required this.manzil});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return CustomPaint(
-      painter: _ManzilFramePainter(isDark: nightDim),
+      painter: _ManzilFramePainter(
+        surface: cs.surface,
+        gold: isDark ? cs.primary : cs.secondary,
+        deepGold: cs.primary,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 6),
         child: Text(
@@ -2355,7 +2615,7 @@ class _ManzilBadge extends StatelessWidget {
             fontFamily: 'Amiri Quran',
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: textColor,
+            color: cs.onSurface,
           ),
         ),
       ),
@@ -2365,17 +2625,17 @@ class _ManzilBadge extends StatelessWidget {
 
 /// Ornamental double frame with pointed ends for the Manzil badge.
 class _ManzilFramePainter extends CustomPainter {
-  final bool isDark;
-  _ManzilFramePainter({required this.isDark});
+  final Color surface;
+  final Color gold;
+  final Color deepGold;
+  _ManzilFramePainter({
+    required this.surface,
+    required this.gold,
+    required this.deepGold,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final gold =
-        isDark ? const Color(0xFFC5A33B) : const Color(0xFFD7B65A);
-    final deepGold =
-        isDark ? const Color(0xFFD8B63E) : const Color(0xFF9C7627);
-    final surfaceColor =
-        isDark ? const Color(0xFF103C30) : const Color(0xFFFFF8E8);
     final w = size.width;
     final h = size.height;
     // Slim pointed tips so the badge stays compact on narrow screens.
@@ -2397,7 +2657,7 @@ class _ManzilFramePainter extends CustomPainter {
     // Background fill to blend smoothly with theme
     canvas.drawPath(
       frame(0),
-      Paint()..color = surfaceColor,
+      Paint()..color = surface,
     );
 
     // Outer gold frame.
@@ -2431,24 +2691,24 @@ class _ManzilFramePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ManzilFramePainter old) =>
-      old.isDark != isDark;
+      old.surface != surface || old.gold != gold || old.deepGold != deepGold;
 }
 
 /// Golden Islamic arabesque lattice painted behind the reader ornaments,
-/// like the reference mushaf design.
+/// like the reference mushaf design. The pattern color is derived from the
+/// theme tokens by the caller.
 class _OrnamentPatternPainter extends CustomPainter {
-  final bool nightDim;
-  _OrnamentPatternPainter({required this.nightDim});
+  final Color pattern;
+  _OrnamentPatternPainter({required this.pattern});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final base = nightDim ? Colors.black : const Color(0xFF9A7B1E);
     final paint = Paint()
-      ..color = base.withValues(alpha: 0.17)
+      ..color = pattern.withValues(alpha: 0.17)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
     final dotPaint = Paint()
-      ..color = base.withValues(alpha: 0.22)
+      ..color = pattern.withValues(alpha: 0.22)
       ..style = PaintingStyle.fill;
     const step = 36.0;
     const r = 8.0;
@@ -2478,5 +2738,5 @@ class _OrnamentPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _OrnamentPatternPainter old) =>
-      old.nightDim != nightDim;
+      old.pattern != pattern;
 }

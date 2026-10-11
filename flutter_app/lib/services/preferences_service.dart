@@ -8,6 +8,11 @@ import 'auto_backup_service.dart';
 class PreferencesService extends ChangeNotifier {
   late SharedPreferences _prefs;
 
+  /// Current backup schema version. A backup whose version is HIGHER than
+  /// this is rejected on import (it may carry fields this app does not
+  /// understand); missing version means an old backup, still importable.
+  static const int _backupVersion = 1;
+
   int _lastReadPage = 2;
   City _selectedCity = presetCities[0];
   String _asrMethod = 'Hanafi';
@@ -465,6 +470,9 @@ class PreferencesService extends ChangeNotifier {
   /// Serializes ALL preferences (settings + saved data) to JSON.
   String exportJson() {
     return jsonEncode({
+      // Schema marker: importers reject backups written by a NEWER app
+      // version instead of half-applying unknown fields.
+      'backupVersion': _backupVersion,
       'lastReadPage': _lastReadPage,
       'selectedCity': _selectedCity.toJson(),
       'asrMethod': _asrMethod,
@@ -477,11 +485,16 @@ class PreferencesService extends ChangeNotifier {
       'lastReadAt': _lastReadAt,
       'dailyTargetPages': _dailyTargetPages,
       'themeName': _themeName,
+      'language': _language,
       'scriptStyle': _scriptStyle,
       'ayahScale': _ayahScale,
       'readingMode': _readingMode,
       'repeatMode': _repeatMode,
       'playbackSpeed': _playbackSpeed,
+      // The selected reciter lives in the audio service's own key
+      // ('selectedQariId'), not in this class's fields — but it is a user
+      // preference, so it belongs in the backup.
+      'selectedQariId': _prefs.getString('selectedQariId') ?? '',
       'savedAyahs': _savedAyahs,
       'pageNotes': _pageNotes,
       'pageTint': _pageTint,
@@ -513,6 +526,14 @@ class PreferencesService extends ChangeNotifier {
       int? asInt(dynamic v) {
         if (v is num) return v.toInt();
         if (v is String) return int.tryParse(v);
+        return null;
+      }
+
+      // Reject backups written by a newer app version: their schema may
+      // include fields this build cannot interpret, and applying the rest
+      // could leave preferences in a half-upgraded state.
+      final backupVersion = asInt(m['backupVersion']);
+      if (backupVersion != null && backupVersion > _backupVersion) {
         return null;
       }
 
@@ -571,6 +592,13 @@ class PreferencesService extends ChangeNotifier {
       data.dailyTargetPages = asInt(m['dailyTargetPages']);
       data.themeName = asString(m['themeName']);
 
+      // The UI language toggle was silently dropped by backups before —
+      // only accept the two real values.
+      final language = asString(m['language']);
+      if (language == 'ur' || language == 'en') {
+        data.language = language;
+      }
+
       final scriptStyle = asString(m['scriptStyle']);
       if (scriptStyle != null) {
         // Old backups may still carry the retired 'nastaliq' style —
@@ -582,6 +610,13 @@ class PreferencesService extends ChangeNotifier {
       data.readingMode = asString(m['readingMode']);
       data.repeatMode = asInt(m['repeatMode']);
       data.playbackSpeed = asDouble(m['playbackSpeed']);
+
+      // Selected reciter (audio service's 'selectedQariId' key). Empty or
+      // absent means "leave the current reciter alone".
+      final qariId = asString(m['selectedQariId']);
+      if (qariId != null && qariId.isNotEmpty) {
+        data.selectedQariId = qariId;
+      }
 
       final savedAyahs = m['savedAyahs'];
       if (savedAyahs is List) {
@@ -717,6 +752,11 @@ class PreferencesService extends ChangeNotifier {
       await _prefs.setString('nur_theme_name', _themeName);
     }
 
+    if (data.language != null) {
+      _language = data.language!;
+      await _prefs.setString('nur_language', _language);
+    }
+
     if (data.scriptStyle != null) {
       _scriptStyle = data.scriptStyle!;
       await _prefs.setString('nur_script_style', _scriptStyle);
@@ -740,6 +780,12 @@ class PreferencesService extends ChangeNotifier {
     if (data.playbackSpeed != null) {
       _playbackSpeed = data.playbackSpeed!;
       await _prefs.setDouble('nur_playback_speed', _playbackSpeed);
+    }
+
+    if (data.selectedQariId != null) {
+      // AudioRecitationService reads this key lazily and falls back to
+      // the default qari when the id is unknown — safe to restore blindly.
+      await _prefs.setString('selectedQariId', data.selectedQariId!);
     }
 
     if (data.savedAyahs != null) {
@@ -875,11 +921,13 @@ class _ParsedBackup {
   String? lastReadAt;
   int? dailyTargetPages;
   String? themeName;
+  String? language;
   String? scriptStyle;
   double? ayahScale;
   String? readingMode;
   int? repeatMode;
   double? playbackSpeed;
+  String? selectedQariId;
   List<String>? savedAyahs;
   Map<String, String>? pageNotes;
   Map<String, String>? pageTint;

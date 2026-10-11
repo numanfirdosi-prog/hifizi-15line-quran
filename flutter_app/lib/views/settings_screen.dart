@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/preferences_service.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/azan_alarm_service.dart';
@@ -75,41 +76,96 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  /// Theme picker card. The preview swatch is sampled from the REAL theme
+  /// (buildTheme(name)) so what the user sees is what they get: background,
+  /// primary button color and surface of the actual palette. The selected
+  /// card is unmistakable — 2px primary border, gold label and a check
+  /// badge — while unselected cards stay flat with a hairline border.
   Widget _themeCard(
     BuildContext context, {
     required String label,
-    required Color previewBg,
-    required Color previewText,
+    required String themeName,
     required bool selected,
     required VoidCallback onTap,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final preview = buildTheme(themeName);
+    final previewBg = preview.scaffoldBackgroundColor;
+    final previewPrimary = preview.colorScheme.primary;
+    final previewSurface = preview.colorScheme.surface;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Column(
           children: [
-            Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color: previewBg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: selected
-                      ? cs.primary
-                      : cs.onSurface.withValues(alpha: 0.25),
-                  width: selected ? 2 : 1,
+            Stack(
+              children: [
+                Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: previewBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: selected
+                          ? cs.primary
+                          : cs.onSurface.withValues(alpha: 0.25),
+                      width: selected ? 2 : 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Miniature of the real palette: surface chip,
+                        // primary swatch, and a sample glyph.
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: previewSurface,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                                color: previewPrimary.withValues(alpha: 0.6)),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'آ',
+                              style: TextStyle(
+                                  color: previewPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: previewPrimary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              child: Center(
-                child: Text(
-                  'آ',
-                  style: TextStyle(
-                      color: previewText,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
+                if (selected)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.check,
+                          size: 13, color: cs.onPrimary),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 6),
             Text(
@@ -120,12 +176,32 @@ class SettingsScreen extends StatelessWidget {
                     ? cs.primary
                     : cs.onSurface.withValues(alpha: 0.7),
                 fontSize: 11,
+                fontWeight:
+                    selected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Section heading style: Noto Nastaliq Urdu for Urdu headings (with the
+  /// generous line height Nastaliq needs so glyphs never clip), bold system
+  /// font for English headings.
+  TextStyle _headingStyle(BuildContext context, bool urdu,
+      {double size = 15}) {
+    final cs = Theme.of(context).colorScheme;
+    if (urdu) {
+      return urduStyle(
+          fontSize: size,
+          color: cs.primary,
+          fontWeight: FontWeight.bold);
+    }
+    return TextStyle(
+        color: cs.primary,
+        fontWeight: FontWeight.bold,
+        fontSize: size);
   }
 
   /// Formats a daily reading target: under 20 pages shows pages, 20+
@@ -198,8 +274,7 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           ur ? 'تنظیمات' : 'Settings',
-          style: TextStyle(
-              color: cs.primary, fontWeight: FontWeight.bold, fontSize: 18),
+          style: _headingStyle(context, ur, size: 18),
         ),
       ),
       body: ListView(
@@ -217,10 +292,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     ur ? 'عصر کا فقہی طریقہ' : 'Asr Juristic Method',
-                    style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
+                    style: _headingStyle(context, ur),
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
@@ -315,10 +387,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     ur ? 'مطالعہ' : 'Reading',
-                    style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
+                    style: _headingStyle(context, ur),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -392,8 +461,7 @@ class SettingsScreen extends StatelessWidget {
                       _themeCard(
                         context,
                         label: 'Night Slate',
-                        previewBg: const Color(0xFF09251D),
-                        previewText: const Color(0xFFE0BD45),
+                        themeName: 'night',
                         selected: prefs.themeName == 'night',
                         onTap: () => prefs.setThemeName('night'),
                       ),
@@ -401,8 +469,7 @@ class SettingsScreen extends StatelessWidget {
                       _themeCard(
                         context,
                         label: 'Emerald Day',
-                        previewBg: const Color(0xFFE8F5E9),
-                        previewText: const Color(0xFF176B3A),
+                        themeName: 'emerald',
                         selected: prefs.themeName == 'emerald',
                         onTap: () => prefs.setThemeName('emerald'),
                       ),
@@ -410,8 +477,7 @@ class SettingsScreen extends StatelessWidget {
                       _themeCard(
                         context,
                         label: 'Antique Parchment',
-                        previewBg: const Color(0xFFF5E8C8),
-                        previewText: const Color(0xFF80551C),
+                        themeName: 'parchment',
                         selected: prefs.themeName == 'parchment',
                         onTap: () => prefs.setThemeName('parchment'),
                       ),
@@ -472,10 +538,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     ur ? 'زبان' : 'Language',
-                    style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
+                    style: _headingStyle(context, ur),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -545,10 +608,7 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       Text(
                         ur ? 'تلاوت' : 'Audio',
-                        style: TextStyle(
-                            color: cs.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15),
+                        style: _headingStyle(context, ur),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -656,10 +716,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Text(
                     ur ? 'روزانہ ہدف' : 'Reading Goal',
-                    style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15),
+                    style: _headingStyle(context, ur),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -713,10 +770,7 @@ class SettingsScreen extends StatelessWidget {
                       Flexible(
                         child: Text(
                           ur ? 'محفوظ شدہ صفحات' : 'Bookmarks',
-                          style: TextStyle(
-                              color: cs.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15),
+                          style: _headingStyle(context, ur),
                         ),
                       ),
                       Text(ur ? '${prefs.bookmarks.length} محفوظ شدہ' : '${prefs.bookmarks.length} saved',
@@ -769,10 +823,7 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Text(
                   ur ? 'نور القرآن کے بارے میں' : 'About Nur-ul-Quran (نور القرآن)',
-                  style: TextStyle(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
+                  style: _headingStyle(context, ur, size: 14),
                 ),
                 const SizedBox(height: 6),
                 Text(

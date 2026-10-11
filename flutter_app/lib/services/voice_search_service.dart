@@ -37,16 +37,23 @@ class VoiceSearchService {
       if (!ok) return false;
     }
 
-    await _speech.listen(
-      localeId: localeId,
-      listenFor: const Duration(seconds: 10),
-      pauseFor: const Duration(seconds: 3),
-      onResult: (result) {
-        final words = result.recognizedWords;
-        final matches = searchSurahs(words);
-        onResult(words, matches);
-      },
-    );
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          final words = result.recognizedWords;
+          final matches = searchSurahs(words);
+          onResult(words, matches);
+        },
+        listenOptions: stt.SpeechListenOptions(
+          localeId: localeId,
+          listenFor: const Duration(seconds: 10),
+          pauseFor: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[Speech] listen failed: $e');
+      return false;
+    }
     return _speech.isListening;
   }
 
@@ -54,6 +61,17 @@ class VoiceSearchService {
     if (_speech.isListening) {
       await _speech.stop();
     }
+  }
+
+  /// Releases the speech recognizer. Call from the owning widget's
+  /// dispose so the plugin doesn't linger after the screen is gone.
+  Future<void> dispose() async {
+    try {
+      if (_speech.isListening) {
+        await _speech.stop();
+      }
+      _speech.cancel();
+    } catch (_) {}
   }
 
   List<Surah> searchSurahs(String query) {

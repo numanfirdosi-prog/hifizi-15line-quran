@@ -10,6 +10,12 @@ import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 
+/// Surah Index: all 114 surahs with trilingual search, Makki/Madani +
+/// bookmark filters, sorting, per-surah info / bookmark / read / audio
+/// actions, and the Parah→Page jump dialog.
+///
+/// Bottom navigation is provided by the parent HomeNavigationScreen
+/// (this screen is one of its tabs), so no nested bar is built here.
 class SurahsScreen extends StatefulWidget {
   final void Function(int page) onOpenPage;
   const SurahsScreen({required this.onOpenPage, super.key});
@@ -27,6 +33,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
   String _sort = 'Mushaf Order';
   bool _isListening = false;
   String _voiceFeedback = '';
+
+  static const _sortOptions = [
+    'Mushaf Order',
+    'Alphabetical',
+    'Longest First',
+    'Shortest First',
+  ];
 
   @override
   void initState() {
@@ -53,8 +66,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
     } else if (_filterIndex == 3) {
       base = base.where((s) => bookmarks.contains(s.startPage)).toList();
     }
-    if (_sort == 'Alphabetical') {
-      base.sort((a, b) => a.nameEn.compareTo(b.nameEn));
+    switch (_sort) {
+      case 'Alphabetical':
+        base.sort((a, b) => a.nameEn.compareTo(b.nameEn));
+      case 'Longest First':
+        base.sort((a, b) => b.totalAyahs.compareTo(a.totalAyahs));
+      case 'Shortest First':
+        base.sort((a, b) => a.totalAyahs.compareTo(b.totalAyahs));
     }
     return base;
   }
@@ -151,10 +169,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       ),
                     ),
                   ),
-                  Text(
-                    surah.nameAr,
-                    style: arabicStyle(prefs.scriptStyle,
-                        fontSize: 26, color: cs.primary),
+                  Flexible(
+                    child: Text(
+                      surah.nameAr,
+                      overflow: TextOverflow.ellipsis,
+                      style: arabicStyle(prefs.scriptStyle,
+                          fontSize: 26, color: cs.primary),
+                    ),
                   ),
                 ],
               ),
@@ -331,8 +352,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
                   const SizedBox(height: 8),
                   Text(
                     error!,
-                    style:
-                        const TextStyle(color: Colors.red, fontSize: 12),
+                    style: TextStyle(color: cs.error, fontSize: 12),
                   ),
                 ],
               ],
@@ -415,10 +435,19 @@ class _SurahsScreenState extends State<SurahsScreen> {
       ),
       body: Column(
         children: [
-          // Search & Voice Action Header
+          // Search & Voice Action Header (theme-driven so it matches the
+          // active Night Slate / Emerald Day / Antique Parchment palette).
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: const Color(0xFF0B2D22),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border(
+                bottom: BorderSide(
+                  color: cs.primary.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -428,16 +457,20 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       child: TextField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: cs.onSurface),
                         decoration: InputDecoration(
-                          hintText: 'Search Surah (Hindi / English / 1-114)...',
-                          hintStyle: const TextStyle(
-                              color: Colors.white54, fontSize: 13),
-                          prefixIcon: Icon(Icons.search, color: cs.primary),
+                          hintText:
+                              'Search Surah (Hindi / English / 1-114)...',
+                          hintStyle: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.45),
+                              fontSize: 13),
+                          prefixIcon:
+                              Icon(Icons.search, color: cs.primary),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      color: Colors.white54),
+                                  icon: Icon(Icons.clear,
+                                      color: cs.onSurface
+                                          .withValues(alpha: 0.5)),
                                   onPressed: () {
                                     _searchController.clear();
                                     _onSearchChanged('');
@@ -445,7 +478,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                                 )
                               : null,
                           filled: true,
-                          fillColor: const Color(0xFF144234),
+                          fillColor:
+                              cs.onSurface.withValues(alpha: 0.07),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
                           border: OutlineInputBorder(
@@ -462,15 +496,12 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: _isListening
-                              ? Colors.redAccent
-                              : cs.primary,
+                          color: _isListening ? cs.error : cs.primary,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: _isListening
-                                  ? Colors.redAccent.withValues(alpha: 0.5)
-                                  : cs.primary.withValues(alpha: 0.3),
+                              color: (_isListening ? cs.error : cs.primary)
+                                  .withValues(alpha: 0.35),
                               blurRadius: 8,
                             ),
                           ],
@@ -490,8 +521,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     child: Text(
                       _voiceFeedback,
                       style: TextStyle(
-                        color:
-                            _isListening ? Colors.amberAccent : Colors.white70,
+                        color: _isListening
+                            ? cs.primary
+                            : cs.onSurface.withValues(alpha: 0.65),
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
@@ -509,13 +541,22 @@ class _SurahsScreenState extends State<SurahsScreen> {
                         child: ChoiceChip(
                           label: Text(filterLabels[i]),
                           selected: selected,
-                          onSelected: (_) => setState(() => _filterIndex = i),
+                          onSelected: (_) =>
+                              setState(() => _filterIndex = i),
                           selectedColor: cs.primary,
-                          backgroundColor: const Color(0xFF144234),
+                          backgroundColor:
+                              cs.onSurface.withValues(alpha: 0.08),
                           labelStyle: TextStyle(
-                            color: selected ? cs.onPrimary : Colors.white70,
+                            color: selected
+                                ? cs.onPrimary
+                                : cs.onSurface.withValues(alpha: 0.75),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
+                          ),
+                          side: BorderSide(
+                            color: selected
+                                ? Colors.transparent
+                                : cs.primary.withValues(alpha: 0.3),
                           ),
                         ),
                       );
@@ -523,11 +564,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                // Sort dropdown
+                // Sort dropdown + result count
                 Row(
                   children: [
-                    const Text('Sort:',
-                        style: TextStyle(color: Colors.white60, fontSize: 12)),
+                    Text('Sort:',
+                        style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: 0.6),
+                            fontSize: 12)),
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: _sort,
@@ -535,7 +578,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       style: TextStyle(color: cs.primary, fontSize: 13),
                       underline: const SizedBox(),
                       icon: Icon(Icons.arrow_drop_down, color: cs.primary),
-                      items: const ['Mushaf Order', 'Alphabetical']
+                      items: _sortOptions
                           .map((s) => DropdownMenuItem(
                                 value: s,
                                 child: Text(s),
@@ -547,8 +590,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     ),
                     const Spacer(),
                     Text('${displayedSurahs.length} surahs',
-                        style: const TextStyle(
-                            color: Colors.white38, fontSize: 11)),
+                        style: TextStyle(
+                            color: cs.onSurface.withValues(alpha: 0.45),
+                            fontSize: 11)),
                   ],
                 ),
               ],
@@ -559,185 +603,226 @@ class _SurahsScreenState extends State<SurahsScreen> {
           Expanded(
             child: displayedSurahs.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off,
-                            size: 54,
-                            color: cs.onSurface.withValues(alpha: 0.38)),
-                        SizedBox(height: 12),
-                        Text(
-                          'No Surah matched your search.\nTry Hindi (सूरह यासीन) or English (Yaseen)',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color:
-                                  cs.onSurface.withValues(alpha: 0.6)),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off,
+                              size: 54,
+                              color: cs.onSurface.withValues(alpha: 0.38)),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No Surah matched your search.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Try Hindi (सूरह यासीन), English (Yaseen),\nArabic (يس) or a number (1-114)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color:
+                                    cs.onSurface.withValues(alpha: 0.55),
+                                fontSize: 13),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 : ListView.separated(
                     itemCount: displayedSurahs.length,
-                    separatorBuilder: (ctx, i) =>
-                        Divider(
-                            color: cs.onSurface.withValues(alpha: 0.12),
-                            height: 1),
+                    separatorBuilder: (ctx, i) => Divider(
+                        color: cs.onSurface.withValues(alpha: 0.12),
+                        height: 1),
                     itemBuilder: (context, index) {
                       final surah = displayedSurahs[index];
                       final isCurrentlyPlaying =
                           audio.isPlaying && audio.currentSurah == surah.number;
-                      final isBookmarked = bookmarked.contains(surah.startPage);
+                      final isBookmarked =
+                          bookmarked.contains(surah.startPage);
 
-                      return Container(
-                        color: isCurrentlyPlaying
-                            ? const Color(0xFF144234)
-                            : Colors.transparent,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            // Surah Number Badge
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: cs.primary, width: 1.5),
-                                color: cs.surface,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  surah.number.toString(),
-                                  style: TextStyle(
-                                    color: cs.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
+                      return InkWell(
+                        onTap: () => widget.onOpenPage(surah.startPage),
+                        child: Container(
+                          color: isCurrentlyPlaying
+                              ? cs.primary.withValues(alpha: 0.14)
+                              : Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          child: Row(
+                            children: [
+                              // Surah Number Medallion (gold ring)
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: cs.primary, width: 1.5),
+                                  color: cs.primary
+                                      .withValues(alpha: 0.08),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    surah.number.toString(),
+                                    style: TextStyle(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 14),
+                              const SizedBox(width: 12),
 
-                            // Surah Details (trilingual)
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          surah.nameEn,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: cs.onSurface,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
+                              // Surah Details (takes remaining width; long
+                              // names ellipsize and never reach the controls)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            surah.nameEn,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: cs.onSurface,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: cs.onSurface.withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          surah.nameHi,
-                                          style: TextStyle(
-                                            color: cs.primary,
-                                            fontSize: 11,
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: cs.onSurface.withValues(
+                                                alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            surah.nameHi,
+                                            style: TextStyle(
+                                              color: cs.primary,
+                                              fontSize: 11,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${surah.totalAyahs} verses • ${surah.isMeccan ? 'Makki' : 'Madani'} • Page ${surah.startPage} • Juz ${juzForPage(surah.startPage)}',
+                                      style: TextStyle(
+                                          color: cs.onSurface
+                                              .withValues(alpha: 0.6),
+                                          fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Arabic Name (shrinks gracefully; never pushes
+                              // the trailing menu off-screen)
+                              Flexible(
+                                child: Text(
+                                  surah.nameAr,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                  style: arabicStyle(prefs.scriptStyle,
+                                      fontSize: 20, color: cs.primary),
+                                ),
+                              ),
+
+                              // One aligned overflow menu per row: About /
+                              // Bookmark / Read / Play — consistent alignment
+                              // and no crowding on narrow phones.
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert,
+                                    color: cs.primary
+                                        .withValues(alpha: 0.85),
+                                    size: 20),
+                                tooltip: 'Surah actions',
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'about':
+                                      _showSurahIntro(context, surah);
+                                    case 'bookmark':
+                                      prefs.toggleBookmark(surah.startPage);
+                                    case 'read':
+                                      widget.onOpenPage(surah.startPage);
+                                    case 'play':
+                                      if (isCurrentlyPlaying) {
+                                        audio.pause();
+                                      } else {
+                                        audio.playSurah(
+                                            surahNumber: surah.number);
+                                      }
+                                  }
+                                },
+                                itemBuilder: (ctx) => [
+                                  PopupMenuItem(
+                                    value: 'about',
+                                    child: Row(children: [
+                                      Icon(Icons.info_outline,
+                                          color: cs.primary, size: 20),
+                                      const SizedBox(width: 10),
+                                      const Text('About this surah'),
+                                    ]),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${surah.totalAyahs} verses • Page ${surah.startPage} • Juz ${juzForPage(surah.startPage)}',
-                                    style: TextStyle(
-                                        color: cs.onSurface
-                                            .withValues(alpha: 0.6),
-                                        fontSize: 11),
+                                  PopupMenuItem(
+                                    value: 'bookmark',
+                                    child: Row(children: [
+                                      Icon(
+                                          isBookmarked
+                                              ? Icons.bookmark
+                                              : Icons.bookmark_border,
+                                          color: cs.primary,
+                                          size: 20),
+                                      const SizedBox(width: 10),
+                                      Text(isBookmarked
+                                          ? 'Remove bookmark'
+                                          : 'Bookmark this surah'),
+                                    ]),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'read',
+                                    child: Row(children: [
+                                      Icon(Icons.menu_book,
+                                          color: cs.primary, size: 20),
+                                      const SizedBox(width: 10),
+                                      Text('Read (p. ${surah.startPage})'),
+                                    ]),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'play',
+                                    child: Row(children: [
+                                      Icon(
+                                          isCurrentlyPlaying
+                                              ? Icons.pause_circle_outline
+                                              : Icons.play_circle_outline,
+                                          color: cs.primary,
+                                          size: 20),
+                                      const SizedBox(width: 10),
+                                      Text(isCurrentlyPlaying
+                                          ? 'Pause audio'
+                                          : 'Play recitation'),
+                                    ]),
                                   ),
                                 ],
                               ),
-                            ),
-
-                            // Arabic Name (flexible: long names must not push the
-                            // trailing buttons off-screen on narrow phones)
-                            Flexible(
-                              child: Text(
-                                surah.nameAr,
-                                overflow: TextOverflow.ellipsis,
-                                style: arabicStyle(prefs.scriptStyle,
-                                    fontSize: 20, color: cs.primary),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-
-                            // Surah intro (tafsir-style commentary)
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              icon: Icon(Icons.info_outline,
-                                  color: cs.primary.withValues(alpha: 0.8),
-                                  size: 20),
-                              tooltip: 'About this surah',
-                              onPressed: () =>
-                                  _showSurahIntro(context, surah),
-                            ),
-
-                            // Bookmark toggle
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              icon: Icon(
-                                isBookmarked
-                                    ? Icons.bookmark
-                                    : Icons.bookmark_border,
-                                color: cs.primary,
-                                size: 22,
-                              ),
-                              tooltip: isBookmarked
-                                  ? 'Remove bookmark'
-                                  : 'Bookmark this surah',
-                              onPressed: () {
-                                prefs.toggleBookmark(surah.startPage);
-                              },
-                            ),
-
-                            // Read Button (opens Mushaf)
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              icon: Icon(Icons.menu_book, color: cs.primary, size: 22),
-                              tooltip: 'Read (p. ${surah.startPage})',
-                              onPressed: () =>
-                                  widget.onOpenPage(surah.startPage),
-                            ),
-
-                            // Audio Recite Button
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              icon: Icon(
-                                isCurrentlyPlaying
-                                    ? Icons.pause_circle_filled
-                                    : Icons.play_circle_outline,
-                                color: cs.primary,
-                                size: 24,
-                              ),
-                              tooltip: 'Listen Audio',
-                              onPressed: () {
-                                if (isCurrentlyPlaying) {
-                                  audio.pause();
-                                } else {
-                                  audio.playSurah(surahNumber: surah.number);
-                                }
-                              },
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },

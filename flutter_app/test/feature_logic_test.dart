@@ -109,12 +109,12 @@ void main() {
       expect(find.text('Browse All'), findsOneWidget);
       // Scroll further to Quick Access.
       for (var i = 0;
-          i < 12 && find.text('Quick Access').evaluate().isEmpty;
+          i < 12 && find.text('QUICK ACCESS').evaluate().isEmpty;
           i++) {
         await tester.drag(listView, const Offset(0, -500));
         await tester.pump(const Duration(milliseconds: 300));
       }
-      expect(find.text('Quick Access'), findsOneWidget);
+      expect(find.text('QUICK ACCESS'), findsOneWidget);
       // Back to the top for the Open-the-Quran button.
       for (var i = 0;
           i < 12 && find.text('Open the Quran').evaluate().isEmpty;

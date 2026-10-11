@@ -62,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final cs = Theme.of(context).colorScheme;
     final last = _page == _pages.length - 1;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -150,6 +150,7 @@ class _OnboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
@@ -161,6 +162,10 @@ class _OnboardPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: cs.primary.withValues(alpha: 0.45),
+                width: 1.5,
+              ),
             ),
             child: Icon(icon, size: 56, color: cs.primary),
           ),
@@ -168,10 +173,16 @@ class _OnboardPage extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+            style: textTheme.titleLarge?.copyWith(fontSize: 22),
+          ),
+          const SizedBox(height: 12),
+          // Small gold divider — the premium accent for key headings.
+          Container(
+            width: 44,
+            height: 3,
+            decoration: BoxDecoration(
+              color: cs.primary,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 16),

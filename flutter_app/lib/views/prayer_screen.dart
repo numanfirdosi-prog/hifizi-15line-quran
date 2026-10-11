@@ -91,14 +91,80 @@ class _PrayerScreenState extends State<PrayerScreen> {
     return _cachedSchedule!;
   }
 
-  Future<void> _rescheduleAlarms(PreferencesService prefs) {
-    return AzanAlarmService().scheduleDailyPrayerAlarms(
+  /// Re-applies the alarm schedule after a preference change, warning the
+  /// user when a denied permission will silently degrade the alarms
+  /// (toggles must never look fully ON while the azan stays silent).
+  Future<void> _rescheduleAlarms(PreferencesService prefs) async {
+    await AzanAlarmService().scheduleDailyPrayerAlarms(
       location: prefs.selectedCity,
       asrMode: prefs.asrMethod,
       enabledAlarms: prefs.prayerAlarms,
       azanSoundEnabled: prefs.azanSoundEnabled,
       lockscreenAlarmEnabled: prefs.lockscreenAlarmEnabled,
     );
+    final exactOk = await AzanAlarmService().canScheduleExactAlarms();
+    // Only ask for the notification permission while at least one alarm is
+    // enabled — requesting it when turning alarms OFF is just noise.
+    final anyAlarmOn =
+        prefs.prayerAlarms.values.any((enabled) => enabled == true);
+    final notifOk = anyAlarmOn
+        ? await AzanAlarmService().ensureNotificationPermission()
+        : true;
+    if (!mounted) return;
+    final notes = <String>[];
+    if (!notifOk) {
+      notes.add(prefs.isUrdu
+          ? 'Notifications بند ہیں — یاد دہانی نہیں آئے گی۔'
+          : 'Notifications are off — reminders will not appear.');
+    }
+    if (prefs.lockscreenAlarmEnabled && !exactOk) {
+      notes.add(prefs.isUrdu
+          ? 'Exact alarm کی اجازت نہیں — لاک اسکرین پر اذان کی آواز نہیں بجے گی۔'
+          : 'Exact-alarm permission denied — the azan sound will not play on the lock screen.');
+    }
+    if (notes.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(notes.join(' ')),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    }
+  }
+
+  /// Asr juristic method change: same 'Hanafi' / 'Standard' domain as
+  /// Settings, recompute + reschedule immediately.
+  Future<void> _setAsrMethod(PreferencesService prefs, String method) async {
+    if (prefs.asrMethod == method) return;
+    await prefs.setAsrMethod(method);
+    _cachedAsrMethod = null; // force the timetable to recompute
+    await _rescheduleAlarms(prefs);
+  }
+
+  /// Enabling the lockscreen exact alarm needs the Android 12+
+  /// SCHEDULE_EXACT_ALARM permission. When the user denies it, keep the
+  /// toggle OFF and explain — ON would silently mean "no azan sound".
+  Future<void> _setLockscreenAlarm(
+      PreferencesService prefs, bool enabled) async {
+    if (enabled) {
+      final granted =
+          await AzanAlarmService().requestExactAlarmPermission();
+      if (!granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(prefs.isUrdu
+                  ? 'Exact alarm کی اجازت نہیں ملی — ٹوگل آف رہے گا۔ اجازت کے بغیر لاک اسکرین پر اذان کی آواز نہیں بجے گی۔'
+                  : 'Exact-alarm permission denied — keeping this off. Without it the azan sound cannot play on the lock screen.'),
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
+        return;
+      }
+    }
+    await prefs.setLockscreenAlarmEnabled(enabled);
+    await _rescheduleAlarms(prefs);
   }
 
   /// M4: Use the device's live GPS position instead of a city preset.
@@ -440,58 +506,171 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
           const SizedBox(height: 16),
 
-          // Test Azan & Sound Toggle Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: cs.surface,
+          // Azan & Alarm Settings
+          Card(
+            color: cs.surface,
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.notifications_active,
-                        color: cs.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                        prefs.isUrdu
-                            ? 'لاک اسکرین اذان الارم'
-                            : 'Lockscreen Azan Alarm',
-                        style: TextStyle(color: cs.onSurface, fontSize: 13)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: cs.primary,
-                    foregroundColor: cs.onPrimary,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    visualDensity: VisualDensity.compact,
+                Padding(
+                  padding:
+                      const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                  child: Text(
+                    prefs.isUrdu ? 'اذان اور الارم سیٹنگز' : 'Azan & Alarm Settings',
+                    style: TextStyle(
+                      color: cs.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
-                  icon: const Icon(Icons.volume_up, size: 16),
-                  label: Text(
-                      prefs.isUrdu ? 'اذان سن کر دیکھیں' : 'Test Azan',
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  onPressed: () {
-                    AzanAlarmService().playTestAzan();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(prefs.isUrdu
-                            ? 'ٹیسٹ اذان چل رہی ہے…'
-                            : 'Playing test Azan sound...'),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
+                ),
+                SwitchListTile(
+                  title: Text(
+                    prefs.isUrdu ? 'اذان کی آواز' : 'Play Azan Sound',
+                    style: TextStyle(
+                        color: cs.onSurface, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    prefs.isUrdu
+                        ? 'نماز کا وقت شروع ہونے پر مکمل اذان چلائیں'
+                        : 'Play full Azan audio when prayer time starts',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.54),
+                        fontSize: 12),
+                  ),
+                  value: prefs.azanSoundEnabled,
+                  activeColor: cs.primary,
+                  onChanged: (val) async {
+                    await prefs.setAzanSoundEnabled(val);
+                    await _rescheduleAlarms(prefs);
                   },
+                ),
+                Divider(
+                    color: cs.onSurface.withValues(alpha: 0.12), height: 1),
+                SwitchListTile(
+                  title: Text(
+                    prefs.isUrdu
+                        ? 'لاک اسکرین اذان الارم'
+                        : 'Lockscreen Exact Alarm',
+                    style: TextStyle(
+                        color: cs.onSurface, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    prefs.isUrdu
+                        ? 'بند فون کو جگائیں اور نماز کا الارم دکھائیں'
+                        : 'Wake up locked phone & display prayer alarm',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.54),
+                        fontSize: 12),
+                  ),
+                  value: prefs.lockscreenAlarmEnabled,
+                  activeColor: cs.primary,
+                  onChanged: (val) => _setLockscreenAlarm(prefs, val),
+                ),
+                Divider(
+                    color: cs.onSurface.withValues(alpha: 0.12), height: 1),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.notifications_active,
+                              color: cs.primary, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            prefs.isUrdu
+                                ? 'اذان سن کر دیکھیں'
+                                : 'Hear the Azan',
+                            style: TextStyle(
+                                color: cs.onSurface, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: cs.primary,
+                          foregroundColor: cs.onPrimary,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(Icons.volume_up, size: 16),
+                        label: Text(
+                          prefs.isUrdu ? 'ٹیسٹ اذان' : 'Test Azan',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        onPressed: () {
+                          AzanAlarmService().playTestAzan();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(prefs.isUrdu
+                                  ? 'ٹیسٹ اذان چل رہی ہے…'
+                                  : 'Playing test Azan sound...'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
           const SizedBox(height: 16),
+
+          // Asr calculation method + Daily Prayer Timings Table header
+          Row(
+            children: [
+              Icon(Icons.calculate_outlined, color: cs.primary, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                prefs.isUrdu ? 'عصر کا طریقہ:' : 'Asr method:',
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('Hanafi'),
+                selected: prefs.asrMethod == 'Hanafi',
+                selectedColor: cs.primary,
+                labelStyle: TextStyle(
+                  color: prefs.asrMethod == 'Hanafi'
+                      ? cs.onPrimary
+                      : cs.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                onSelected: (_) => _setAsrMethod(prefs, 'Hanafi'),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: Text(prefs.isUrdu ? 'شافعی' : "Shafi'i"),
+                selected: prefs.asrMethod != 'Hanafi',
+                selectedColor: cs.primary,
+                labelStyle: TextStyle(
+                  color: prefs.asrMethod != 'Hanafi'
+                      ? cs.onPrimary
+                      : cs.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                onSelected: (_) => _setAsrMethod(prefs, 'Standard'),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
 
           // Daily Prayer Timings Table
           ...prayerCards.map((p) {
@@ -547,9 +726,25 @@ class _PrayerScreenState extends State<PrayerScreen> {
                     Switch(
                       value: isAlarmOn,
                       activeColor: cs.primary,
-                      onChanged: (val) {
-                        prefs.setPrayerAlarm(key, val);
-                        _rescheduleAlarms(prefs);
+                      onChanged: (val) async {
+                        await prefs.setPrayerAlarm(key, val);
+                        if (val) {
+                          // Android 13+: without the notification permission
+                          // the reminder never appears — ask now and say so.
+                          final notifOk = await AzanAlarmService()
+                              .ensureNotificationPermission();
+                          if (!notifOk && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(prefs.isUrdu
+                                    ? 'Notifications بند ہیں — یاد دہانی نہیں آئے گی جب تک سسٹم سیٹنگز میں اجازت نہ دیں۔'
+                                    : 'Notifications are off — this reminder will not appear until you allow notifications in system Settings.'),
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
+                        }
+                        await _rescheduleAlarms(prefs);
                       },
                     )
                   else

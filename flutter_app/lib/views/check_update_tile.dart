@@ -176,7 +176,7 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
         subtitle = 'Aap latest version par hain';
         break;
       case _UpdateStatus.updateAvailable:
-        trailing = const Icon(Icons.download, color: Colors.red, size: 28);
+        trailing = Icon(Icons.download, color: cs.error, size: 28);
         subtitle =
             'Nayi version $_latestVersion available hai — tap karke download karein';
         break;

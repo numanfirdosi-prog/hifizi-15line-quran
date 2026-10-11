@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../main.dart';
 import '../services/auto_backup_service.dart';
 import '../services/azan_alarm_service.dart';
 import '../services/preferences_service.dart';
+import '../utils/script_font.dart';
 import 'home_navigation_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -128,8 +130,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final prefs =
+        Provider.of<PreferencesService>(context, listen: false);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -147,9 +151,12 @@ class _SplashScreenState extends State<SplashScreen>
                 Text(
                   'نور القرآن',
                   textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    color: cs.primary,
+                  // Bundled Arabic font (user's chosen script style) so the
+                  // wordmark renders with correct Quranic letterforms.
+                  style: arabicStyle(
+                    prefs.scriptStyle,
                     fontSize: 40,
+                    color: cs.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -252,7 +259,7 @@ class _EmblemPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final bg = Paint()
-      ..color = const Color(0xFF1B4D3E)
+      ..color = Nur.elevatedGreen
       ..style = PaintingStyle.fill;
     final rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, w, w),
@@ -262,12 +269,12 @@ class _EmblemPainter extends CustomPainter {
 
     // Gold crescent.
     final gold = Paint()
-      ..color = const Color(0xFFD4AF37)
+      ..color = Nur.gold
       ..style = PaintingStyle.fill;
     final c = Offset(w * 0.5, w * 0.52);
     canvas.drawCircle(c, w * 0.30, gold);
     final cut = Paint()
-      ..color = const Color(0xFF1B4D3E)
+      ..color = Nur.elevatedGreen
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
         Offset(w * 0.60, w * 0.44), w * 0.25, cut);

@@ -157,6 +157,13 @@ class PageDrawingService extends ChangeNotifier {
   final Map<String, List<DrawingStroke>> _drawings = {};
   SharedPreferences? _prefs;
 
+  /// Undo/redo history: per-page stacks of stroke-list snapshots taken
+  /// BEFORE each mutation. Session-only (never persisted). Bounded by
+  /// [maxUndoDepth] so a long drawing session cannot grow memory unbounded.
+  static const int maxUndoDepth = 50;
+  final Map<String, List<List<DrawingStroke>>> _undoStacks = {};
+  final Map<String, List<List<DrawingStroke>>> _redoStacks = {};
+
   /// Currently active drawing tool ('pen' | 'brush' | 'highlighter' |
   /// 'rectangle' | 'eraser'), or null when not in drawing mode.
   String? _selectedTool;
@@ -190,6 +197,10 @@ class PageDrawingService extends ChangeNotifier {
       _prefs ??= await SharedPreferences.getInstance();
       final raw = _prefs?.getString(prefsKey);
       _drawings.clear();
+      // The on-disk set changed underneath the session — the undo/redo
+      // history no longer describes these strokes, so drop it.
+      _undoStacks.clear();
+      _redoStacks.clear();
       if (raw != null && raw.isNotEmpty) {
         final decoded = jsonDecode(raw);
         if (decoded is Map) {
@@ -214,6 +225,79 @@ class PageDrawingService extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // ------------------------------------------------------------------
+  // Undo / redo (per page)
+  // ------------------------------------------------------------------
+
+  /// Copies the current stroke list for [key] (shallow — strokes are
+  /// immutable in practice, lists are replaced, never mutated).
+  List<DrawingStroke> _snapshot(String key) =>
+      List<DrawingStroke>.of(_drawings[key] ?? const []);
+
+  /// Records the pre-mutation snapshot on the undo stack; a new edit
+  /// always invalidates the redo branch.
+  void _pushHistory(String key) {
+    final stack = _undoStacks[key] ??= [];
+    stack.add(_snapshot(key));
+    if (stack.length > maxUndoDepth) stack.removeAt(0);
+    _redoStacks.remove(key);
+  }
+
+  bool canUndo(int page) =>
+      (_undoStacks[page.toString()]?.isNotEmpty ?? false);
+
+  bool canRedo(int page) =>
+      (_redoStacks[page.toString()]?.isNotEmpty ?? false);
+
+  /// Restores the previous stroke list for [page]. Returns false when the
+  /// undo stack is empty.
+  Future<bool> undo(int page) async {
+    try {
+      final key = page.toString();
+      final stack = _undoStacks[key];
+      if (stack == null || stack.isEmpty) return false;
+      final current = _snapshot(key);
+      final previous = stack.removeLast();
+      final redo = _redoStacks[key] ??= [];
+      redo.add(current);
+      if (previous.isEmpty) {
+        _drawings.remove(key);
+      } else {
+        _drawings[key] = previous;
+      }
+      notifyListeners();
+      await _persist();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Re-applies the most recently undone edit for [page]. Returns false
+  /// when the redo stack is empty.
+  Future<bool> redo(int page) async {
+    try {
+      final key = page.toString();
+      final stack = _redoStacks[key];
+      if (stack == null || stack.isEmpty) return false;
+      final current = _snapshot(key);
+      final next = stack.removeLast();
+      final undo = _undoStacks[key] ??= [];
+      undo.add(current);
+      if (undo.length > maxUndoDepth) undo.removeAt(0);
+      if (next.isEmpty) {
+        _drawings.remove(key);
+      } else {
+        _drawings[key] = next;
+      }
+      notifyListeners();
+      await _persist();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _persist() async {
     try {
       _prefs ??= await SharedPreferences.getInstance();
@@ -235,6 +319,7 @@ class PageDrawingService extends ChangeNotifier {
   Future<void> addStroke(int page, DrawingStroke stroke) async {
     try {
       final key = page.toString();
+      _pushHistory(key);
       (_drawings[key] ??= []).add(stroke);
       notifyListeners();
       await _persist();
@@ -250,6 +335,7 @@ class PageDrawingService extends ChangeNotifier {
       if (strokes == null || strokes.isEmpty) return false;
       for (var i = strokes.length - 1; i >= 0; i--) {
         if (hitTestStroke(strokes[i], p, tolerance)) {
+          _pushHistory(key);
           strokes.removeAt(i);
           notifyListeners();
           await _persist();
@@ -266,7 +352,9 @@ class PageDrawingService extends ChangeNotifier {
   /// (see PreferencesService.setPageNote).
   Future<void> clearPage(int page) async {
     try {
-      _drawings.remove(page.toString());
+      final key = page.toString();
+      if (_drawings[key]?.isNotEmpty ?? false) _pushHistory(key);
+      _drawings.remove(key);
       notifyListeners();
       await _persist();
     } catch (_) {}

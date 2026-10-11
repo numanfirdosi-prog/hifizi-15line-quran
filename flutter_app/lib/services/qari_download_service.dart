@@ -99,6 +99,12 @@ class QariDownloadService extends ChangeNotifier {
   QariPackProgress progressOf(String qariId) =>
       _progress[qariId] ?? const QariPackProgress();
 
+  /// Id of the qari whose pack is downloading right now, or null.
+  String? get activeQariId => _activeId;
+
+  /// True while any pack is downloading right now.
+  bool get hasActiveDownload => _activeId != null;
+
   /// Synchronous "known complete" check: live state or the lazy disk-scan
   /// cache. Call [refreshCompleteCache] to (re)scan from disk.
   bool isKnownComplete(String qariId) {

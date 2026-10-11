@@ -182,11 +182,47 @@ const List<Qari> availableQaris = [
 class AudioRecitationService extends ChangeNotifier {
   static const String _selectedQariIdKey = 'selectedQariId';
 
+  /// SharedPreferences keys for the last-session resume feature.
+  static const String _kLastSurahKey = 'nur_last_played_surah';
+  static const String _kLastAyahKey = 'nur_last_played_ayah';
+  static const String _kLastPosMsKey = 'nur_last_played_pos_ms';
+  static const String _kLastWasAyahKey = 'nur_last_played_was_ayah';
+
+  /// Min interval between background session-persistence writes.
+  static const int _kPersistIntervalMs = 15000;
+
   final AudioPlayer _player = AudioPlayer();
   Qari _selectedQari = availableQaris[0];
   bool _isPlaying = false;
+
+  /// True while a source is loading/buffering (drives UI spinners).
+  bool _isLoading = false;
+
+  /// Last playback failure message, or null. Set when a play attempt
+  /// fails (e.g. no internet), cleared on the next play attempt or via
+  /// [clearError]. Drives the UI error + retry state.
+  String? _errorMessage;
+
   int _currentSurah = 1;
   int _currentAyah = 1;
+
+  /// True once any play* call has started a track (false again after
+  /// [stop]). Lets the UI tell "nothing played yet" apart from "paused".
+  bool _hasActiveTrack = false;
+
+  /// Last user-initiated play request: powers [retryLast] and restarts
+  /// the current track on the newly selected reciter.
+  int? _lastSurah;
+  int? _lastAyah;
+  bool _lastWasAyahMode = false;
+
+  int _lastPersistMs = 0;
+  bool _disposed = false;
+
+  StreamSubscription<PlayerState>? _playerStateSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<AudioInterruptionEvent>? _interruptionSub;
+  StreamSubscription<void>? _noisySub;
 
   /// 0 = off, 1/3/5 = that many total plays, -1 = infinite.
   int repeatMode = 0;
@@ -233,20 +269,45 @@ class AudioRecitationService extends ChangeNotifier {
   AudioPlayer get player => _player;
   Qari get selectedQari => _selectedQari;
   bool get isPlaying => _isPlaying;
+
+  /// True while a source is loading/buffering.
+  bool get isLoading => _isLoading;
+
+  /// Last playback failure message, or null when there is no error.
+  String? get errorMessage => _errorMessage;
+
+  /// True once any play* call has started a track.
+  bool get hasActiveTrack => _hasActiveTrack;
   int get currentSurah => _currentSurah;
   int get currentAyah => _currentAyah;
+
+  /// Short human-readable status for UI badges.
+  String get statusText {
+    if (_errorMessage != null) return 'Error — tap retry';
+    if (_isLoading) return 'Loading…';
+    if (_isPlaying) return _ayahMode ? 'Ayah $_currentAyah' : 'Playing';
+    return _hasActiveTrack ? 'Paused' : 'Ready';
+  }
 
   AudioRecitationService() {
     _restoreSelectedQari();
     _initAudioSession();
-    _player.playerStateStream.listen(_onPlayerState);
+    _playerStateSub = _player.playerStateStream.listen(_onPlayerState);
     // Website-style highlight fill: 0..1 progress of the current ayah.
     // Per-ayah MP3s carry short silence padding at both ends (measured
     // across qaris: ~0.15-0.85s leading, ~0.4-0.7s trailing). Mapping raw
     // position/duration therefore leaves the highlight a word behind at
     // the start and creeping through the last words after the recitation
     // ends. Trim a conservative padding so the fill tracks the recitation.
-    _player.positionStream.listen((pos) {
+    _positionSub = _player.positionStream.listen((pos) {
+      // Throttled session persistence so "Resume" survives app restarts.
+      if (!_progressClosed && _hasActiveTrack && !_disposed) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (now - _lastPersistMs > _kPersistIntervalMs) {
+          _lastPersistMs = now;
+          _persistSession();
+        }
+      }
       if (!_ayahMode || _progressClosed) return;
       final d = _player.duration;
       double p;
@@ -272,8 +333,11 @@ class AudioRecitationService extends ChangeNotifier {
   Future<void> _initAudioSession() async {
     try {
       final session = await AudioSession.instance;
+      if (_disposed) return;
       await session.configure(const AudioSessionConfiguration.speech());
-      session.interruptionEventStream.listen((event) {
+      if (_disposed) return;
+      _interruptionSub = session.interruptionEventStream.listen((event) {
+        if (_disposed) return;
         if (event.begin) {
           if (_isPlaying) {
             _playInterrupted = true;
@@ -286,7 +350,8 @@ class AudioRecitationService extends ChangeNotifier {
           }
         }
       });
-      session.becomingNoisyEventStream.listen((_) {
+      _noisySub = session.becomingNoisyEventStream.listen((_) {
+        if (_disposed) return;
         if (_isPlaying) pause();
       });
     } catch (e) {
@@ -333,6 +398,10 @@ class AudioRecitationService extends ChangeNotifier {
     final gen = _playGeneration;
     _isPlaying =
         state.playing && state.processingState != ProcessingState.completed;
+    // Mirror just_audio's buffering state so the UI shows a spinner even
+    // when the play* method already returned (e.g. slow network).
+    _isLoading = state.processingState == ProcessingState.loading ||
+        state.processingState == ProcessingState.buffering;
     if (state.processingState == ProcessingState.completed) {
       if (_ayahMode) {
         await _advanceAyah(gen);
@@ -469,8 +538,11 @@ class AudioRecitationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Async qari selection that persists across restarts.
+  /// Async qari selection that persists across restarts. When a track is
+  /// playing, it restarts on the newly selected reciter instead of
+  /// silently continuing the old voice.
   Future<void> setQari(Qari qari) async {
+    final wasPlaying = _isPlaying || _isLoading;
     _selectedQari = qari;
     notifyListeners();
     try {
@@ -478,6 +550,9 @@ class AudioRecitationService extends ChangeNotifier {
       await prefs.setString(_selectedQariIdKey, qari.id);
     } catch (e) {
       debugPrint('[AudioRecitation] persist qari failed: $e');
+    }
+    if (wasPlaying && _lastSurah != null) {
+      await retryLast();
     }
   }
 
@@ -493,6 +568,7 @@ class AudioRecitationService extends ChangeNotifier {
     // A new user-initiated session invalidates any in-flight ayah
     // auto-advance (see _playGeneration).
     _playGeneration++;
+    final gen = _playGeneration;
     // A whole-surah playback is a fresh session: drop any ayah repeat
     // range left over from earlier, or _advanceAyah would later loop back
     // into the stale range when an ayah of that surah is played.
@@ -502,6 +578,14 @@ class AudioRecitationService extends ChangeNotifier {
     _currentSurah = surahNumber;
     _currentAyah = 1;
     _completedPlays = 0;
+    // Remember for retry + reciter-switch replay.
+    _lastSurah = surahNumber;
+    _lastAyah = 1;
+    _lastWasAyahMode = false;
+    _hasActiveTrack = true;
+    _errorMessage = null;
+    _isLoading = true;
+    notifyListeners();
 
     final audioUrl = _selectedQari.urlForSurah(surahNumber);
 
@@ -511,6 +595,9 @@ class AudioRecitationService extends ChangeNotifier {
       // fully downloaded qari works without internet. Falls back to the
       // previous streaming behaviour otherwise.
       final localFile = await QariAudioStorage.surahFile(_selectedQari, surahNumber);
+      // A newer request superseded this one while it was loading: leave
+      // the player alone — the newer request owns it now.
+      if (gen != _playGeneration) return;
       await _player.setAudioSource(
         localFile != null
             ? AudioSource.uri(Uri.file(localFile.path))
@@ -518,11 +605,59 @@ class AudioRecitationService extends ChangeNotifier {
             // Surah keeps working offline afterwards.
             : LockCachingAudioSource(Uri.parse(audioUrl)),
       );
+      if (gen != _playGeneration) return;
       await _player.play();
-      notifyListeners();
+      // The player-state listener clears _isLoading once the source is
+      // ready/playing; clear here too in case the stream lags.
+      if (gen == _playGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     } catch (e) {
-      debugPrint('[AudioRecitation] Error: $e');
+      debugPrint('[AudioRecitation] playSurah error: $e');
+      if (gen != _playGeneration) return;
+      _isLoading = false;
+      _errorMessage = 'Audio load nahi ho saka — internet check karein';
+      try {
+        await _player.stop();
+      } catch (_) {}
+      notifyListeners();
     }
+  }
+
+  /// Plays the next surah (1..114, clamped). No-op at surah 114.
+  Future<void> playNextSurah() async {
+    final next = (_currentSurah + 1).clamp(1, 114);
+    if (next == _currentSurah) return;
+    await playSurah(surahNumber: next);
+  }
+
+  /// Plays the previous surah (1..114, clamped). No-op at surah 1.
+  Future<void> playPrevSurah() async {
+    final prev = (_currentSurah - 1).clamp(1, 114);
+    if (prev == _currentSurah) return;
+    await playSurah(surahNumber: prev);
+  }
+
+  /// Replays the last user-initiated play request (used by the UI retry
+  /// button after a network failure, and when the reciter changes
+  /// mid-playback). Returns false when there is nothing to retry.
+  Future<bool> retryLast() async {
+    final s = _lastSurah;
+    if (s == null) return false;
+    _errorMessage = null;
+    notifyListeners();
+    if (_lastWasAyahMode) {
+      return playAyah(surah: s, ayah: _lastAyah ?? 1, keepRepeatRange: true);
+    }
+    await playSurah(surahNumber: s);
+    return true;
+  }
+
+  /// Clears a surfaced playback error (the track stays stopped).
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 
   /// Plays a single ayah MP3 (everyayah.com) and enters ayah-by-ayah mode:
@@ -548,6 +683,14 @@ class AudioRecitationService extends ChangeNotifier {
     _currentSurah = surah;
     _currentAyah = ayah;
     _completedPlays = 0;
+    // Remember for retry + reciter-switch replay.
+    _lastSurah = surah;
+    _lastAyah = ayah;
+    _lastWasAyahMode = true;
+    _hasActiveTrack = true;
+    _errorMessage = null;
+    _isLoading = true;
+    notifyListeners();
     if (!keepRepeatRange) {
       _repeatRangeSurah = null;
       _repeatRangeStart = null;
@@ -579,7 +722,10 @@ class AudioRecitationService extends ChangeNotifier {
       );
       if (gen != _playGeneration) return false;
       await _player.play();
-      notifyListeners();
+      if (gen == _playGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
       return true;
     } catch (e) {
       debugPrint('[AudioRecitation] playAyah error: $e');
@@ -589,12 +735,17 @@ class AudioRecitationService extends ChangeNotifier {
       try {
         await _player.stop();
       } catch (_) {}
+      if (gen == _playGeneration) {
+        _isLoading = false;
+        _errorMessage = 'Audio load nahi ho saka — internet check karein';
+      }
       notifyListeners();
       return false;
     }
   }
 
   Future<void> pause() async {
+    _persistSession();
     await _player.pause();
     notifyListeners();
   }
@@ -605,7 +756,9 @@ class AudioRecitationService extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _persistSession();
     _ayahMode = false;
+    _hasActiveTrack = false;
     // Invalidate any in-flight auto-advance: it must not restart audio
     // after the user pressed stop (see _playGeneration).
     _playGeneration++;
@@ -616,9 +769,89 @@ class AudioRecitationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Saves the current (surah, ayah, position) so playback can resume
+  /// after an app restart. Never throws.
+  Future<void> _persistSession() async {
+    if (!_hasActiveTrack || _disposed) return;
+    try {
+      final sp = await SharedPreferences.getInstance();
+      await sp.setInt(_kLastSurahKey, _currentSurah);
+      await sp.setInt(_kLastAyahKey, _currentAyah);
+      await sp.setInt(_kLastPosMsKey, _player.position.inMilliseconds);
+      await sp.setBool(_kLastWasAyahKey, _ayahMode);
+    } catch (_) {}
+  }
+
+  /// Human-readable label of the saved session, e.g. "Al-Baqarah 2:255".
+  /// Null when nothing was ever played.
+  Future<String?> lastSessionDescription() async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      final s = sp.getInt(_kLastSurahKey);
+      final v = sp.getInt(_kLastAyahKey);
+      if (s == null || v == null || s < 1 || s > 114) return null;
+      final name = allSurahs[s - 1].nameEn;
+      final wasAyah = sp.getBool(_kLastWasAyahKey) ?? false;
+      return wasAyah ? '$name $s:$v' : name;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Resumes the saved session (surah mode seeks to the saved position).
+  /// Returns false when there is no saved session.
+  Future<bool> resumeLastSession() async {
+    int? s;
+    int? v;
+    var posMs = 0;
+    var wasAyah = false;
+    try {
+      final sp = await SharedPreferences.getInstance();
+      s = sp.getInt(_kLastSurahKey);
+      v = sp.getInt(_kLastAyahKey);
+      posMs = sp.getInt(_kLastPosMsKey) ?? 0;
+      wasAyah = sp.getBool(_kLastWasAyahKey) ?? false;
+    } catch (_) {}
+    if (s == null || v == null || s < 1 || s > 114) return false;
+    if (wasAyah) {
+      final total = allSurahs[s - 1].totalAyahs;
+      return playAyah(
+          surah: s, ayah: v.clamp(1, total), keepRepeatRange: true);
+    }
+    await playSurah(surahNumber: s);
+    // Surah MP3s are long: jump back to where the user left off once the
+    // duration is known. Fire-and-forget; failures just start at 0.
+    if (posMs > 2000) {
+      unawaited(_seekWhenReady(Duration(milliseconds: posMs)));
+    }
+    return true;
+  }
+
+  /// Seeks to [target] as soon as the player reports a duration (polls
+  /// briefly; just_audio has no "duration ready" future). Never throws.
+  Future<void> _seekWhenReady(Duration target) async {
+    try {
+      for (var i = 0; i < 24; i++) {
+        if (_disposed) return;
+        final d = _player.duration;
+        if (d != null && d > Duration.zero) {
+          final t = target < d ? target : Duration.zero;
+          if (t > Duration.zero) await _player.seek(t);
+          return;
+        }
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
+    _disposed = true;
     _progressClosed = true;
+    _playerStateSub?.cancel();
+    _positionSub?.cancel();
+    _interruptionSub?.cancel();
+    _noisySub?.cancel();
     _ayahProgressController.close();
     _player.dispose();
     super.dispose();

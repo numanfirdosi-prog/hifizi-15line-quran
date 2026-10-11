@@ -57,8 +57,9 @@ class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1F17),
+      backgroundColor: cs.surface,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -72,39 +73,39 @@ class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFD4AF37),
+                      color: cs.primary,
                       width: 3,
                     ),
-                    color: const Color(0xFF143527),
+                    color: cs.primary.withValues(alpha: 0.12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.mosque,
                     size: 56,
-                    color: Color(0xFFD4AF37),
+                    color: cs.primary,
                   ),
                 ),
                 const SizedBox(height: 28),
                 Text(
                   widget.prayerName,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: cs.onSurface,
                     fontSize: 44,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'نماز کا وقت',
                   style: TextStyle(
-                    color: Color(0xFFD4AF37),
+                    color: cs.primary,
                     fontSize: 30,
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'Azan is playing',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: cs.onSurface.withValues(alpha: 0.7),
                     fontSize: 16,
                   ),
                 ),
@@ -120,8 +121,8 @@ class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
                       style: const TextStyle(fontSize: 22),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD4AF37),
-                      foregroundColor: Colors.black,
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(32),
                       ),

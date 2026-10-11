@@ -11,6 +11,8 @@ import '../data/verse_index.dart';
 import '../models/surah.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
+import '../widgets/premium_card.dart';
+import '../widgets/section_header.dart';
 import 'ayah_player_sheet.dart';
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
@@ -49,31 +51,57 @@ class DashboardScreen extends StatelessWidget {
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
-  Widget _card(BuildContext context, {required Widget child}) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.primary.withOpacity(0.25)),
-      ),
-      child: child,
-    );
+  /// Premium card wrapper shared across the dashboard.
+  Widget _card(BuildContext context,
+      {required Widget child, bool goldAccent = false}) {
+    return NurCard(child: child, goldAccent: goldAccent);
   }
 
   Widget _sectionTitle(BuildContext context, String text) {
+    return NurSectionHeader(title: text);
+  }
+
+  // ------------------------------------------------------------------
+  // Compact brand header: app name + edition line, theme-aware.
+  // ------------------------------------------------------------------
+
+  Widget _brandHeader(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: cs.primary,
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-        ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: cs.primary.withValues(alpha: 0.35)),
+            ),
+            child: Icon(Icons.menu_book_rounded,
+                color: cs.primary, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nur Al-Quran',
+                  style: textTheme.titleLarge?.copyWith(fontSize: 20),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '15-Line Hifzi Mushaf',
+                  style: textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -118,6 +146,7 @@ class DashboardScreen extends StatelessWidget {
     if (prefs.lastReadAt.isEmpty) {
       return _card(
         context,
+        goldAccent: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -161,6 +190,7 @@ class DashboardScreen extends StatelessWidget {
 
     return _card(
       context,
+      goldAccent: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -314,6 +344,7 @@ class DashboardScreen extends StatelessWidget {
 
     return _card(
       context,
+      goldAccent: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -654,7 +685,7 @@ class DashboardScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'SPECIALIZE',
+                'SPECIAL EDITION',
                 style: TextStyle(
                   color: cs.onPrimary,
                   fontSize: 11,
@@ -803,7 +834,8 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       children: [
-        const SizedBox(height: 8),
+        _brandHeader(context),
+        const SizedBox(height: 4),
         _lastReadCard(context),
         _progressCard(context),
         _ayahOfDayCard(context),

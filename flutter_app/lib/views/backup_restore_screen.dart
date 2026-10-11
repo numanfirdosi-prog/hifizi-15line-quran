@@ -299,6 +299,13 @@ class BackupRestoreScreen extends StatelessWidget {
     );
     if (confirmed == true) {
       await prefs.resetAll();
+      // resetAll wipes the drawing keys from storage; drop the drawing
+      // service's in-memory strokes too so deleted annotations do not
+      // linger on screen until the next app launch.
+      try {
+        await Provider.of<PageDrawingService>(context, listen: false)
+            .reload();
+      } catch (_) {}
       // Defaults (city / asr method / alarms) were restored: re-apply them.
       await _rescheduleAlarms(prefs);
       messenger.showSnackBar(
