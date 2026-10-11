@@ -234,6 +234,22 @@ class _MushafScreenState extends State<MushafScreen> {
     }
   }
 
+  IconData _toolIcon(String? tool) {
+    switch (tool) {
+      case 'rectangle':
+        return Icons.crop_square;
+      case 'pen':
+        return Icons.edit;
+      case 'brush':
+        return Icons.brush;
+      case 'eraser':
+        return Icons.cleaning_services;
+      case 'highlighter':
+      default:
+        return Icons.highlight;
+    }
+  }
+
   /// Paint layer for persisted + in-progress drawing strokes.
   Widget _buildDrawingPaint(int pageNum) {
     if (!_highlightsVisible) return const SizedBox.shrink();
@@ -1710,22 +1726,23 @@ class _MushafScreenState extends State<MushafScreen> {
                                   ],
                                 ),
                               ),
-                              // 2. Highlighter
+                              // 2. Drawing tools (opens the 5-tool sheet:
+                              // Rectangle / Pen / Highlighter / Brush / Eraser)
                               _barControl(
                                 onTap: () {
-                                  draw.setTool('highlighter');
+                                  _showToolSheet();
                                 },
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.highlight,
+                                      _toolIcon(draw.selectedTool),
                                       color: barAccent,
                                       size: 24,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'Highlighter',
+                                      _toolLabel(draw.selectedTool ?? 'highlighter'),
                                       style: TextStyle(
                                         color: barAccent,
                                         fontWeight: FontWeight.bold,
