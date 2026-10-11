@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../main.dart';
 import '../services/azan_alarm_service.dart';
 import '../services/page_drawing_service.dart';
 import '../services/preferences_service.dart';
@@ -69,8 +70,18 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
               onPressed: () => _confirmClearAll(context),
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            // Explicit colors: the TabBar sits on the dark AppBar in all
+            // 3 themes, so labels must be light with a gold indicator.
+            // isScrollable prevents the first tab from being cut off on
+            // narrow screens.
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelColor: Nur.ink,
+            unselectedLabelColor: Nur.ink.withValues(alpha: 0.6),
+            indicatorColor: Nur.gold,
+            indicatorWeight: 3,
+            tabs: const [
               Tab(text: 'All Saved'),
               Tab(text: 'Pages'),
               Tab(text: 'Notes'),

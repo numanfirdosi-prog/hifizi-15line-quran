@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../data/preset_cities.dart';
+import '../main.dart';
 import '../models/city.dart';
 import '../models/prayer_times.dart';
 import '../services/prayer_calculation_service.dart';
@@ -405,20 +406,25 @@ class _PrayerScreenState extends State<PrayerScreen> {
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
+                // Gold border: visible on the dark AppBar in all 3 themes
+                // (cs.primary is dark in Emerald/Parchment themes).
                 border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.4)),
+                    color: Nur.gold.withValues(alpha: 0.5)),
               ),
               child: TextButton.icon(
-                icon: Icon(Icons.location_on, color: cs.primary, size: 18),
+                icon: Icon(Icons.location_on, color: Nur.gold, size: 18),
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       prefs.selectedCity.name.split('/')[0].trim(),
-                      style: TextStyle(color: cs.onSurface, fontSize: 13),
+                      // Light ink: readable on the dark AppBar in all
+                      // 3 themes (cs.onSurface is dark in Emerald/Parchment).
+                      style:
+                          const TextStyle(color: Nur.ink, fontSize: 13),
                     ),
                     Icon(Icons.arrow_drop_down,
-                        color: cs.primary, size: 18),
+                        color: Nur.gold, size: 18),
                   ],
                 ),
                 onPressed: () => _showCityPickerDialog(prefs),
