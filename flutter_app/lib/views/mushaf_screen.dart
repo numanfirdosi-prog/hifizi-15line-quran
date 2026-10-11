@@ -61,6 +61,9 @@ class _MushafScreenState extends State<MushafScreen> {
   // currently being drawn (not yet persisted) and its page.
   DrawingStroke? _inProgressStroke;
   int? _inProgressPage;
+  bool _highlightsVisible = true;
+  bool _showColorPalette = false;
+  String? _lastHighlightedAyahKey;
 
   static const List<double> _speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
   static const List<int> _repeatModes = [0, 1, 3, 5, -1];
@@ -233,6 +236,7 @@ class _MushafScreenState extends State<MushafScreen> {
 
   /// Paint layer for persisted + in-progress drawing strokes.
   Widget _buildDrawingPaint(int pageNum) {
+    if (!_highlightsVisible) return const SizedBox.shrink();
     return Positioned.fill(
       child: Consumer<PageDrawingService>(
         builder: (context, draw, _) {
@@ -242,11 +246,15 @@ class _MushafScreenState extends State<MushafScreen> {
           if (strokes.isEmpty && inProgress == null) {
             return const SizedBox.shrink();
           }
+          final prefs = Provider.of<PreferencesService>(context, listen: false);
           return CustomPaint(
-            painter: _PageDrawingPainter([
-              ...strokes,
-              if (inProgress != null) inProgress,
-            ]),
+            painter: _PageDrawingPainter(
+              [
+                ...strokes,
+                if (inProgress != null) inProgress,
+              ],
+              isNightMode: prefs.nightPageMode,
+            ),
           );
         },
       ),
@@ -258,7 +266,7 @@ class _MushafScreenState extends State<MushafScreen> {
     return Consumer<PageDrawingService>(
       builder: (context, draw, _) {
         final tool = draw.selectedTool;
-        if (tool == null) return const SizedBox.shrink();
+        if (tool == null || tool == 'highlighter') return const SizedBox.shrink();
         return Positioned(
           top: 8,
           right: 8,
@@ -329,12 +337,75 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  Future<void> _highlightAt(BuildContext tapCtx, Offset globalPosition,
+      int pageNum, PageDrawingService draw) async {
+    final f = _toFraction(tapCtx, globalPosition);
+    if (f.dx < 0) return;
+    final segsMap = await _segmentsFuture;
+    final pageSegs = segsMap[pageNum] ?? const <AyahSeg>[];
+    final hit = hitTestAyah(pageSegs, f.dx, f.dy, pageNum);
+    if (hit == null) return;
+
+    final key = '${hit.surah}:${hit.ayah}';
+    if (_lastHighlightedAyahKey == key) return;
+    _lastHighlightedAyahKey = key;
+
+    final rects = rectsForAyah(pageSegs, hit.surah, hit.ayah, pageNum);
+    if (rects.isEmpty) return;
+
+    final existingStrokes = draw.strokesFor(pageNum);
+    final colorHex = draw.selectedColorHex;
+
+    bool isSameSegment(DrawingStroke s, AyahRect r) {
+      if (s.tool != 'highlighter' || s.rect == Rect.zero) return false;
+      return (s.rect.left - r.left).abs() < 0.015 &&
+          (s.rect.top - r.top).abs() < 0.015 &&
+          (s.rect.width - r.width).abs() < 0.015 &&
+          (s.rect.height - r.height).abs() < 0.015;
+    }
+
+    final matchingStrokes = existingStrokes.where((s) {
+      return rects.any((r) => isSameSegment(s, r));
+    }).toList();
+
+    if (matchingStrokes.isNotEmpty) {
+      if (matchingStrokes.every((s) => s.colorHex == colorHex)) {
+        for (final s in matchingStrokes) {
+          await draw.removeStrokeAt(pageNum, s.rect.center, 0.02);
+        }
+        if (mounted) setState(() {});
+        return;
+      }
+      for (final s in matchingStrokes) {
+        await draw.removeStrokeAt(pageNum, s.rect.center, 0.02);
+      }
+    }
+
+    for (final r in rects) {
+      await draw.addStroke(
+        pageNum,
+        DrawingStroke(
+          tool: 'highlighter',
+          colorHex: colorHex,
+          width: 0.04,
+          rect: Rect.fromLTWH(r.left, r.top, r.width, r.height),
+        ),
+      );
+    }
+    if (mounted) setState(() {});
+  }
+
   void _onDrawStart(BuildContext tapCtx, DragStartDetails d, int pageNum,
       PageDrawingService draw) {
     final tool = draw.selectedTool;
     if (tool == null) return;
     if (tool == 'eraser') {
       _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
+      return;
+    }
+    if (tool == 'highlighter') {
+      _lastHighlightedAyahKey = null;
+      _highlightAt(tapCtx, d.globalPosition, pageNum, draw);
       return;
     }
     final f = _toFraction(tapCtx, d.globalPosition);
@@ -359,6 +430,10 @@ class _MushafScreenState extends State<MushafScreen> {
       _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
       return;
     }
+    if (tool == 'highlighter') {
+      _highlightAt(tapCtx, d.globalPosition, pageNum, draw);
+      return;
+    }
     final cur = _inProgressStroke;
     if (cur == null || _inProgressPage != pageNum || cur.tool != tool) return;
     final f = _toFraction(tapCtx, d.globalPosition);
@@ -374,6 +449,7 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   Future<void> _onDrawEnd(int pageNum, PageDrawingService draw) async {
+    _lastHighlightedAyahKey = null;
     final s = _inProgressStroke;
     final p = _inProgressPage;
     _inProgressStroke = null;
@@ -397,6 +473,7 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Bottom sheet 1: Color | Highlighter | Notes | Clear.
   void _showDrawingMenu(int pageNum) {
     final cs = Theme.of(context).colorScheme;
+    final draw = Provider.of<PageDrawingService>(context, listen: false);
     showModalBottomSheet(
       context: context,
       backgroundColor: cs.surface,
@@ -410,17 +487,16 @@ class _MushafScreenState extends State<MushafScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _drawingMenuItem(
-                  sheetCtx, Icons.palette, const Color(0xFFE53935), 'Color',
-                  () {
+                  sheetCtx, Icons.palette, draw.selectedColor, 'Color', () {
                 Navigator.pop(sheetCtx);
                 _showColorRow();
               }),
               _drawingMenuItem(
-                  sheetCtx, Icons.highlight, cs.primary, 'Highlighter', () {
+                  sheetCtx, Icons.highlight, const Color(0xFFD4AF37), 'Highlighter', () {
                 Navigator.pop(sheetCtx);
-                _showToolSheet();
+                draw.setTool('highlighter');
               }),
-              _drawingMenuItem(sheetCtx, Icons.note_add, cs.primary, 'Notes',
+              _drawingMenuItem(sheetCtx, Icons.note_alt_outlined, cs.primary, 'Notes',
                   () {
                 Navigator.pop(sheetCtx);
                 _showPageNoteDialog(pageNum);
@@ -457,7 +533,7 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  /// Color picker row (6 colors); picking one opens the Drawing Tools sheet.
+  /// Color picker row (6 colors); picking one selects the color and enters highlighter mode.
   void _showColorRow() {
     final cs = Theme.of(context).colorScheme;
     final draw = Provider.of<PageDrawingService>(context, listen: false);
@@ -478,22 +554,25 @@ class _MushafScreenState extends State<MushafScreen> {
                   customBorder: const CircleBorder(),
                   onTap: () {
                     draw.setColor(hex);
+                    draw.setTool('highlighter');
                     Navigator.pop(sheetCtx);
-                    _showToolSheet();
                   },
                   child: Container(
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: _parseHexColor(hex),
+                      color: PageDrawingService.parseHex(hex),
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: draw.selectedColorHex == hex
                             ? cs.primary
                             : Colors.black26,
-                        width: 2,
+                        width: draw.selectedColorHex == hex ? 3 : 1.5,
                       ),
                     ),
+                    child: draw.selectedColorHex == hex
+                        ? const Icon(Icons.check, size: 22, color: Colors.black87)
+                        : null,
                   ),
                 ),
             ],
@@ -1391,42 +1470,188 @@ class _MushafScreenState extends State<MushafScreen> {
               ),
             ),
 
-          // Floating + button, bottom-left like the reference design.
-          // Opens the page drawing/notes menu (same as the note button).
-          Positioned(
-            left: 12,
-            bottom: 84 + MediaQuery.of(context).padding.bottom,
-            child: Material(
-              color: isDark ? const Color(0xFF103C30) : const Color(0xFF8B5E34),
-              shape: CircleBorder(
-                side: BorderSide(
-                  color: isDark
-                      ? const Color(0xFFC5A33B)
-                      : const Color(0xFFD7B65A),
-                  width: 1.2,
+          // When in drawing mode: bottom-left has X (close), bottom-right has Eye (toggle highlights).
+          // When not in drawing mode: bottom-left has + button.
+          if (drawingActive) ...[
+            // Exit button (X) bottom-left
+            Positioned(
+              left: 14,
+              bottom: 84 + MediaQuery.of(context).padding.bottom,
+              child: Material(
+                color: isDark ? const Color(0xFF103C30) : Colors.white,
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: isDark
+                        ? const Color(0xFFC5A33B)
+                        : const Color(0xFFD7B65A),
+                    width: 1.4,
+                  ),
                 ),
-              ),
-              elevation: 3,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: () => _showDrawingMenu(_currentPage),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Icon(
-                    Icons.add,
-                    color: isDark ? const Color(0xFFFFF5D6) : Colors.white,
-                    size: 26,
+                elevation: 4,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    _cancelInProgress();
+                    setState(() {
+                      _showColorPalette = false;
+                    });
+                    Provider.of<PageDrawingService>(context, listen: false)
+                        .exitDrawing();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.close,
+                      color: isDark
+                          ? const Color(0xFFFFF5D6)
+                          : const Color(0xFF49351B),
+                      size: 24,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+            // Show/Hide toggle button (Eye) bottom-right
+            Positioned(
+              right: 14,
+              bottom: 84 + MediaQuery.of(context).padding.bottom,
+              child: Material(
+                color: isDark ? const Color(0xFF103C30) : Colors.white,
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: isDark
+                        ? const Color(0xFFC5A33B)
+                        : const Color(0xFFD7B65A),
+                    width: 1.4,
+                  ),
+                ),
+                elevation: 4,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    setState(() {
+                      _highlightsVisible = !_highlightsVisible;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      _highlightsVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: isDark
+                          ? const Color(0xFFFFF5D6)
+                          : const Color(0xFF49351B),
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            // Floating + button, bottom-left like the reference design.
+            Positioned(
+              left: 14,
+              bottom: 84 + MediaQuery.of(context).padding.bottom,
+              child: Material(
+                color: isDark ? const Color(0xFF103C30) : const Color(0xFF8B5E34),
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: isDark
+                        ? const Color(0xFFC5A33B)
+                        : const Color(0xFFD7B65A),
+                    width: 1.2,
+                  ),
+                ),
+                elevation: 3,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => _showDrawingMenu(_currentPage),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      Icons.add,
+                      color: isDark ? const Color(0xFFFFF5D6) : Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
 
-          // Persistent reader control bar: Speed / Play / Repeat / Night /
-          // Menu. Warm cream surface in light mode, deep espresso in dark
-          // mode, with restrained gold accents. SafeArea keeps the controls
-          // clear of the system nav bar; the 76px page spacer below the
-          // Manzil badge already reserves room for the overlay.
+          // Floating color palette row above toolbar when Color is tapped
+          if (drawingActive && _showColorPalette)
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 76 + MediaQuery.of(context).padding.bottom,
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: barSurface,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: barBorder, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Consumer<PageDrawingService>(
+                    builder: (context, draw, _) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final hex in PageDrawingService.paletteHexes)
+                          GestureDetector(
+                            onTap: () {
+                              draw.setColor(hex);
+                              draw.setTool('highlighter');
+                              setState(() {
+                                _showColorPalette = false;
+                              });
+                            },
+                            child: Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 6),
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: PageDrawingService.parseHex(hex),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: draw.selectedColorHex == hex
+                                      ? barAccent
+                                      : (isDark
+                                          ? Colors.white24
+                                          : Colors.black26),
+                                  width:
+                                      draw.selectedColorHex == hex ? 3 : 1.5,
+                                ),
+                              ),
+                              child: draw.selectedColorHex == hex
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 18,
+                                      color: Colors.black87,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Persistent reader control bar:
+          // When in drawing mode: 4-button Highlighter Toolbar (Color, Highlighter, Notes, Clear)
+          // When reading: Speed / Play / Repeat / Night / More
           Positioned(
             left: 0,
             right: 0,
@@ -1446,152 +1671,272 @@ class _MushafScreenState extends State<MushafScreen> {
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      // Speed
-                      _barControl(
-                        onTap: _cycleSpeed,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _speedLabel(prefs.playbackSpeed),
-                              style: TextStyle(
-                                color: barAccent,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              'Speed',
-                              style: TextStyle(
-                                color: barText.withValues(alpha: 0.65),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Play / Pause (big circular button, gold outline)
-                      GestureDetector(
-                        onTap: _onPlayPausePressed,
-                        child: Container(
-                          width: 58,
-                          height: 58,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border:
-                                Border.all(color: barAccent, width: 2.5),
-                          ),
-                          child: Icon(
-                            audio.isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: barText,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-                      // Repeat (badge shows active mode)
-                      _barControl(
-                        onTap: _cycleRepeat,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Icon(
-                                  Icons.repeat,
-                                  color: barText.withValues(alpha: 0.85),
-                                  size: 24,
-                                ),
-                                if (prefs.repeatMode != 0)
-                                  Positioned(
-                                    right: -8,
-                                    top: -6,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 5, vertical: 1),
+                  child: drawingActive
+                      ? Consumer<PageDrawingService>(
+                          builder: (context, draw, _) => Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              // 1. Color
+                              _barControl(
+                                onTap: () {
+                                  setState(() {
+                                    _showColorPalette = !_showColorPalette;
+                                  });
+                                },
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
                                       decoration: BoxDecoration(
-                                        color: barAccent,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        _repeatLabels[prefs.repeatMode] ?? '',
-                                        style: TextStyle(
-                                          color: barDark
-                                              ? const Color(0xFF0A1F17)
-                                              : const Color(0xFFFFFDF5),
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                        color: draw.selectedColor,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: barAccent,
+                                          width: 2,
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Color',
+                                      style: TextStyle(
+                                        color: barText.withValues(alpha: 0.85),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 2. Highlighter
+                              _barControl(
+                                onTap: () {
+                                  draw.setTool('highlighter');
+                                },
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.highlight,
+                                      color: barAccent,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Highlighter',
+                                      style: TextStyle(
+                                        color: barAccent,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 3. Notes
+                              _barControl(
+                                onTap: () =>
+                                    _showPageNoteDialog(_currentPage),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.note_alt_outlined,
+                                      color: barText.withValues(alpha: 0.85),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Notes',
+                                      style: TextStyle(
+                                        color: barText.withValues(alpha: 0.65),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 4. Clear
+                              _barControl(
+                                onTap: () =>
+                                    _confirmClearPage(_currentPage),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      color: barText.withValues(alpha: 0.85),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Clear',
+                                      style: TextStyle(
+                                        color: barText.withValues(alpha: 0.65),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            // Speed
+                            _barControl(
+                              onTap: _cycleSpeed,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _speedLabel(prefs.playbackSpeed),
+                                    style: TextStyle(
+                                      color: barAccent,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                              ],
+                                  Text(
+                                    'Speed',
+                                    style: TextStyle(
+                                      color: barText.withValues(alpha: 0.65),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            Text(
-                              'Repeat',
-                              style: TextStyle(
-                                color: barText.withValues(alpha: 0.65),
-                                fontSize: 11,
+                            // Play / Pause (big circular button, gold outline)
+                            GestureDetector(
+                              onTap: _onPlayPausePressed,
+                              child: Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border:
+                                      Border.all(color: barAccent, width: 2.5),
+                                ),
+                                child: Icon(
+                                  audio.isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                  color: barText,
+                                  size: 32,
+                                ),
+                              ),
+                            ),
+                            // Repeat (badge shows active mode)
+                            _barControl(
+                              onTap: _cycleRepeat,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Icon(
+                                        Icons.repeat,
+                                        color: barText.withValues(alpha: 0.85),
+                                        size: 24,
+                                      ),
+                                      if (prefs.repeatMode != 0)
+                                        Positioned(
+                                          right: -8,
+                                          top: -6,
+                                          child: Container(
+                                            padding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 5,
+                                                    vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: barAccent,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              _repeatLabels[
+                                                      prefs.repeatMode] ??
+                                                  '',
+                                              style: TextStyle(
+                                                color: barDark
+                                                    ? const Color(0xFF0A1F17)
+                                                    : const Color(0xFFFFFDF5),
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  Text(
+                                    'Repeat',
+                                    style: TextStyle(
+                                      color: barText.withValues(alpha: 0.65),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Night page mode toggle: invert page (black bg, white text)
+                            _barControl(
+                              onTap: () => prefs
+                                  .setNightPageMode(!prefs.nightPageMode),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    prefs.nightPageMode
+                                        ? Icons.dark_mode
+                                        : Icons.dark_mode_outlined,
+                                    color: prefs.nightPageMode
+                                        ? barAccent
+                                        : barText.withValues(alpha: 0.85),
+                                    size: 24,
+                                  ),
+                                  Text(
+                                    'Night',
+                                    style: TextStyle(
+                                      color: barText.withValues(alpha: 0.65),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // 3-dot menu -> reader settings sheet
+                            _barControl(
+                              onTap: () => _showReaderSettings(context),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.more_vert,
+                                    color: barText.withValues(alpha: 0.85),
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'More',
+                                    style: TextStyle(
+                                      color: barSubText,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      // Night page mode toggle: invert page (black bg, white text)
-                      _barControl(
-                        onTap: () =>
-                            prefs.setNightPageMode(!prefs.nightPageMode),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              prefs.nightPageMode
-                                  ? Icons.dark_mode
-                                  : Icons.dark_mode_outlined,
-                              color: prefs.nightPageMode
-                                  ? barAccent
-                                  : barText.withValues(alpha: 0.85),
-                              size: 24,
-                            ),
-                            Text(
-                              'Night',
-                              style: TextStyle(
-                                color: barText.withValues(alpha: 0.65),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // 3-dot menu -> reader settings sheet
-                      _barControl(
-                        onTap: () => _showReaderSettings(context),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.more_vert,
-                              color: barText.withValues(alpha: 0.85),
-                              size: 24,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'More',
-                              style: TextStyle(
-                                color: barSubText,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -1606,15 +1951,15 @@ class _MushafScreenState extends State<MushafScreen> {
 /// image box. Coordinates are fractions (0..1) of the box.
 class _PageDrawingPainter extends CustomPainter {
   final List<DrawingStroke> strokes;
-  _PageDrawingPainter(this.strokes);
+  final bool isNightMode;
+  _PageDrawingPainter(this.strokes, {this.isNightMode = false});
 
   static Color _colorOf(String hex, bool translucent) {
     var h = hex.replaceAll('#', '');
     if (h.length == 6) h = 'FF$h';
-    final c = Color(int.tryParse(h, radix: 16) ?? 0xFFD4AF37);
-    // The highlighter must stay translucent like a real marker so the
-    // Quranic text always shows through, even with dark colors.
-    return translucent ? c.withValues(alpha: 0.30) : c;
+    final c = Color(int.tryParse(h, radix: 16) ?? 0xFFFFD54F);
+    // Translucent pastel tint so text shines through crisply
+    return translucent ? c.withValues(alpha: 0.38) : c;
   }
 
   @override
@@ -1624,31 +1969,67 @@ class _PageDrawingPainter extends CustomPainter {
     final img = _MushafScreenState._imageRect(size.width, size.height);
     Offset mapPt(Offset p) =>
         Offset(img.dx + p.dx * img.w, img.dy + p.dy * img.h);
+
     for (final s in strokes) {
-      final paint = Paint()
-        ..color = _colorOf(s.colorHex, s.tool == 'highlighter')
-        ..strokeWidth = max(1.5, s.width * img.w)
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke;
-      if (s.tool == 'rectangle') {
-        final r = s.rect;
-        canvas.drawRect(
-          Rect.fromLTRB(
-            img.dx + r.left * img.w,
-            img.dy + r.top * img.h,
-            img.dx + r.right * img.w,
-            img.dy + r.bottom * img.h,
-          ),
-          paint,
-        );
+      if (s.tool == 'highlighter') {
+        final hlPaint = Paint()
+          ..color = _colorOf(s.colorHex, true)
+          ..style = PaintingStyle.fill
+          ..blendMode = isNightMode ? BlendMode.screen : BlendMode.multiply;
+
+        if (s.rect != Rect.zero) {
+          final r = Rect.fromLTRB(
+            img.dx + s.rect.left * img.w,
+            img.dy + s.rect.top * img.h,
+            img.dx + s.rect.right * img.w,
+            img.dy + s.rect.bottom * img.h,
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(r, const Radius.circular(3)),
+            hlPaint,
+          );
+        } else if (s.points.isNotEmpty) {
+          final pts = s.points.map(mapPt).toList();
+          final strokePaint = Paint()
+            ..color = _colorOf(s.colorHex, true)
+            ..strokeWidth = max(18.0, s.width * img.w)
+            ..strokeCap = StrokeCap.square
+            ..strokeJoin = StrokeJoin.round
+            ..style = PaintingStyle.stroke
+            ..blendMode = isNightMode ? BlendMode.screen : BlendMode.multiply;
+          if (pts.length == 1) {
+            canvas.drawCircle(pts.first, strokePaint.strokeWidth / 2,
+                strokePaint..style = PaintingStyle.fill);
+          } else {
+            canvas.drawPoints(PointMode.polygon, pts, strokePaint);
+          }
+        }
       } else {
-        final pts = s.points.map(mapPt).toList();
-        if (pts.length == 1) {
-          canvas.drawCircle(pts.first, paint.strokeWidth / 2,
-              paint..style = PaintingStyle.fill);
-        } else if (pts.length > 1) {
-          canvas.drawPoints(PointMode.polygon, pts, paint);
+        final paint = Paint()
+          ..color = _colorOf(s.colorHex, false)
+          ..strokeWidth = max(1.5, s.width * img.w)
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..style = PaintingStyle.stroke;
+        if (s.tool == 'rectangle') {
+          final r = s.rect;
+          canvas.drawRect(
+            Rect.fromLTRB(
+              img.dx + r.left * img.w,
+              img.dy + r.top * img.h,
+              img.dx + r.right * img.w,
+              img.dy + r.bottom * img.h,
+            ),
+            paint,
+          );
+        } else {
+          final pts = s.points.map(mapPt).toList();
+          if (pts.length == 1) {
+            canvas.drawCircle(pts.first, paint.strokeWidth / 2,
+                paint..style = PaintingStyle.fill);
+          } else if (pts.length > 1) {
+            canvas.drawPoints(PointMode.polygon, pts, paint);
+          }
         }
       }
     }
@@ -1870,7 +2251,7 @@ class _BismillahHeader extends StatelessWidget {
     return Center(
       child: Container(
         constraints: const BoxConstraints(
-          minHeight: 56,
+          minHeight: 58,
           minWidth: 320,
           maxWidth: 410,
         ),
@@ -1878,46 +2259,49 @@ class _BismillahHeader extends StatelessWidget {
         child: CustomPaint(
           painter: _BismillahCartouchePainter(isDark: nightDim),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 11),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '۞',
-                  style: TextStyle(
-                    fontFamily: 'Amiri Quran',
-                    fontSize: 15,
-                    color: accentColor,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.visible,
+            padding: const EdgeInsets.only(left: 26, right: 26, top: 6, bottom: 14),
+            child: Transform.translate(
+              offset: const Offset(0, -3.5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '۞',
                     style: TextStyle(
                       fontFamily: 'Amiri Quran',
-                      fontSize: 21,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                      letterSpacing: 0.5,
+                      fontSize: 15,
+                      color: accentColor,
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  '۞',
-                  style: TextStyle(
-                    fontFamily: 'Amiri Quran',
-                    fontSize: 15,
-                    color: accentColor,
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                        fontFamily: 'Amiri Quran',
+                        fontSize: 21,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Text(
+                    '۞',
+                    style: TextStyle(
+                      fontFamily: 'Amiri Quran',
+                      fontSize: 15,
+                      color: accentColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
