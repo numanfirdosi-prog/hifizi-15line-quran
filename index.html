@@ -54,7 +54,7 @@
 					<button class="nav-item" data-view="prayer"><span class="nav-icon">🕌</span>Prayer Times & Azan (اوقات الصلوٰۃ)</button>
 					<button class="nav-item" data-view="qiblah"><span class="nav-icon">🧭</span>Qiblah Compass (قبلہ نما)</button>
 					<button class="nav-item" data-view="ramadan"><span class="nav-icon">☾</span>Ramzan & Duas</button>
-					<a class="nav-item" id="sidebarDownloadAppBtn" href="https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases/download/v1.0.33/Nur-Al-Quran-v1.0.33.apk" style="color:var(--primary);font-weight:700;text-decoration:none;"><span class="nav-icon">⬇️</span>Download App (ایپ ڈاؤن لوڈ کریں)</a>
+					<a class="nav-item" id="sidebarDownloadAppBtn" href="https://github.com/numanfirdosi-prog/hifizi-15line-quran/releases/download/v1.0.60/Nur-Al-Quran.apk" style="color:var(--primary);font-weight:700;text-decoration:none;"><span class="nav-icon">⬇️</span>Download App (ایپ ڈاؤن لوڈ کریں)</a>
 					<button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span>Preferences</button>
 					<button class="nav-item" data-view="backup"><span class="nav-icon">☁</span>Backup & Restore</button>
 					<button class="nav-item" data-view="faq"><span class="nav-icon">❓</span>Questions & FAQ</button>
@@ -1975,6 +1975,31 @@
 				});
 			});
 		}
+	</script>
+
+	<script>
+		// "Download App" button: always serve the newest release APK.
+		(function () {
+			var btn = document.getElementById('sidebarDownloadAppBtn');
+			if (!btn) return;
+			var fallback = btn.getAttribute('href');
+			btn.addEventListener('click', function (e) {
+				e.preventDefault();
+				var done = false;
+				var go = function (url) { if (!done) { done = true; window.location.href = url; } };
+				fetch('https://api.github.com/repos/numanfirdosi-prog/hifizi-15line-quran/releases/latest')
+					.then(function (r) { return r.json(); })
+					.then(function (j) {
+						var assets = j.assets || [], apk = null;
+						for (var i = 0; i < assets.length; i++) {
+							if (/\.apk$/i.test(assets[i].name)) { apk = assets[i]; break; }
+						}
+						go(apk ? apk.browser_download_url : fallback);
+					})
+					.catch(function () { go(fallback); });
+				setTimeout(function () { go(fallback); }, 8000);
+			});
+		})();
 	</script>
 </body>
 </html>
