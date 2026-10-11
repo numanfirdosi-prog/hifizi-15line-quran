@@ -398,6 +398,214 @@ class _SurahsScreenState extends State<SurahsScreen> {
     });
   }
 
+  /// Premium surah card matching the Juz Index card design: gold-ringed
+  /// number medallion, Arabic + English names, play / bookmark / info
+  /// actions, verified metadata rows, and a full-width gold Read button.
+  /// All four overflow-menu actions are integrated: Read (gold button +
+  /// card tap), Play (toggle), Bookmark (toggle), About (info sheet).
+  Widget _buildSurahCard(
+    BuildContext context,
+    Surah surah, {
+    required bool isCurrentlyPlaying,
+    required bool isBookmarked,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final audio = Provider.of<AudioRecitationService>(context, listen: false);
+    final badge = surah.number.toString().padLeft(2, '0');
+
+    return Card(
+      color: cs.surface,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          // Full gold ring while its recitation is playing.
+          color: isCurrentlyPlaying
+              ? cs.primary
+              : cs.primary.withValues(alpha: 0.25),
+          width: isCurrentlyPlaying ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => widget.onOpenPage(surah.startPage),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Gold-ringed number medallion
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: cs.primary.withValues(alpha: 0.12),
+                      border: Border.all(color: cs.primary, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          color: cs.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          surah.nameAr,
+                          textDirection: TextDirection.rtl,
+                          style: arabicStyle(
+                            prefs.scriptStyle,
+                            fontSize: 20,
+                            color: cs.onSurface,
+                            scale: prefs.ayahScale,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Surah $badge \u2022 ${surah.nameEn}',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Play / pause recitation
+                  _cardIconButton(
+                    context,
+                    icon: isCurrentlyPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                    tooltip: isCurrentlyPlaying
+                        ? 'Pause recitation'
+                        : 'Play recitation',
+                    onPressed: () {
+                      if (isCurrentlyPlaying) {
+                        audio.pause();
+                      } else {
+                        audio.playSurah(surahNumber: surah.number);
+                      }
+                    },
+                  ),
+                  // Bookmark start page
+                  _cardIconButton(
+                    context,
+                    icon: isBookmarked
+                        ? Icons.bookmark
+                        : Icons.bookmark_border,
+                    tooltip: isBookmarked
+                        ? 'Remove bookmark'
+                        : 'Bookmark this surah',
+                    onPressed: () => prefs.toggleBookmark(surah.startPage),
+                  ),
+                  // Surah info sheet (About this surah)
+                  _cardIconButton(
+                    context,
+                    icon: Icons.info_outline,
+                    tooltip: 'About this surah',
+                    onPressed: () => _showSurahIntro(context, surah),
+                  ),
+                ],
+              ),
+              Divider(
+                color: cs.primary.withValues(alpha: 0.25),
+                height: 20,
+              ),
+              // Verified metadata
+              _metaRow(
+                context,
+                Icons.auto_stories_outlined,
+                '${surah.totalAyahs} verses \u2022 ${surah.isMeccan ? 'Makki' : 'Madani'}',
+              ),
+              const SizedBox(height: 6),
+              _metaRow(
+                context,
+                Icons.menu_book_outlined,
+                'Starts on Page ${surah.startPage} \u2022 Juz ${juzForPage(surah.startPage)}',
+              ),
+              const SizedBox(height: 6),
+              _metaRow(
+                context,
+                Icons.translate_outlined,
+                surah.nameHi,
+              ),
+              const SizedBox(height: 12),
+              // The one prominent primary action.
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.menu_book, size: 18),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: cs.primary,
+                    foregroundColor: cs.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () => widget.onOpenPage(surah.startPage),
+                  label:
+                      Text('Read Surah $badge \u2022 Page ${surah.startPage}'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Compact header icon button: a 36px hit area keeps three actions from
+  /// crowding the surah names on narrow phones.
+  Widget _cardIconButton(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return IconButton(
+      icon: Icon(icon, color: cs.primary),
+      tooltip: tooltip,
+      onPressed: onPressed,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+    );
+  }
+
+  Widget _metaRow(BuildContext context, IconData icon, String text) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: cs.primary.withValues(alpha: 0.8)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+                fontSize: 12.5,
+                color: cs.onSurface.withValues(alpha: 0.85)),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -633,197 +841,19 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       ),
                     ),
                   )
-                : ListView.separated(
+                : ListView.builder(
                     itemCount: displayedSurahs.length,
-                    separatorBuilder: (ctx, i) => Divider(
-                        color: cs.onSurface.withValues(alpha: 0.12),
-                        height: 1),
                     itemBuilder: (context, index) {
                       final surah = displayedSurahs[index];
                       final isCurrentlyPlaying =
                           audio.isPlaying && audio.currentSurah == surah.number;
                       final isBookmarked =
                           bookmarked.contains(surah.startPage);
-
-                      return InkWell(
-                        onTap: () => widget.onOpenPage(surah.startPage),
-                        child: Container(
-                          color: isCurrentlyPlaying
-                              ? cs.primary.withValues(alpha: 0.14)
-                              : Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          child: Row(
-                            children: [
-                              // Surah Number Medallion (gold ring)
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: cs.primary, width: 1.5),
-                                  color: cs.primary
-                                      .withValues(alpha: 0.08),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    surah.number.toString(),
-                                    style: TextStyle(
-                                      color: cs.primary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-
-                              // Surah Details (takes remaining width; long
-                              // names ellipsize and never reach the controls)
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            surah.nameEn,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              color: cs.onSurface,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: cs.onSurface.withValues(
-                                                alpha: 0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            surah.nameHi,
-                                            style: TextStyle(
-                                              color: cs.primary,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${surah.totalAyahs} verses • ${surah.isMeccan ? 'Makki' : 'Madani'} • Page ${surah.startPage} • Juz ${juzForPage(surah.startPage)}',
-                                      style: TextStyle(
-                                          color: cs.onSurface
-                                              .withValues(alpha: 0.6),
-                                          fontSize: 11),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Arabic Name (shrinks gracefully; never pushes
-                              // the trailing menu off-screen)
-                              Flexible(
-                                child: Text(
-                                  surah.nameAr,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.right,
-                                  style: arabicStyle(prefs.scriptStyle,
-                                      fontSize: 20, color: cs.primary),
-                                ),
-                              ),
-
-                              // One aligned overflow menu per row: About /
-                              // Bookmark / Read / Play — consistent alignment
-                              // and no crowding on narrow phones.
-                              PopupMenuButton<String>(
-                                icon: Icon(Icons.more_vert,
-                                    color: cs.primary
-                                        .withValues(alpha: 0.85),
-                                    size: 20),
-                                tooltip: 'Surah actions',
-                                onSelected: (value) {
-                                  switch (value) {
-                                    case 'about':
-                                      _showSurahIntro(context, surah);
-                                    case 'bookmark':
-                                      prefs.toggleBookmark(surah.startPage);
-                                    case 'read':
-                                      widget.onOpenPage(surah.startPage);
-                                    case 'play':
-                                      if (isCurrentlyPlaying) {
-                                        audio.pause();
-                                      } else {
-                                        audio.playSurah(
-                                            surahNumber: surah.number);
-                                      }
-                                  }
-                                },
-                                itemBuilder: (ctx) => [
-                                  PopupMenuItem(
-                                    value: 'about',
-                                    child: Row(children: [
-                                      Icon(Icons.info_outline,
-                                          color: cs.primary, size: 20),
-                                      const SizedBox(width: 10),
-                                      const Text('About this surah'),
-                                    ]),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'bookmark',
-                                    child: Row(children: [
-                                      Icon(
-                                          isBookmarked
-                                              ? Icons.bookmark
-                                              : Icons.bookmark_border,
-                                          color: cs.primary,
-                                          size: 20),
-                                      const SizedBox(width: 10),
-                                      Text(isBookmarked
-                                          ? 'Remove bookmark'
-                                          : 'Bookmark this surah'),
-                                    ]),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'read',
-                                    child: Row(children: [
-                                      Icon(Icons.menu_book,
-                                          color: cs.primary, size: 20),
-                                      const SizedBox(width: 10),
-                                      Text('Read (p. ${surah.startPage})'),
-                                    ]),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'play',
-                                    child: Row(children: [
-                                      Icon(
-                                          isCurrentlyPlaying
-                                              ? Icons.pause_circle_outline
-                                              : Icons.play_circle_outline,
-                                          color: cs.primary,
-                                          size: 20),
-                                      const SizedBox(width: 10),
-                                      Text(isCurrentlyPlaying
-                                          ? 'Pause audio'
-                                          : 'Play recitation'),
-                                    ]),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                      return _buildSurahCard(
+                        context,
+                        surah,
+                        isCurrentlyPlaying: isCurrentlyPlaying,
+                        isBookmarked: isBookmarked,
                       );
                     },
                   ),
