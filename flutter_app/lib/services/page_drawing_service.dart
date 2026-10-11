@@ -105,6 +105,14 @@ bool hitTestStroke(DrawingStroke s, Offset p, double tolerance) {
   if (s.tool == 'rectangle') {
     return s.rect.inflate(tolerance).contains(p);
   }
+  // Highlighter strokes may be rect-based (whole-ayah highlights saved
+  // before freehand mode) or freehand points-based; accept a hit on
+  // either representation so the eraser removes both.
+  if (s.tool == 'highlighter' &&
+      s.rect != Rect.zero &&
+      s.rect.inflate(tolerance).contains(p)) {
+    return true;
+  }
   final pts = s.points;
   if (pts.isEmpty) return false;
   if (pts.length == 1) {

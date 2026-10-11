@@ -63,7 +63,6 @@ class _MushafScreenState extends State<MushafScreen> {
   int? _inProgressPage;
   bool _highlightsVisible = true;
   bool _showColorPalette = false;
-  String? _lastHighlightedAyahKey;
 
   static const List<double> _speeds = [0.5, 1.0, 1.25, 1.5, 2.0];
   static const List<int> _repeatModes = [0, 1, 3, 5, -1];
@@ -353,64 +352,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  Future<void> _highlightAt(BuildContext tapCtx, Offset globalPosition,
-      int pageNum, PageDrawingService draw) async {
-    final f = _toFraction(tapCtx, globalPosition);
-    if (f.dx < 0) return;
-    final segsMap = await _segmentsFuture;
-    final pageSegs = segsMap[pageNum] ?? const <AyahSeg>[];
-    final hit = hitTestAyah(pageSegs, f.dx, f.dy, pageNum);
-    if (hit == null) return;
-
-    final key = '${hit.surah}:${hit.ayah}';
-    if (_lastHighlightedAyahKey == key) return;
-    _lastHighlightedAyahKey = key;
-
-    final rects = rectsForAyah(pageSegs, hit.surah, hit.ayah, pageNum);
-    if (rects.isEmpty) return;
-
-    final existingStrokes = draw.strokesFor(pageNum);
-    final colorHex = draw.selectedColorHex;
-
-    bool isSameSegment(DrawingStroke s, AyahRect r) {
-      if (s.tool != 'highlighter' || s.rect == Rect.zero) return false;
-      return (s.rect.left - r.left).abs() < 0.015 &&
-          (s.rect.top - r.top).abs() < 0.015 &&
-          (s.rect.width - r.width).abs() < 0.015 &&
-          (s.rect.height - r.height).abs() < 0.015;
-    }
-
-    final matchingStrokes = existingStrokes.where((s) {
-      return rects.any((r) => isSameSegment(s, r));
-    }).toList();
-
-    if (matchingStrokes.isNotEmpty) {
-      if (matchingStrokes.every((s) => s.colorHex == colorHex)) {
-        for (final s in matchingStrokes) {
-          await draw.removeStrokeAt(pageNum, s.rect.center, 0.02);
-        }
-        if (mounted) setState(() {});
-        return;
-      }
-      for (final s in matchingStrokes) {
-        await draw.removeStrokeAt(pageNum, s.rect.center, 0.02);
-      }
-    }
-
-    for (final r in rects) {
-      await draw.addStroke(
-        pageNum,
-        DrawingStroke(
-          tool: 'highlighter',
-          colorHex: colorHex,
-          width: 0.04,
-          rect: Rect.fromLTWH(r.left, r.top, r.width, r.height),
-        ),
-      );
-    }
-    if (mounted) setState(() {});
-  }
-
   void _onDrawStart(BuildContext tapCtx, DragStartDetails d, int pageNum,
       PageDrawingService draw) {
     final tool = draw.selectedTool;
@@ -419,11 +360,8 @@ class _MushafScreenState extends State<MushafScreen> {
       _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
       return;
     }
-    if (tool == 'highlighter') {
-      _lastHighlightedAyahKey = null;
-      _highlightAt(tapCtx, d.globalPosition, pageNum, draw);
-      return;
-    }
+    // Highlighter is freehand like pen/brush: the stroke follows the finger
+    // path exactly (no whole-ayah auto-highlight).
     final f = _toFraction(tapCtx, d.globalPosition);
     if (f.dx < 0) return;
     setState(() {
@@ -446,10 +384,7 @@ class _MushafScreenState extends State<MushafScreen> {
       _onEraseAt(tapCtx, d.globalPosition, pageNum, draw);
       return;
     }
-    if (tool == 'highlighter') {
-      _highlightAt(tapCtx, d.globalPosition, pageNum, draw);
-      return;
-    }
+    // Highlighter appends freehand points like pen/brush.
     final cur = _inProgressStroke;
     if (cur == null || _inProgressPage != pageNum || cur.tool != tool) return;
     final f = _toFraction(tapCtx, d.globalPosition);
@@ -465,7 +400,6 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   Future<void> _onDrawEnd(int pageNum, PageDrawingService draw) async {
-    _lastHighlightedAyahKey = null;
     final s = _inProgressStroke;
     final p = _inProgressPage;
     _inProgressStroke = null;
