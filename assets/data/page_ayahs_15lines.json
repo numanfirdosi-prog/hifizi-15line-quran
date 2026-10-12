@@ -12167,59 +12167,39 @@
   ],
   "83": [
     {
-      "id": 517,
       "surah": 4,
       "ayah": 24,
-      "lines": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
           "right": 0.0,
           "width": 59.5
         }
-      ],
-      "verseKey": "4:24"
+      ]
     },
     {
-      "id": 518,
       "surah": 4,
       "ayah": 25,
-      "lines": [
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 5,
@@ -12228,50 +12208,44 @@
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
           "right": 0.0,
           "width": 17.9
         }
-      ],
-      "verseKey": "4:25"
+      ]
     },
     {
-      "id": 519,
       "surah": 4,
       "ayah": 26,
-      "lines": [
-        12,
-        13
-      ],
       "segments": [
         {
           "line": 12,
@@ -12283,18 +12257,11 @@
           "right": 0.0,
           "width": 66.9
         }
-      ],
-      "verseKey": "4:26"
+      ]
     },
     {
-      "id": 520,
       "surah": 4,
       "ayah": 27,
-      "lines": [
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 13,
@@ -12303,71 +12270,48 @@
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 15,
           "right": 0.0,
-          "width": 18.8
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:27"
+      ]
     },
     {
-      "id": 521,
       "surah": 4,
       "ayah": 28,
-      "lines": [
-        15
-      ],
       "segments": [
         {
           "line": 15,
-          "right": 18.8,
-          "width": 81.2
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:28"
+      ]
     }
   ],
   "84": [
     {
-      "id": 522,
       "surah": 4,
       "ayah": 29,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
           "width": 45.8
         }
-      ],
-      "verseKey": "4:29"
+      ]
     },
     {
-      "id": 523,
       "surah": 4,
       "ayah": 30,
-      "lines": [
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 3,
@@ -12376,43 +12320,35 @@
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 77.2
         }
-      ],
-      "verseKey": "4:30"
+      ]
     },
     {
-      "id": 524,
       "surah": 4,
       "ayah": 31,
-      "lines": [
-        5,
-        6
-      ],
       "segments": [
         {
+          "line": 4,
+          "right": 77.2,
+          "width": 22.8
+        },
+        {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
           "right": 0.0,
           "width": 18.2
         }
-      ],
-      "verseKey": "4:31"
+      ]
     },
     {
-      "id": 525,
       "surah": 4,
       "ayah": 32,
-      "lines": [
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 6,
@@ -12421,120 +12357,94 @@
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 86.7
         }
-      ],
-      "verseKey": "4:32"
+      ]
     },
     {
-      "id": 526,
       "surah": 4,
       "ayah": 33,
-      "lines": [
-        9,
-        10
-      ],
       "segments": [
         {
+          "line": 8,
+          "right": 86.7,
+          "width": 13.3
+        },
+        {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:33"
+      ]
     },
     {
-      "id": 527,
       "surah": 4,
       "ayah": 34,
-      "lines": [
-        11,
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:34"
+      ]
     }
   ],
   "85": [
     {
-      "id": 528,
       "surah": 4,
       "ayah": 35,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
           "width": 51.2
         }
-      ],
-      "verseKey": "4:35"
+      ]
     },
     {
-      "id": 529,
       "surah": 4,
       "ayah": 36,
-      "lines": [
-        3,
-        4,
-        5,
-        6,
-        7
-      ],
       "segments": [
         {
           "line": 3,
@@ -12543,64 +12453,50 @@
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
           "right": 0.0,
-          "width": 66.9
+          "width": 66.5
         }
-      ],
-      "verseKey": "4:36"
+      ]
     },
     {
-      "id": 530,
       "surah": 4,
       "ayah": 37,
-      "lines": [
-        7,
-        8,
-        9
-      ],
       "segments": [
         {
           "line": 7,
-          "right": 66.9,
-          "width": 33.1
+          "right": 66.5,
+          "width": 33.5
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
           "width": 64.4
         }
-      ],
-      "verseKey": "4:37"
+      ]
     },
     {
-      "id": 531,
       "surah": 4,
       "ayah": 38,
-      "lines": [
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 9,
@@ -12609,53 +12505,40 @@
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 84.4
+          "width": 84.2
         }
-      ],
-      "verseKey": "4:38"
+      ]
     },
     {
-      "id": 532,
       "surah": 4,
       "ayah": 39,
-      "lines": [
-        11,
-        12,
-        13
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 84.4,
-          "width": 15.6
+          "right": 84.2,
+          "width": 15.8
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
           "right": 0.0,
           "width": 39.8
         }
-      ],
-      "verseKey": "4:39"
+      ]
     },
     {
-      "id": 533,
       "surah": 4,
       "ayah": 40,
-      "lines": [
-        13,
-        14
-      ],
       "segments": [
         {
           "line": 13,
@@ -12667,17 +12550,11 @@
           "right": 0.0,
           "width": 85.1
         }
-      ],
-      "verseKey": "4:40"
+      ]
     },
     {
-      "id": 534,
       "surah": 4,
       "ayah": 41,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
@@ -12686,367 +12563,265 @@
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:41"
+      ]
     }
   ],
   "86": [
     {
-      "id": 535,
       "surah": 4,
       "ayah": 42,
-      "lines": [
-        1,
-        2
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
           "right": 0.0,
-          "width": 73.3
+          "width": 73.1
         }
-      ],
-      "verseKey": "4:42"
+      ]
     },
     {
-      "id": 536,
       "surah": 4,
       "ayah": 43,
-      "lines": [
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 2,
-          "right": 73.3,
-          "width": 26.7
+          "right": 73.1,
+          "width": 26.9
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
           "right": 0.0,
-          "width": 35.2
+          "width": 34.9
         }
-      ],
-      "verseKey": "4:43"
+      ]
     },
     {
-      "id": 537,
       "surah": 4,
       "ayah": 44,
-      "lines": [
-        8,
-        9,
-        10
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 35.2,
-          "width": 64.8
+          "right": 34.9,
+          "width": 65.1
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 10,
           "right": 0.0,
-          "width": 23.5
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:44"
+      ]
     },
     {
-      "id": 538,
       "surah": 4,
       "ayah": 45,
-      "lines": [
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 10,
-          "right": 23.5,
-          "width": 76.5
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 38.4
+          "width": 18.2
         }
-      ],
-      "verseKey": "4:45"
+      ]
     },
     {
-      "id": 539,
       "surah": 4,
       "ayah": 46,
-      "lines": [
-        11,
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 38.4,
-          "width": 61.6
+          "right": 18.2,
+          "width": 81.8
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:46"
+      ]
     }
   ],
   "87": [
     {
-      "id": 540,
       "surah": 4,
       "ayah": 47,
-      "lines": [
-        1,
-        2,
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 4,
           "right": 0.0,
-          "width": 15.0
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:47"
+      ]
     },
     {
-      "id": 541,
       "surah": 4,
       "ayah": 48,
-      "lines": [
-        4,
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 4,
-          "right": 15.0,
-          "width": 85.0
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 6,
           "right": 0.0,
-          "width": 24.1
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:48"
+      ]
     },
     {
-      "id": 542,
       "surah": 4,
       "ayah": 49,
-      "lines": [
-        6,
-        7
-      ],
       "segments": [
         {
           "line": 6,
-          "right": 24.1,
-          "width": 75.9
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
           "right": 0.0,
-          "width": 81.9
+          "width": 58.9
         }
-      ],
-      "verseKey": "4:49"
+      ]
     },
     {
-      "id": 543,
       "surah": 4,
       "ayah": 50,
-      "lines": [
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 7,
-          "right": 81.9,
-          "width": 18.1
+          "right": 58.9,
+          "width": 41.1
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 75.2
         }
-      ],
-      "verseKey": "4:50"
+      ]
     },
     {
-      "id": 544,
       "surah": 4,
       "ayah": 51,
-      "lines": [
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
+          "line": 8,
+          "right": 75.2,
+          "width": 24.8
+        },
+        {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 65.8
+          "width": 40.7
         }
-      ],
-      "verseKey": "4:51"
+      ]
     },
     {
-      "id": 545,
       "surah": 4,
       "ayah": 52,
-      "lines": [
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 65.8,
-          "width": 34.2
+          "right": 40.7,
+          "width": 59.3
         },
         {
           "line": 12,
           "right": 0.0,
-          "width": 76.6
+          "width": 59.6
         }
-      ],
-      "verseKey": "4:52"
+      ]
     },
     {
-      "id": 546,
       "surah": 4,
       "ayah": 53,
-      "lines": [
-        12,
-        13
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 76.6,
-          "width": 23.4
+          "right": 59.6,
+          "width": 40.4
         },
         {
           "line": 13,
           "right": 0.0,
           "width": 69.6
         }
-      ],
-      "verseKey": "4:53"
+      ]
     },
     {
-      "id": 547,
       "surah": 4,
       "ayah": 54,
-      "lines": [
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 13,
@@ -13055,310 +12830,238 @@
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:54"
+      ]
     }
   ],
   "88": [
     {
-      "id": 548,
       "surah": 4,
       "ayah": 55,
-      "lines": [
-        1,
-        2
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
           "right": 0.0,
-          "width": 17.5
+          "width": 17.3
         }
-      ],
-      "verseKey": "4:55"
+      ]
     },
     {
-      "id": 549,
       "surah": 4,
       "ayah": 56,
-      "lines": [
-        2,
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 2,
-          "right": 17.5,
-          "width": 82.5
+          "right": 17.3,
+          "width": 82.7
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
           "right": 0.0,
-          "width": 69.2
+          "width": 46.2
         }
-      ],
-      "verseKey": "4:56"
+      ]
     },
     {
-      "id": 550,
       "surah": 4,
       "ayah": 57,
-      "lines": [
-        4,
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 4,
-          "right": 69.2,
-          "width": 30.8
+          "right": 46.2,
+          "width": 53.8
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 84.8
         }
-      ],
-      "verseKey": "4:57"
+      ]
     },
     {
-      "id": 551,
       "surah": 4,
       "ayah": 58,
-      "lines": [
-        7,
-        8,
-        9
-      ],
       "segments": [
         {
+          "line": 6,
+          "right": 84.8,
+          "width": 15.2
+        },
+        {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
-          "width": 65.0
+          "width": 31.2
         }
-      ],
-      "verseKey": "4:58"
+      ]
     },
     {
-      "id": 552,
       "surah": 4,
       "ayah": 59,
-      "lines": [
-        9,
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 65.0,
-          "width": 35.0
+          "right": 31.2,
+          "width": 68.8
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
           "right": 0.0,
-          "width": 81.9
+          "width": 50.4
         }
-      ],
-      "verseKey": "4:59"
+      ]
     },
     {
-      "id": 553,
       "surah": 4,
       "ayah": 60,
-      "lines": [
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 81.9,
-          "width": 18.1
+          "right": 50.4,
+          "width": 49.6
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:60"
+      ]
     }
   ],
   "89": [
     {
-      "id": 554,
       "surah": 4,
       "ayah": 61,
-      "lines": [
-        1,
-        2
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
           "right": 0.0,
-          "width": 82.7
+          "width": 82.5
         }
-      ],
-      "verseKey": "4:61"
+      ]
     },
     {
-      "id": 555,
       "surah": 4,
       "ayah": 62,
-      "lines": [
-        2,
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 2,
-          "right": 82.7,
-          "width": 17.3
+          "right": 82.5,
+          "width": 17.5
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
+          "right": 0.0,
           "width": 100.0
         }
-      ],
-      "verseKey": "4:62"
+      ]
     },
     {
-      "id": 556,
       "surah": 4,
       "ayah": 63,
-      "lines": [
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
           "right": 0.0,
-          "width": 77.5
+          "width": 77.3
         }
-      ],
-      "verseKey": "4:63"
+      ]
     },
     {
-      "id": 557,
       "surah": 4,
       "ayah": 64,
-      "lines": [
-        6,
-        7,
-        8,
-        9
-      ],
       "segments": [
         {
           "line": 6,
-          "right": 77.5,
-          "width": 22.5
+          "right": 77.3,
+          "width": 22.7
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
           "width": 49.6
         }
-      ],
-      "verseKey": "4:64"
+      ]
     },
     {
-      "id": 558,
       "surah": 4,
       "ayah": 65,
-      "lines": [
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 9,
@@ -13367,59 +13070,45 @@
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 71.0
+          "width": 70.6
         }
-      ],
-      "verseKey": "4:65"
+      ]
     },
     {
-      "id": 559,
       "surah": 4,
       "ayah": 66,
-      "lines": [
-        11,
-        12,
-        13,
-        14
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 71.0,
-          "width": 29.0
+          "right": 70.6,
+          "width": 29.4
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
           "width": 69.4
         }
-      ],
-      "verseKey": "4:66"
+      ]
     },
     {
-      "id": 560,
       "surah": 4,
       "ayah": 67,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
@@ -13429,261 +13118,191 @@
         {
           "line": 15,
           "right": 0.0,
-          "width": 63.4
+          "width": 41.9
         }
-      ],
-      "verseKey": "4:67"
+      ]
     },
     {
-      "id": 561,
       "surah": 4,
       "ayah": 68,
-      "lines": [
-        15
-      ],
       "segments": [
         {
           "line": 15,
-          "right": 63.4,
-          "width": 36.6
+          "right": 41.9,
+          "width": 58.1
         }
-      ],
-      "verseKey": "4:68"
+      ]
     }
   ],
   "90": [
     {
-      "id": 562,
       "surah": 4,
       "ayah": 69,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
-          "width": 69.7
+          "width": 45.3
         }
-      ],
-      "verseKey": "4:69"
+      ]
     },
     {
-      "id": 563,
       "surah": 4,
       "ayah": 70,
-      "lines": [
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 3,
-          "right": 69.7,
-          "width": 30.3
+          "right": 45.3,
+          "width": 54.7
         },
         {
           "line": 4,
           "right": 0.0,
-          "width": 57.3
+          "width": 25.3
         }
-      ],
-      "verseKey": "4:70"
+      ]
     },
     {
-      "id": 564,
       "surah": 4,
       "ayah": 71,
-      "lines": [
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 4,
-          "right": 57.3,
-          "width": 42.7
+          "right": 25.3,
+          "width": 74.7
         },
         {
           "line": 5,
           "right": 0.0,
-          "width": 78.6
+          "width": 46.9
         }
-      ],
-      "verseKey": "4:71"
+      ]
     },
     {
-      "id": 565,
       "surah": 4,
       "ayah": 72,
-      "lines": [
-        5,
-        6,
-        7
-      ],
       "segments": [
         {
           "line": 5,
-          "right": 78.6,
-          "width": 21.4
+          "right": 46.9,
+          "width": 53.1
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
           "right": 0.0,
-          "width": 50.4
+          "width": 31.0
         }
-      ],
-      "verseKey": "4:72"
+      ]
     },
     {
-      "id": 566,
       "surah": 4,
       "ayah": 73,
-      "lines": [
-        7,
-        8,
-        9
-      ],
       "segments": [
         {
           "line": 7,
-          "right": 50.4,
-          "width": 49.6
+          "right": 31.0,
+          "width": 69.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
-          "width": 58.9
+          "width": 40.5
         }
-      ],
-      "verseKey": "4:73"
+      ]
     },
     {
-      "id": 567,
       "surah": 4,
       "ayah": 74,
-      "lines": [
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 58.9,
-          "width": 41.1
+          "right": 40.5,
+          "width": 59.5
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:74"
+      ]
     },
     {
-      "id": 568,
       "surah": 4,
       "ayah": 75,
-      "lines": [
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:75"
+      ]
     }
   ],
   "91": [
     {
-      "id": 569,
       "surah": 4,
       "ayah": 76,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
           "width": 58.2
         }
-      ],
-      "verseKey": "4:76"
+      ]
     },
     {
-      "id": 570,
       "surah": 4,
       "ayah": 77,
-      "lines": [
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 3,
@@ -13692,81 +13311,65 @@
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
           "right": 0.0,
-          "width": 70.1
+          "width": 69.9
         }
-      ],
-      "verseKey": "4:77"
+      ]
     },
     {
-      "id": 571,
       "surah": 4,
       "ayah": 78,
-      "lines": [
-        8,
-        9,
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 70.1,
-          "width": 29.9
+          "right": 69.9,
+          "width": 30.1
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
           "right": 0.0,
           "width": 59.6
         }
-      ],
-      "verseKey": "4:78"
+      ]
     },
     {
-      "id": 572,
       "surah": 4,
       "ayah": 79,
-      "lines": [
-        12,
-        13,
-        14
-      ],
       "segments": [
         {
           "line": 12,
@@ -13775,25 +13378,19 @@
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
           "width": 65.7
         }
-      ],
-      "verseKey": "4:79"
+      ]
     },
     {
-      "id": 573,
       "surah": 4,
       "ayah": 80,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
@@ -13802,51 +13399,37 @@
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:80"
+      ]
     }
   ],
   "92": [
     {
-      "id": 574,
       "surah": 4,
       "ayah": 81,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
           "width": 71.3
         }
-      ],
-      "verseKey": "4:81"
+      ]
     },
     {
-      "id": 575,
       "surah": 4,
       "ayah": 82,
-      "lines": [
-        3,
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 3,
@@ -13855,352 +13438,273 @@
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
           "right": 0.0,
-          "width": 17.3
+          "width": 17.2
         }
-      ],
-      "verseKey": "4:82"
+      ]
     },
     {
-      "id": 576,
       "surah": 4,
       "ayah": 83,
-      "lines": [
-        5,
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 5,
-          "right": 17.3,
-          "width": 82.7
+          "right": 17.2,
+          "width": 82.8
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
           "right": 0.0,
-          "width": 37.9
+          "width": 37.7
         }
-      ],
-      "verseKey": "4:83"
+      ]
     },
     {
-      "id": 577,
       "surah": 4,
       "ayah": 84,
-      "lines": [
-        8,
-        9,
-        10
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 37.9,
-          "width": 62.1
+          "right": 37.7,
+          "width": 62.3
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
           "right": 0.0,
-          "width": 66.2
+          "width": 65.8
         }
-      ],
-      "verseKey": "4:84"
+      ]
     },
     {
-      "id": 578,
       "surah": 4,
       "ayah": 85,
-      "lines": [
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 10,
-          "right": 66.2,
-          "width": 33.8
+          "right": 65.8,
+          "width": 34.2
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 89.0
         }
-      ],
-      "verseKey": "4:85"
+      ]
     },
     {
-      "id": 579,
       "surah": 4,
       "ayah": 86,
-      "lines": [
-        13,
-        14
-      ],
       "segments": [
         {
+          "line": 12,
+          "right": 89.0,
+          "width": 11.0
+        },
+        {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
-          "width": 40.5
+          "width": 40.4
         }
-      ],
-      "verseKey": "4:86"
+      ]
     },
     {
-      "id": 580,
       "surah": 4,
       "ayah": 87,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
-          "right": 40.5,
-          "width": 59.5
+          "right": 40.4,
+          "width": 59.6
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:87"
+      ]
     }
   ],
   "93": [
     {
-      "id": 581,
       "surah": 4,
       "ayah": 88,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
-          "width": 43.9
+          "width": 43.7
         }
-      ],
-      "verseKey": "4:88"
+      ]
     },
     {
-      "id": 582,
       "surah": 4,
       "ayah": 89,
-      "lines": [
-        3,
-        4,
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 3,
-          "right": 43.9,
-          "width": 56.1
+          "right": 43.7,
+          "width": 56.3
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
+          "right": 0.0,
           "width": 100.0
         }
-      ],
-      "verseKey": "4:89"
+      ]
     },
     {
-      "id": 583,
       "surah": 4,
       "ayah": 90,
-      "lines": [
-        7,
-        8,
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 79.5
+          "width": 63.2
         }
-      ],
-      "verseKey": "4:90"
+      ]
     },
     {
-      "id": 584,
       "surah": 4,
       "ayah": 91,
-      "lines": [
-        11,
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 79.5,
-          "width": 20.5
+          "right": 63.2,
+          "width": 36.8
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:91"
+      ]
     }
   ],
   "94": [
     {
-      "id": 585,
       "surah": 4,
       "ayah": 92,
-      "lines": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
           "right": 0.0,
           "width": 58.6
         }
-      ],
-      "verseKey": "4:92"
+      ]
     },
     {
-      "id": 586,
       "surah": 4,
       "ayah": 93,
-      "lines": [
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 6,
@@ -14209,27 +13713,19 @@
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
           "right": 0.0,
           "width": 27.1
         }
-      ],
-      "verseKey": "4:93"
+      ]
     },
     {
-      "id": 587,
       "surah": 4,
       "ayah": 94,
-      "lines": [
-        8,
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 8,
@@ -14238,90 +13734,68 @@
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:94"
+      ]
     },
     {
-      "id": 588,
       "surah": 4,
       "ayah": 95,
-      "lines": [
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:95"
+      ]
     }
   ],
   "95": [
     {
-      "id": 589,
       "surah": 4,
       "ayah": 96,
-      "lines": [
-        1,
-        2
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
           "right": 0.0,
           "width": 21.6
         }
-      ],
-      "verseKey": "4:96"
+      ]
     },
     {
-      "id": 590,
       "surah": 4,
       "ayah": 97,
-      "lines": [
-        2,
-        3,
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 2,
@@ -14330,258 +13804,198 @@
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:97"
+      ]
     },
     {
-      "id": 591,
       "surah": 4,
       "ayah": 98,
-      "lines": [
-        6,
-        7
-      ],
       "segments": [
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:98"
+      ]
     },
     {
-      "id": 592,
       "surah": 4,
       "ayah": 99,
-      "lines": [
-        8,
-        9
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
-          "width": 30.8
+          "width": 18.6
         }
-      ],
-      "verseKey": "4:99"
+      ]
     },
     {
-      "id": 593,
       "surah": 4,
       "ayah": 100,
-      "lines": [
-        9,
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 30.8,
-          "width": 69.2
+          "right": 18.6,
+          "width": 81.4
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:100"
+      ]
     },
     {
-      "id": 594,
       "surah": 4,
       "ayah": 101,
-      "lines": [
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:101"
+      ]
     }
   ],
   "96": [
     {
-      "id": 595,
       "surah": 4,
       "ayah": 102,
-      "lines": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:102"
+      ]
     },
     {
-      "id": 596,
       "surah": 4,
       "ayah": 103,
-      "lines": [
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 80.4
+          "width": 63.9
         }
-      ],
-      "verseKey": "4:103"
+      ]
     },
     {
-      "id": 597,
       "surah": 4,
       "ayah": 104,
-      "lines": [
-        11,
-        12,
-        13,
-        14
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 80.4,
-          "width": 19.6
+          "right": 63.9,
+          "width": 36.1
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
           "width": 18.6
         }
-      ],
-      "verseKey": "4:104"
+      ]
     },
     {
-      "id": 598,
       "surah": 4,
       "ayah": 105,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
@@ -14590,287 +14004,213 @@
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:105"
+      ]
     }
   ],
   "97": [
     {
-      "id": 599,
       "surah": 4,
       "ayah": 106,
-      "lines": [
-        1
-      ],
       "segments": [
         {
           "line": 1,
           "right": 0.0,
-          "width": 76.6
+          "width": 76.5
         }
-      ],
-      "verseKey": "4:106"
+      ]
     },
     {
-      "id": 600,
       "surah": 4,
       "ayah": 107,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 76.6,
-          "width": 23.4
+          "right": 76.5,
+          "width": 23.5
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
-          "width": 57.5
+          "width": 27.1
         }
-      ],
-      "verseKey": "4:107"
+      ]
     },
     {
-      "id": 601,
       "surah": 4,
       "ayah": 108,
-      "lines": [
-        3,
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 3,
-          "right": 57.5,
-          "width": 42.5
+          "right": 27.1,
+          "width": 72.9
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 55.4
         }
-      ],
-      "verseKey": "4:108"
+      ]
     },
     {
-      "id": 602,
       "surah": 4,
       "ayah": 109,
-      "lines": [
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
+          "line": 5,
+          "right": 55.4,
+          "width": 44.6
+        },
+        {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 8,
           "right": 0.0,
-          "width": 16.3
+          "width": 76.1
         }
-      ],
-      "verseKey": "4:109"
+      ]
     },
     {
-      "id": 603,
       "surah": 4,
       "ayah": 110,
-      "lines": [
-        8,
-        9
-      ],
       "segments": [
+        {
+          "line": 7,
+          "right": 76.1,
+          "width": 23.9
+        },
         {
           "line": 8,
-          "right": 16.3,
-          "width": 83.7
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
           "right": 0.0,
-          "width": 52.4
+          "width": 18.8
         }
-      ],
-      "verseKey": "4:110"
+      ]
     },
     {
-      "id": 604,
       "surah": 4,
       "ayah": 111,
-      "lines": [
-        9,
-        10
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 52.4,
-          "width": 47.6
+          "right": 18.8,
+          "width": 81.2
         },
         {
           "line": 10,
           "right": 0.0,
-          "width": 85.3
+          "width": 45.8
         }
-      ],
-      "verseKey": "4:111"
+      ]
     },
     {
-      "id": 605,
       "surah": 4,
       "ayah": 112,
-      "lines": [
-        10,
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 10,
-          "right": 85.3,
-          "width": 14.7
+          "right": 45.8,
+          "width": 54.2
         },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 12,
           "right": 0.0,
-          "width": 32.6
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:112"
+      ]
     },
     {
-      "id": 606,
       "surah": 4,
       "ayah": 113,
-      "lines": [
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 32.6,
-          "width": 67.4
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:113"
+      ]
     }
   ],
   "98": [
     {
-      "id": 607,
       "surah": 4,
       "ayah": 114,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:114"
+      ]
     },
     {
-      "id": 608,
       "surah": 4,
       "ayah": 115,
-      "lines": [
-        4,
-        5,
-        6
-      ],
       "segments": [
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
           "right": 0.0,
           "width": 37.3
         }
-      ],
-      "verseKey": "4:115"
+      ]
     },
     {
-      "id": 609,
       "surah": 4,
       "ayah": 116,
-      "lines": [
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 6,
@@ -14879,331 +14219,260 @@
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 8,
           "right": 0.0,
-          "width": 48.1
+          "width": 47.8
         }
-      ],
-      "verseKey": "4:116"
+      ]
     },
     {
-      "id": 610,
       "surah": 4,
       "ayah": 117,
-      "lines": [
-        8,
-        9
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 48.1,
-          "width": 51.9
+          "right": 47.8,
+          "width": 52.2
         },
         {
           "line": 9,
           "right": 0.0,
-          "width": 75.6
+          "width": 75.4
         }
-      ],
-      "verseKey": "4:117"
+      ]
     },
     {
-      "id": 611,
       "surah": 4,
       "ayah": 118,
-      "lines": [
-        9,
-        10
-      ],
       "segments": [
         {
           "line": 9,
-          "right": 75.6,
-          "width": 24.4
+          "right": 75.4,
+          "width": 24.6
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:118"
+      ]
     },
     {
-      "id": 612,
       "surah": 4,
       "ayah": 119,
-      "lines": [
-        11,
-        12,
-        13
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:119"
+      ]
     },
     {
-      "id": 613,
       "surah": 4,
       "ayah": 120,
-      "lines": [
-        14
-      ],
       "segments": [
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:120"
+      ]
     },
     {
-      "id": 614,
       "surah": 4,
       "ayah": 121,
-      "lines": [
-        15
-      ],
       "segments": [
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:121"
+      ]
     }
   ],
   "99": [
     {
-      "id": 615,
       "surah": 4,
       "ayah": 122,
-      "lines": [
-        1,
-        2,
-        3
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
           "right": 0.0,
-          "width": 78.4
+          "width": 65.5
         }
-      ],
-      "verseKey": "4:122"
+      ]
     },
     {
-      "id": 616,
       "surah": 4,
       "ayah": 123,
-      "lines": [
-        3,
-        4,
-        5
-      ],
       "segments": [
         {
           "line": 3,
-          "right": 78.4,
-          "width": 21.6
+          "right": 65.5,
+          "width": 34.5
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 74.9
         }
-      ],
-      "verseKey": "4:123"
+      ]
     },
     {
-      "id": 617,
       "surah": 4,
       "ayah": 124,
-      "lines": [
-        6,
-        7
-      ],
       "segments": [
         {
+          "line": 5,
+          "right": 74.9,
+          "width": 25.1
+        },
+        {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 71.7
         }
-      ],
-      "verseKey": "4:124"
+      ]
     },
     {
-      "id": 618,
       "surah": 4,
       "ayah": 125,
-      "lines": [
-        8,
-        9
-      ],
       "segments": [
         {
+          "line": 7,
+          "right": 71.7,
+          "width": 28.3
+        },
+        {
           "line": 8,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100.0
+          "right": 0.0,
+          "width": 87.3
         }
-      ],
-      "verseKey": "4:125"
+      ]
     },
     {
-      "id": 619,
       "surah": 4,
       "ayah": 126,
-      "lines": [
-        10,
-        11
-      ],
       "segments": [
         {
+          "line": 9,
+          "right": 87.3,
+          "width": 12.7
+        },
+        {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
-          "width": 20.2
+          "width": 20.0
         }
-      ],
-      "verseKey": "4:126"
+      ]
     },
     {
-      "id": 620,
       "surah": 4,
       "ayah": 127,
-      "lines": [
-        11,
-        12,
-        13,
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 11,
-          "right": 20.2,
-          "width": 79.8
+          "right": 20.0,
+          "width": 80.0
         },
         {
           "line": 12,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:127"
+      ]
     }
   ],
   "100": [
     {
-      "id": 621,
       "surah": 4,
       "ayah": 128,
-      "lines": [
-        1,
-        2,
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
           "right": 0.0,
           "width": 48.3
         }
-      ],
-      "verseKey": "4:128"
+      ]
     },
     {
-      "id": 622,
       "surah": 4,
       "ayah": 129,
-      "lines": [
-        4,
-        5,
-        6,
-        7
-      ],
       "segments": [
         {
           "line": 4,
@@ -15212,30 +14481,24 @@
         },
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
           "right": 0.0,
           "width": 18.8
         }
-      ],
-      "verseKey": "4:129"
+      ]
     },
     {
-      "id": 623,
       "surah": 4,
       "ayah": 130,
-      "lines": [
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 7,
@@ -15247,19 +14510,11 @@
           "right": 0.0,
           "width": 36.8
         }
-      ],
-      "verseKey": "4:130"
+      ]
     },
     {
-      "id": 624,
       "surah": 4,
       "ayah": 131,
-      "lines": [
-        8,
-        9,
-        10,
-        11
-      ],
       "segments": [
         {
           "line": 8,
@@ -15268,30 +14523,24 @@
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 10,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 11,
           "right": 0.0,
           "width": 61.4
         }
-      ],
-      "verseKey": "4:131"
+      ]
     },
     {
-      "id": 625,
       "surah": 4,
       "ayah": 132,
-      "lines": [
-        11,
-        12
-      ],
       "segments": [
         {
           "line": 11,
@@ -15301,47 +14550,34 @@
         {
           "line": 12,
           "right": 0.0,
-          "width": 80.0
+          "width": 64.2
         }
-      ],
-      "verseKey": "4:132"
+      ]
     },
     {
-      "id": 626,
       "surah": 4,
       "ayah": 133,
-      "lines": [
-        12,
-        13,
-        14
-      ],
       "segments": [
         {
           "line": 12,
-          "right": 80.0,
-          "width": 20.0
+          "right": 64.2,
+          "width": 35.8
         },
         {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
           "width": 19.6
         }
-      ],
-      "verseKey": "4:133"
+      ]
     },
     {
-      "id": 627,
       "surah": 4,
       "ayah": 134,
-      "lines": [
-        14,
-        15
-      ],
       "segments": [
         {
           "line": 14,
@@ -15350,379 +14586,267 @@
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:134"
+      ]
     }
   ],
   "101": [
     {
-      "id": 628,
       "surah": 4,
       "ayah": 135,
-      "lines": [
-        1,
-        2,
-        3,
-        4
-      ],
       "segments": [
         {
           "line": 1,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 2,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 3,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 4,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:135"
+      ]
     },
     {
-      "id": 629,
       "surah": 4,
       "ayah": 136,
-      "lines": [
-        5,
-        6,
-        7,
-        8
-      ],
       "segments": [
         {
           "line": 5,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 6,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 7,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 8,
           "right": 0.0,
-          "width": 29.6
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:136"
+      ]
     },
     {
-      "id": 630,
       "surah": 4,
       "ayah": 137,
-      "lines": [
-        8,
-        9,
-        10
-      ],
       "segments": [
         {
           "line": 8,
-          "right": 29.6,
-          "width": 70.4
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 9,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 10,
           "right": 0.0,
-          "width": 27.4
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:137"
+      ]
     },
     {
-      "id": 631,
       "surah": 4,
       "ayah": 138,
-      "lines": [
-        10
-      ],
       "segments": [
         {
           "line": 10,
-          "right": 27.4,
-          "width": 72.6
+          "right": 0.0,
+          "width": 67.1
         }
-      ],
-      "verseKey": "4:138"
+      ]
     },
     {
-      "id": 632,
       "surah": 4,
       "ayah": 139,
-      "lines": [
-        11,
-        12
-      ],
       "segments": [
+        {
+          "line": 10,
+          "right": 67.1,
+          "width": 32.9
+        },
         {
           "line": 11,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 12,
-          "right": 0.0,
-          "width": 68.8
-        }
-      ],
-      "verseKey": "4:139"
-    },
-    {
-      "id": 633,
-      "surah": 4,
-      "ayah": 140,
-      "lines": [
-        12,
-        13,
-        14,
-        15
-      ],
-      "segments": [
-        {
-          "line": 12,
-          "right": 68.8,
-          "width": 31.2
-        },
-        {
-          "line": 13,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 14,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 15,
-          "right": 0,
-          "width": 100
-        }
-      ],
-      "verseKey": "4:140"
-    }
-  ],
-  "102": [
-    {
-      "id": 634,
-      "surah": 4,
-      "ayah": 141,
-      "lines": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "segments": [
-        {
-          "line": 1,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 2,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 3,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 4,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 5,
-          "right": 0.0,
-          "width": 26.5
-        }
-      ],
-      "verseKey": "4:141"
-    },
-    {
-      "id": 635,
-      "surah": 4,
-      "ayah": 142,
-      "lines": [
-        5,
-        6,
-        7
-      ],
-      "segments": [
-        {
-          "line": 5,
-          "right": 26.5,
-          "width": 73.5
-        },
-        {
-          "line": 6,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 7,
           "right": 0.0,
           "width": 51.2
         }
-      ],
-      "verseKey": "4:142"
+      ]
     },
     {
-      "id": 636,
       "surah": 4,
-      "ayah": 143,
-      "lines": [
-        7,
-        8,
-        9
-      ],
+      "ayah": 140,
       "segments": [
         {
-          "line": 7,
+          "line": 12,
           "right": 51.2,
           "width": 48.8
         },
         {
-          "line": 8,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 9,
-          "right": 0.0,
-          "width": 26.9
-        }
-      ],
-      "verseKey": "4:143"
-    },
-    {
-      "id": 637,
-      "surah": 4,
-      "ayah": 144,
-      "lines": [
-        9,
-        10,
-        11
-      ],
-      "segments": [
-        {
-          "line": 9,
-          "right": 26.9,
-          "width": 73.1
-        },
-        {
-          "line": 10,
-          "right": 0,
-          "width": 100
-        },
-        {
-          "line": 11,
-          "right": 0.0,
-          "width": 26.7
-        }
-      ],
-      "verseKey": "4:144"
-    },
-    {
-      "id": 638,
-      "surah": 4,
-      "ayah": 145,
-      "lines": [
-        11,
-        12
-      ],
-      "segments": [
-        {
-          "line": 11,
-          "right": 26.7,
-          "width": 73.3
-        },
-        {
-          "line": 12,
-          "right": 0.0,
-          "width": 52.9
-        }
-      ],
-      "verseKey": "4:145"
-    },
-    {
-      "id": 639,
-      "surah": 4,
-      "ayah": 146,
-      "lines": [
-        12,
-        13,
-        14
-      ],
-      "segments": [
-        {
-          "line": 12,
-          "right": 52.9,
-          "width": 47.1
-        },
-        {
           "line": 13,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         },
         {
           "line": 14,
           "right": 0.0,
-          "width": 72.4
-        }
-      ],
-      "verseKey": "4:146"
-    },
-    {
-      "id": 640,
-      "surah": 4,
-      "ayah": 147,
-      "lines": [
-        14,
-        15
-      ],
-      "segments": [
-        {
-          "line": 14,
-          "right": 72.4,
-          "width": 27.6
+          "width": 100.0
         },
         {
           "line": 15,
-          "right": 0,
-          "width": 100
+          "right": 0.0,
+          "width": 100.0
         }
-      ],
-      "verseKey": "4:147"
+      ]
+    }
+  ],
+  "102": [
+    {
+      "surah": 4,
+      "ayah": 141,
+      "segments": [
+        {
+          "line": 1,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 2,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 3,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 4,
+          "right": 0.0,
+          "width": 100.0
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 142,
+      "segments": [
+        {
+          "line": 5,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 6,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 7,
+          "right": 0.0,
+          "width": 30.4
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 143,
+      "segments": [
+        {
+          "line": 7,
+          "right": 30.4,
+          "width": 69.6
+        },
+        {
+          "line": 8,
+          "right": 0.0,
+          "width": 100.0
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 144,
+      "segments": [
+        {
+          "line": 9,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 10,
+          "right": 0.0,
+          "width": 100.0
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 145,
+      "segments": [
+        {
+          "line": 11,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 12,
+          "right": 0.0,
+          "width": 26.0
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 146,
+      "segments": [
+        {
+          "line": 12,
+          "right": 26.0,
+          "width": 74.0
+        },
+        {
+          "line": 13,
+          "right": 0.0,
+          "width": 100.0
+        },
+        {
+          "line": 14,
+          "right": 0.0,
+          "width": 54.0
+        }
+      ]
+    },
+    {
+      "surah": 4,
+      "ayah": 147,
+      "segments": [
+        {
+          "line": 14,
+          "right": 54.0,
+          "width": 46.0
+        },
+        {
+          "line": 15,
+          "right": 0.0,
+          "width": 100.0
+        }
+      ]
     }
   ],
   "103": [
