@@ -236,6 +236,25 @@ class _MushafScreenState extends State<MushafScreen> {
     }
   }
 
+  /// Plays Bismillah (ayah 0) for the surah that starts on [pageNum].
+  Future<void> _playBismillahForPage(int pageNum) async {
+    final segsMap = await _segmentsFuture;
+    final segs = segsMap[pageNum] ?? const <AyahSeg>[];
+    for (final s in segs) {
+      if (s.ayah == 0 && s.surah != 9) {
+        final ok = await _audio.playAyah(surah: s.surah, ayah: 0);
+        if (!ok && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Audio nahi chal saka — internet check karein'),
+            ),
+          );
+        }
+        return;
+      }
+    }
+  }
+
   // ------------------------------------------------------------------
   // Page drawing tools (📜 menu): pen / brush / highlighter / rectangle /
   // eraser. Strokes are stored as fractions of the image box so they
@@ -1092,7 +1111,9 @@ class _MushafScreenState extends State<MushafScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (hasBismillah)
-              const _BismillahHeader()
+              _BismillahHeader(
+                onTap: () => _playBismillahForPage(pageNum),
+              )
             else
               _NeutralTopOrnament(gold: gold),
             const SizedBox(height: 5),
@@ -2352,7 +2373,8 @@ class _RibbonPainter extends CustomPainter {
 /// secondary in the light themes), text is onSurface for clear contrast in
 /// both modes.
 class _BismillahHeader extends StatelessWidget {
-  const _BismillahHeader();
+  final VoidCallback? onTap;
+  const _BismillahHeader({this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2365,12 +2387,15 @@ class _BismillahHeader extends StatelessWidget {
     final maxW = MediaQuery.of(context).size.width - 32;
 
     return Center(
-      child: Container(
-        constraints: BoxConstraints(
-          minHeight: 58,
-          minWidth: min(320.0, maxW),
-          maxWidth: 410,
-        ),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: BoxConstraints(
+            minHeight: 58,
+            minWidth: min(320.0, maxW),
+            maxWidth: 410,
+          ),
         margin: const EdgeInsets.symmetric(horizontal: 16),
         child: CustomPaint(
           painter: _BismillahCartouchePainter(
@@ -2427,6 +2452,7 @@ class _BismillahHeader extends StatelessWidget {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

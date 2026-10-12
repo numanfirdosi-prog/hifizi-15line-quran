@@ -156,27 +156,42 @@ const List<Qari> availableQaris = [
 /// Pure helper: the (surah, ayah) following ([s], [v]), or null at the end
 /// of the Quran (after 114:6).
 (int, int)? nextAyahAfter(int s, int v) {
-  final total = allSurahs[s - 1].totalAyahs;
-  var ns = s;
-  var nv = v + 1;
-  if (nv > total) {
-    ns += 1;
-    nv = 1;
+  if (v == 0) {
+    return (s, 1);
   }
+  final total = allSurahs[s - 1].totalAyahs;
+  if (v < total) {
+    return (s, v + 1);
+  }
+  final ns = s + 1;
   if (ns > 114) return null;
-  return (ns, nv);
+  // Surah 9 (At-Tawbah) has NO Bismillah: begins directly at ayah 1.
+  if (ns == 9) {
+    return (9, 1);
+  }
+  // All other Surahs (2..114 except 9) begin with Bismillah (ayah 0).
+  return (ns, 0);
 }
 
 /// Pure helper: the (surah, ayah) preceding ([s], [v]), or null at 1:1.
 (int, int)? prevAyahBefore(int s, int v) {
-  var ns = s;
-  var nv = v - 1;
-  if (nv < 1) {
-    ns -= 1;
-    if (ns < 1) return null;
-    nv = allSurahs[ns - 1].totalAyahs;
+  if (v > 1) {
+    return (s, v - 1);
   }
-  return (ns, nv);
+  if (v == 1) {
+    if (s == 1) return null;
+    if (s == 9) {
+      // Surah 9 has no Bismillah: previous is Surah 8's last ayah.
+      const prevSurah = 8;
+      return (prevSurah, allSurahs[prevSurah - 1].totalAyahs);
+    }
+    // Surahs 2..114 (except 9): going back from ayah 1 lands on Bismillah (ayah 0).
+    return (s, 0);
+  }
+  // v == 0 (Bismillah): previous is last ayah of previous surah.
+  final ps = s - 1;
+  if (ps < 1) return null;
+  return (ps, allSurahs[ps - 1].totalAyahs);
 }
 
 class AudioRecitationService extends ChangeNotifier {
@@ -285,7 +300,11 @@ class AudioRecitationService extends ChangeNotifier {
   String get statusText {
     if (_errorMessage != null) return 'Error — tap retry';
     if (_isLoading) return 'Loading…';
-    if (_isPlaying) return _ayahMode ? 'Ayah $_currentAyah' : 'Playing';
+    if (_isPlaying) {
+      return _ayahMode
+          ? (_currentAyah == 0 ? 'Bismillah' : 'Ayah $_currentAyah')
+          : 'Playing';
+    }
     return _hasActiveTrack ? 'Paused' : 'Ready';
   }
 
@@ -675,6 +694,15 @@ class AudioRecitationService extends ChangeNotifier {
       required int ayah,
       bool keepRepeatRange = false,
       bool autoAdvance = false}) async {
+    // Surah At-Tawbah (9) has no Bismillah: redirect any request for 9:0 directly to 9:1.
+    if (surah == 9 && ayah == 0) {
+      return playAyah(
+          surah: 9,
+          ayah: 1,
+          keepRepeatRange: keepRepeatRange,
+          autoAdvance: autoAdvance);
+    }
+
     // Every user-initiated playback bumps the generation so a stale
     // in-flight auto-advance can never overwrite the newer tap.
     if (!autoAdvance) _playGeneration++;
@@ -714,12 +742,42 @@ class AudioRecitationService extends ChangeNotifier {
       // A newer user tap superseded this playback while it was loading:
       // leave the player alone — the newer tap owns it now.
       if (gen != _playGeneration) return false;
-      await _player.setAudioSource(
-        localFile != null
-            ? AudioSource.uri(Uri.file(localFile.path))
-            // Cache the ayah audio on disk while streaming, like surah audio.
-            : LockCachingAudioSource(Uri.parse(audioUrl)),
-      );
+
+      if (localFile != null) {
+        await _player.setAudioSource(AudioSource.uri(Uri.file(localFile.path)));
+      } else {
+        try {
+          await _player.setAudioSource(
+            LockCachingAudioSource(Uri.parse(audioUrl)),
+          );
+        } catch (sourceErr) {
+          // Bismillah fallback: if {SSS}000.mp3 is missing on this reciter's server,
+          // try bismillah.mp3, 001001.mp3, or Alafasy's reference Bismillah.
+          if (ayah == 0 && surah != 9) {
+            final fallbacks = <String>[
+              '${_selectedQari.ayahBaseUrl}bismillah.mp3',
+              '${_selectedQari.ayahBaseUrl}001001.mp3',
+              'https://everyayah.com/data/Alafasy_128kbps/${surah.toString().padLeft(3, '0')}000.mp3',
+              'https://everyayah.com/data/Alafasy_128kbps/001001.mp3',
+            ];
+            bool loaded = false;
+            for (final fb in fallbacks) {
+              if (gen != _playGeneration) return false;
+              try {
+                await _player.setAudioSource(
+                  LockCachingAudioSource(Uri.parse(fb)),
+                );
+                loaded = true;
+                break;
+              } catch (_) {}
+            }
+            if (!loaded) rethrow;
+          } else {
+            rethrow;
+          }
+        }
+      }
+
       if (gen != _playGeneration) return false;
       await _player.play();
       if (gen == _playGeneration) {

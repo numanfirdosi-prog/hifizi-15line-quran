@@ -21,6 +21,14 @@ Future<List<dynamic>>? _playerDataFuture;
 /// Never includes private notes.
 Future<void> shareAyah(BuildContext context,
     {required int surah, required int ayah}) async {
+  final name = allSurahs[(surah - 1).clamp(0, 113)].nameEn;
+  if (ayah == 0) {
+    const text = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\n'
+        '"In the name of Allah, the Entirely Merciful, the Especially Merciful."\n\n'
+        '— Surah ';
+    await Share.share('$text$name (Bismillah) • Nur Al-Quran');
+    return;
+  }
   _quranTextFuture ??= loadQuranText();
   final list = await _quranTextFuture;
   QuranTextEntry? entry;
@@ -32,7 +40,6 @@ Future<void> shareAyah(BuildContext context,
       }
     }
   }
-  final name = allSurahs[(surah - 1).clamp(0, 113)].nameEn;
   final text = entry == null
       ? 'Surah $name ($surah:$ayah) — Nur Al-Quran'
       : '${entry.ar}\n\n"${entry.en}"\n\n— Surah $name ($surah:$ayah) • Nur Al-Quran';
@@ -140,7 +147,9 @@ class _AyahPlayerSheet extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Ayah $v of ${surah.totalAyahs}',
+                            v == 0
+                                ? 'Bismillah'
+                                : 'Ayah $v of ${surah.totalAyahs}',
                             style: TextStyle(
                               color: cs.primary,
                               fontSize: 13,
@@ -249,8 +258,17 @@ class _AyahPlayerSheet extends StatelessWidget {
                               snap.data?[0] as List<QuranTextEntry>?;
                           final urduMap =
                               snap.data?[1] as Map<String, String>?;
-                          final entry = _find(list, s, v);
-                          final urdu = urduMap?['$s:$v'] ?? '';
+                          final entry = v == 0
+                              ? const QuranTextEntry(
+                                  s: 1,
+                                  v: 1,
+                                  ar: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
+                                  en: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.',
+                                )
+                              : _find(list, s, v);
+                          final urdu = v == 0
+                              ? 'شروع اللہ کے نام سے جو بے انتہا مہربان، نہایت رحم فرمانے والا ہے'
+                              : (urduMap?['$s:$v'] ?? '');
                           return Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),

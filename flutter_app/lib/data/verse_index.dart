@@ -24,17 +24,20 @@ Map<String, int> buildVersePageIndex(Map<String, dynamic> pageAyahs) {
   return index;
 }
 
-/// Builds page number -> first 's:v' on that page (skips empty pages).
+/// Builds page number -> first canonical 's:v' (v >= 1) on that page (skips empty pages).
 Map<int, String> buildPageFirstVerseIndex(Map<String, dynamic> pageAyahs) {
   final index = <int, String>{};
   pageAyahs.forEach((pageKey, entries) {
     final page = int.tryParse(pageKey);
     if (page == null || entries is! List || entries.isEmpty) return;
-    final first = entries.first;
-    if (first is Map<String, dynamic>) {
-      final verseKey = first['verseKey'];
-      if (verseKey is String && verseKey.isNotEmpty) {
-        index[page] = verseKey;
+    for (final e in entries) {
+      if (e is Map<String, dynamic>) {
+        final ayah = (e['ayah'] as num?)?.toInt() ?? 0;
+        final verseKey = e['verseKey'];
+        if (ayah > 0 && verseKey is String && verseKey.isNotEmpty) {
+          index[page] = verseKey;
+          break;
+        }
       }
     }
   });
