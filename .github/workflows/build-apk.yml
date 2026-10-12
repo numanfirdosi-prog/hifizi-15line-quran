@@ -1,8 +1,5 @@
-name: Build Android APK
+name: Build & Release Android APK
 
-# Builds a signed-ready (unsigned) release APK of the Nur-Al-Quran Flutter app.
-# The APK is signed afterwards with the real release keystore, which is kept
-# off GitHub, and published as a GitHub Release asset.
 on:
   workflow_dispatch:
   push:
@@ -14,8 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      NUR_UNSIGNED_BUILD: "1"
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,9 +26,6 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # Default package list includes the long-removed 'tools' package,
-          # which makes sdkmanager exit 1. Only install platform-tools here;
-          # the remaining packages are installed in the next step.
           packages: platform-tools
 
       - name: Install Android packages
@@ -46,28 +40,62 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Configure Release Signing Key
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > flutter_app/android/app/release.jks
+          cat <<EOF > flutter_app/android/key.properties
+          storePassword=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.RELEASE_KEY_PASSWORD }}
+          keyAlias=${{ secrets.RELEASE_KEY_ALIAS }}
+          storeFile=release.jks
+          EOF
+
       - name: Install Dart dependencies
         working-directory: flutter_app
         run: flutter pub get
 
-      - name: Build unsigned release APK
+      - name: Build signed release APK
         working-directory: flutter_app
         run: flutter build apk --release
 
-      - name: Build unsigned release App Bundle (AAB)
+      - name: Build signed release App Bundle (AAB)
         working-directory: flutter_app
         run: flutter build appbundle --release
 
-      - name: Upload unsigned APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Nur-Al-Quran-unsigned-apk
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+      - name: Extract App Version
+        id: version
+        run: |
+          VERSION=$(grep '^version:' flutter_app/pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "APP_VERSION=v$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version is v$VERSION"
 
-      - name: Upload unsigned AAB
-        uses: actions/upload-artifact@v4
+      - name: Prepare Release Artifacts
+        run: |
+          mkdir -p release_dist
+          cp flutter_app/build/app/outputs/flutter-apk/app-release.apk release_dist/Nur-Al-Quran.apk
+          cp flutter_app/build/app/outputs/flutter-apk/app-release.apk release_dist/Nur-Al-Quran-${{ env.APP_VERSION }}.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Nur-Al-Quran-unsigned-aab
-          path: flutter_app/build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
+          tag_name: ${{ env.APP_VERSION }}
+          name: "Nur-Al-Quran ${{ env.APP_VERSION }} — Official Release"
+          body: |
+            Nur-Al-Quran ${{ env.APP_VERSION }}
+            
+            ### 🌟 Features & Highlights:
+            - **100% Authentic Ayah Highlight Alignment for Juz 1 & Juz 2:**
+              All ayah highlight segments verified and aligned against original 15-line Mushaf page images.
+            - **Ayah Highlighter Redesign:**
+              Multiply blend mode keeping Arabic calligraphy pitch-black and razor sharp with soft pastel highlighters.
+            - **Bismillah Cartouche Centering:**
+              Perfect vertical alignment inside illuminated frame.
+            - **Direct Parah & Page Jump:**
+              Jump to any Parah (1-30) and Page within Parah (1-20), or directly jump to any Mushaf page.
+          files: |
+            release_dist/Nur-Al-Quran.apk
+            release_dist/Nur-Al-Quran-${{ env.APP_VERSION }}.apk
+          token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          make_latest: true
+
