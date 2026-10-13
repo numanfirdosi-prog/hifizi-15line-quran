@@ -895,7 +895,7 @@ class _MushafScreenState extends State<MushafScreen> {
   /// 4. If bottom tab in HomeNavigationScreen -> returns to previous tab.
   void _handleBack() {
     final draw = Provider.of<PageDrawingService>(context, listen: false);
-    if (draw.isDrawingActive) {
+    if (draw.isDrawingMode) {
       _cancelInProgress();
       setState(() {
         _showColorPalette = false;
