@@ -137,6 +137,21 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
     }
   }
 
+  void _handleBackNavigation() {
+    while (_tabHistory.isNotEmpty && _tabHistory.last == _currentIndex) {
+      _tabHistory.removeLast();
+    }
+    if (_tabHistory.isNotEmpty) {
+      final prevIndex = _tabHistory.removeLast();
+      setState(() => _currentIndex = prevIndex);
+      return;
+    }
+    if (_currentIndex != 0) {
+      setState(() => _currentIndex = 0);
+      return;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -146,7 +161,10 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
         onSelectTab: _selectTab,
       ),
       MushafScreen(
-          key: ValueKey(_mushafTargetPage), initialPage: _mushafTargetPage),
+        key: ValueKey(_mushafTargetPage),
+        initialPage: _mushafTargetPage,
+        onBackToPreviousTab: _handleBackNavigation,
+      ),
       SurahsScreen(onOpenPage: _jumpToMushafPage),
       const PrayerScreen(),
       MoreScreen(

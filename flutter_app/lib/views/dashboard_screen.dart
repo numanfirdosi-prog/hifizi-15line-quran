@@ -23,6 +23,7 @@ import 'khatm_planner_screen.dart';
 import 'offline_download_screen.dart';
 import 'qiblah_screen.dart';
 import 'ramzan_duas_screen.dart';
+import 'mushaf_screen.dart';
 import 'search_quran_screen.dart';
 import 'settings_screen.dart';
 
@@ -112,15 +113,19 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  /// Pushes a screen that can jump to a mushaf page: the pushed route is
-  /// popped first so the mushaf tab switch underneath becomes visible.
+  /// Pushes a screen that can jump to a mushaf page: pushes MushafScreen
+  /// directly onto the navigator stack so system back / back button returns
+  /// directly to this screen (Bookmarks, Juz Index, Search, etc.).
   void _pushJumpable(
       BuildContext context, Widget Function(void Function(int)) build) {
     _push(
       context,
       build((page) {
-        Navigator.of(context).pop();
-        onOpenPage(page);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MushafScreen(initialPage: page),
+          ),
+        );
       }),
     );
   }
@@ -129,8 +134,11 @@ class DashboardScreen extends StatelessWidget {
     _push(
       context,
       SettingsScreen(onOpenPage: (p) {
-        Navigator.of(context).pop();
-        onOpenPage(p);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => MushafScreen(initialPage: p),
+          ),
+        );
       }),
     );
   }

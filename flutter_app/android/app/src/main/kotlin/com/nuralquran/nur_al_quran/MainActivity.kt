@@ -1,6 +1,7 @@
 package com.nuralquran.nur_al_quran
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -16,12 +17,42 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        wakeScreenIfLocked()
+        if (isAzanIntent(intent)) {
+            setShowWhenLockedCompat(true)
+        } else {
+            setShowWhenLockedCompat(false)
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (isAzanIntent(intent)) {
+            setShowWhenLockedCompat(true)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        wakeScreenIfLocked()
+        // Do not unconditionally wake the screen on normal resume.
+    }
+
+    private fun isAzanIntent(intent: Intent?): Boolean {
+        if (intent == null) return false
+        val payload = intent.getStringExtra("payload")
+        if (payload != null && payload.startsWith("azan_alarm")) return true
+        val extras = intent.extras ?: return false
+        for (key in extras.keySet()) {
+            val value = extras.get(key)
+            if (value is String && value.contains("azan_alarm")) {
+                return true
+            }
+        }
+        val id = extras.getInt("notification_id", extras.getInt("notificationId", -1))
+        if (id in 1001..1005) {
+            return true
+        }
+        return false
     }
 
     private fun wakeScreenIfLocked() {

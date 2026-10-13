@@ -17,13 +17,17 @@ import 'reader_settings_sheet.dart';
 
 class MushafScreen extends StatefulWidget {
   final int initialPage;
-  const MushafScreen({Key? key, this.initialPage = 2}) : super(key: key);
+  final VoidCallback? onBackToPreviousTab;
+  const MushafScreen(
+      {Key? key, this.initialPage = 2, this.onBackToPreviousTab})
+      : super(key: key);
 
   @override
   State<MushafScreen> createState() => _MushafScreenState();
 }
 
 class _MushafScreenState extends State<MushafScreen> {
+  final List<int> _pageHistory = [];
   late PageController _pageController;
   late int _currentPage;
   final TransformationController _transformController =
@@ -869,8 +873,11 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   /// Jumps directly to any page in the Mushaf (1..611) across all reading modes.
-  void _jumpToPage(int page) {
+  void _jumpToPage(int page, {bool recordHistory = true}) {
     final target = page.clamp(1, totalPagesInMushaf);
+    if (recordHistory && target != _currentPage) {
+      _pageHistory.add(_currentPage);
+    }
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     if (prefs.readingMode == 'scroll') {
       final itemHeight = _scrollItemHeight(context);
@@ -879,6 +886,38 @@ class _MushafScreenState extends State<MushafScreen> {
       _pageController.jumpToPage(target - 1);
     }
     _setCurrentPage(target);
+  }
+
+  /// Handles back navigation from the reader:
+  /// 1. If drawing tool is active -> exits drawing mode.
+  /// 2. If page jump history exists -> returns to previous page.
+  /// 3. If pushed onto Navigator (from Bookmarks, Search, Juz Index) -> pops route.
+  /// 4. If bottom tab in HomeNavigationScreen -> returns to previous tab.
+  void _handleBack() {
+    final draw = Provider.of<PageDrawingService>(context, listen: false);
+    if (draw.isDrawingActive) {
+      _cancelInProgress();
+      setState(() {
+        _showColorPalette = false;
+      });
+      draw.exitDrawing();
+      return;
+    }
+
+    if (_pageHistory.isNotEmpty) {
+      final prevPage = _pageHistory.removeLast();
+      _jumpToPage(prevPage, recordHistory: false);
+      return;
+    }
+
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    if (widget.onBackToPreviousTab != null) {
+      widget.onBackToPreviousTab!();
+    }
   }
 
   /// Toggles recitation of the Surah on the current page.
@@ -1470,12 +1509,18 @@ class _MushafScreenState extends State<MushafScreen> {
       _scrollViewWidth = null;
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // Full-screen reader: no AppBar — the Quran page fills the screen
-      // like the reference design. System back button navigates back.
-      body: Stack(
-        children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        // Full-screen reader: no AppBar — the Quran page fills the screen
+        // like the reference design. System back button navigates back.
+        body: Stack(
+          children: [
           // PageView with Reverse direction for Quranic Right-to-Left Reading
           if (isScroll)
             _buildScrollView(context)
@@ -1561,6 +1606,30 @@ class _MushafScreenState extends State<MushafScreen> {
                         color: isBookmarked ? barOnAccent : barText,
                         size: 22,
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Back button, top-left (symmetrical with bookmark ribbon).
+          if (!drawingActive)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 4,
+              left: 14,
+              child: Material(
+                color: barSurface.withValues(alpha: 0.88),
+                shape: const CircleBorder(),
+                elevation: 3,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: _handleBack,
+                  child: Padding(
+                    padding: const EdgeInsets.all(9),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: barText,
+                      size: 22,
                     ),
                   ),
                 ),
@@ -2083,6 +2152,7 @@ class _MushafScreenState extends State<MushafScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
