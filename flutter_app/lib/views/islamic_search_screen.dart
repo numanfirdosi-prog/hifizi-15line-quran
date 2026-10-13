@@ -10,6 +10,8 @@ import '../models/islamic_search_result.dart';
 import '../services/islamic_search_service.dart';
 import '../services/preferences_service.dart';
 import '../services/voice_search_service.dart';
+import '../data/lughat_data.dart';
+import '../data/verse_index.dart';
 import '../utils/script_font.dart';
 import '../widgets/premium_card.dart';
 
@@ -41,6 +43,9 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
   String _errorMessage = '';
   bool _isListening = false;
 
+  // Live Lughat suggestions shown while typing
+  List<LughatEntry> _suggestions = [];
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +71,7 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
       _hasSearched = true;
       _errorMessage = '';
       _results = [];
+      _suggestions = [];
     });
 
     final prefs = Provider.of<PreferencesService>(context, listen: false);
@@ -99,6 +105,33 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
         });
       }
     }
+  }
+
+  /// Updates live Lughat suggestions as the user types (2+ chars).
+  /// Matches Arabic word, Urdu meaning, or Roman transliteration.
+  void _updateSuggestions(String text) {
+    final clean = text.trim();
+    if (clean.length < 2) {
+      if (_suggestions.isNotEmpty) setState(() => _suggestions = []);
+      return;
+    }
+    final qNorm = normalizeUrdu(clean.toLowerCase());
+    final matches = <LughatEntry>[];
+    for (final entry in lughatDictionary) {
+      final wordNorm = normalizeUrdu(entry.word);
+      final urduNorm = normalizeUrdu(entry.urdu);
+      final romanNorm = entry.roman.toLowerCase();
+      if (wordNorm.contains(qNorm) ||
+          qNorm.contains(wordNorm) ||
+          urduNorm.contains(qNorm) ||
+          qNorm.contains(urduNorm) ||
+          romanNorm.contains(qNorm) ||
+          qNorm.contains(romanNorm)) {
+        matches.add(entry);
+        if (matches.length >= 5) break;
+      }
+    }
+    setState(() => _suggestions = matches);
   }
 
   Future<void> _toggleVoiceSearch() async {
@@ -377,6 +410,7 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                 controller: _searchController,
                 textInputAction: TextInputAction.search,
                 onSubmitted: _performSearch,
+                onChanged: _updateSuggestions,
                 textDirection: TextDirection.rtl,
                 decoration: InputDecoration(
                   hintText: 'مسئلہ، حدیث، آیت یا لفظ تلاش کریں...',
@@ -408,6 +442,69 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                 ),
               ),
               const SizedBox(height: 8),
+
+              // Live Lughat suggestions (shown while typing)
+              if (_suggestions.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: Nur.goldBorder(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: _suggestions.map((entry) {
+                      return InkWell(
+                        onTap: () {
+                          _searchController.text = entry.word;
+                          _updateSuggestions('');
+                          _performSearch(entry.word);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.book,
+                                  size: 14, color: Nur.gold),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: RichText(
+                                  textDirection: TextDirection.rtl,
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      color: cs.onSurface,
+                                      fontSize: 13,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: entry.word,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(
+                                        text: ' — ${entry.urdu}',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                'لغت',
+                                style: TextStyle(
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
 
               // Category filter chips
               SingleChildScrollView(
@@ -509,7 +606,24 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                           itemCount: _results.length,
                           itemBuilder: (context, index) {
                             final item = _results[index];
-                            return _buildResultCard(item, cs, isDark);
+                            // Staggered fade-in: each card fades in with
+                            // 50ms delay per index for a premium feel.
+                            return TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: Duration(
+                                  milliseconds: 250 + (index * 50)),
+                              curve: Curves.easeOut,
+                              builder: (context, opacity, child) {
+                                return Opacity(
+                                  opacity: opacity,
+                                  child: Transform.translate(
+                                    offset: Offset(0, 12 * (1 - opacity)),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: _buildResultCard(item, cs, isDark),
+                            );
                           },
                         ),
         ),
@@ -604,26 +718,63 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Badges row: Category + Evidence Type
+            // Badges row: Category + Evidence Type + Siratul Jinan
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    item.category.titleUrdu,
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: cs.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        item.category.titleUrdu,
+                        style: TextStyle(
+                          color: cs.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
+                    // Siratul Jinan badge
+                    if (item.searchSource.contains('Siratul Jinan')) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1B5E20)
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: const Color(0xFF1B5E20)
+                                  .withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.menu_book,
+                                size: 11, color: Color(0xFF1B5E20)),
+                            SizedBox(width: 3),
+                            Text(
+                              'صراط الجنان',
+                              style: TextStyle(
+                                color: Color(0xFF1B5E20),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 Container(
                   padding:
@@ -767,9 +918,11 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          item.category == IslamicSearchCategory.quran
-                              ? 'معتمد تفسیر (تفسیر ابن کثیر):'
-                              : 'شرعی و فقہی شرح:',
+                          item.searchSource.contains('Siratul Jinan')
+                              ? 'تفسیر صراط الجنان:'
+                              : item.category == IslamicSearchCategory.quran
+                                  ? 'معتمد تفسیر (تفسیر ابن کثیر):'
+                                  : 'شرعی و فقہی شرح:',
                           style: TextStyle(
                             color: cs.primary,
                             fontSize: 12,
@@ -826,34 +979,75 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
             ],
             const SizedBox(height: 14),
 
-            // Citation Footer Row
+            // Citation Footer — golden-bordered dalil box with tappable source
             InkWell(
               onTap: () => _showCitationDetails(item.citation),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Nur.goldBorder(0.4)),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.menu_book, size: 16, color: Nur.gold),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item.citation.formattedReferenceUrdu,
-                        textDirection: TextDirection.rtl,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: cs.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        const Icon(Icons.menu_book, size: 16, color: Nur.gold),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            item.citation.formattedReferenceUrdu,
+                            textDirection: TextDirection.rtl,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.chevron_left, size: 18),
+                      ],
+                    ),
+                    // Tappable source URL
+                    if (item.citation.sourceUrl != null &&
+                        item.citation.sourceUrl!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final url = item.citation.sourceUrl!;
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.open_in_new,
+                                size: 13, color: Nur.gold),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                item.citation.sourceUrl!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Nur.gold,
+                                  fontSize: 11,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const Icon(Icons.chevron_left, size: 18),
+                    ],
                   ],
                 ),
               ),

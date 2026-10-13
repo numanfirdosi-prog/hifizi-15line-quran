@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nur_al_quran/models/islamic_search_result.dart';
 import 'package:nur_al_quran/services/islamic_search_service.dart';
+import 'package:nur_al_quran/services/web_search_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -124,6 +125,91 @@ void main() {
       expect(entry.evidenceType, EvidenceType.linguisticLexicon);
       expect(entry.arabicText.contains('و-ق-ي'), isTrue);
       expect(entry.citation.bookName.contains('المفردات'), isTrue);
+    });
+
+    test('Lughat: Urdu search "نماز" returns Arabic word "صلاة" (Urdu→Arabic mapping)', () async {
+      final results = await service.search(
+        query: 'نماز',
+        category: IslamicSearchCategory.lughat,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      final entry = results.firstWhere(
+        (r) => r.arabicText.contains('صلاة'),
+        orElse: () => results.first,
+      );
+      expect(entry.arabicText.contains('صلاة'), isTrue);
+      expect(entry.evidenceType, EvidenceType.linguisticLexicon);
+    });
+
+    test('Lughat: Arabic search "صلاة" returns result', () async {
+      final results = await service.search(
+        query: 'صلاة',
+        category: IslamicSearchCategory.lughat,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      expect(results.first.evidenceType, EvidenceType.linguisticLexicon);
+      expect(results.first.arabicText.contains('صلاة'), isTrue);
+    });
+
+    test('Lughat: Roman Urdu search "namaz" returns result', () async {
+      final results = await service.search(
+        query: 'namaz',
+        category: IslamicSearchCategory.lughat,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      final entry = results.firstWhere(
+        (r) => r.arabicText.contains('صلاة'),
+        orElse: () => results.first,
+      );
+      expect(entry.arabicText.contains('صلاة'), isTrue);
+    });
+
+    test('Lughat: normalization — Urdu "تقوی" (ی) matches Arabic "تقوى" (ى) with root و-ق-ي', () async {
+      final results = await service.search(
+        query: 'تقوی',
+        category: IslamicSearchCategory.lughat,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      final entry = results.firstWhere(
+        (r) => r.arabicText.contains('و-ق-ي'),
+        orElse: () => results.first,
+      );
+      expect(entry.arabicText.contains('و-ق-ي'), isTrue);
+    });
+
+    test('Siratul Jinan URL helper returns a valid URL', () {
+      final url = siratulJinanUrl(2, 255);
+      expect(url.isNotEmpty, isTrue);
+      expect(
+        url.contains('urdumehfil') || url.contains('siratuljinan'),
+        isTrue,
+      );
+    });
+
+    test('Lughat: online-first search never throws and falls back offline', () async {
+      // The online dictionary (CDN) may be unreachable in tests — the
+      // search must still return offline core results and never throw.
+      final results = await service.search(
+        query: 'نماز',
+        category: IslamicSearchCategory.lughat,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      expect(results.first.category, IslamicSearchCategory.lughat);
+    });
+
+    test('Lughat: offline core dataset still has the essential words', () async {
+      for (final word in ['نماز', 'روزہ', 'زکوٰۃ', 'ایمان', 'تقوی']) {
+        final results = await service.search(
+          query: word,
+          category: IslamicSearchCategory.lughat,
+        );
+        expect(results.isNotEmpty, isTrue, reason: 'No result for $word');
+      }
     });
 
     test('Prioritizes Fiqh rulings when searching a masla in All category', () async {
