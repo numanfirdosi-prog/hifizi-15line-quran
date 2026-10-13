@@ -330,7 +330,7 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'الباsecond الباحث الإسلامي — تلاشِ علم',
+          'الباحث الإسلامي — تلاشِ علم',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
         ),
         actions: [
@@ -734,6 +734,61 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                     fontSize: 14,
                     color: cs.onSurface.withValues(alpha: 0.85),
                   ),
+                ),
+              ),
+            ],
+
+            // Tafsir or Scholarly Commentary section (تفسیر و فقہی شرح)
+            if (item.tafsirOrCommentary != null &&
+                item.tafsirOrCommentary!.trim().isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF132822)
+                      : const Color(0xFFF0F7F4),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: cs.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          item.category == IslamicSearchCategory.quran
+                              ? Icons.menu_book
+                              : Icons.school,
+                          size: 16,
+                          color: cs.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          item.category == IslamicSearchCategory.quran
+                              ? 'معتمد تفسیر (تفسیر ابن کثیر):'
+                              : 'شرعی و فقہی شرح:',
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.tafsirOrCommentary!,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

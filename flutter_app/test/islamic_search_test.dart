@@ -125,6 +125,20 @@ void main() {
       expect(entry.arabicText.contains('و-ق-ي'), isTrue);
       expect(entry.citation.bookName.contains('المفردات'), isTrue);
     });
+
+    test('Prioritizes Fiqh rulings when searching a masla in All category', () async {
+      final results = await service.search(
+        query: 'وضو کے فرائض',
+        category: IslamicSearchCategory.all,
+      );
+
+      expect(results.isNotEmpty, isTrue);
+      final first = results.first;
+      expect(first.category, IslamicSearchCategory.fiqh);
+      expect(first.title.contains('وضو کے چار فرائض'), isTrue);
+      expect(first.evidenceType, EvidenceType.quranNass);
+      expect(first.citation.bookName.contains('الفتاوى الهندية') || first.citation.bookName.contains('عالمگیری'), isTrue);
+    });
   });
 }
 
