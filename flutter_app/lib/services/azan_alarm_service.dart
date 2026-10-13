@@ -122,7 +122,9 @@ void azanAlarmCallback(int id) async {
           'azan_alarm_channel',
           'Azan Prayers & Alarms',
           importance: Importance.max,
-          priority: Priority.high,
+          priority: Priority.max,
+          visibility: NotificationVisibility.public,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
           category: AndroidNotificationCategory.alarm,
           // Only pop the full-screen alarm UI when audio actually plays;
           // with sound off this is a silent visual reminder.

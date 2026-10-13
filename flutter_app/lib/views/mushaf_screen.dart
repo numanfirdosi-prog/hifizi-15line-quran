@@ -241,6 +241,17 @@ class _MushafScreenState extends State<MushafScreen> {
     final segsMap = await _segmentsFuture;
     final segs = segsMap[pageNum] ?? const <AyahSeg>[];
     for (final s in segs) {
+      if (s.surah == 1 && s.ayah == 1) {
+        final ok = await _audio.playAyah(surah: 1, ayah: 1);
+        if (!ok && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Audio nahi chal saka — internet check karein'),
+            ),
+          );
+        }
+        return;
+      }
       if (s.ayah == 0 && s.surah != 9) {
         final ok = await _audio.playAyah(surah: s.surah, ayah: 0);
         if (!ok && mounted) {

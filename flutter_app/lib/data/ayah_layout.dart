@@ -107,22 +107,22 @@ const double _kTextTop = 0.0662;
 const double _kTextWidth = 0.7834; // 1 - 0.1097 - 0.1069
 const double _kTextHeight = 0.8689;
 
-/// Lauh bismillah cartouche (line 0 on page 2).
-const double _kLauhBisLeft = 0.28;
-const double _kLauhBisTop = 0.365;
-const double _kLauhBisW = 0.44; // 1 - 0.28 - 0.28
-const double _kLauhBisH = 0.062;
+/// Lauh bismillah cartouche (line 0 on pages 2 and 3).
+const double _kLauhBisLeft = 0.21;
+const double _kLauhBisTop = 0.352;
+const double _kLauhBisW = 0.58;
+const double _kLauhBisH = 0.0685;
 
-/// Lauh line rows 1..6: left 24.6%, width 50.8%, (top, height) per line.
-const double _kLauhRowLeft = 0.246;
-const double _kLauhRowW = 0.508; // 1 - 0.246 - 0.246
+/// Lauh line rows 1..6: left 25.4%, width 49.5%, exact row heights.
+const double _kLauhRowLeft = 0.254;
+const double _kLauhRowW = 0.495;
 const Map<int, (double, double)> _kLauhRows = {
-  1: (0.428, 0.0685),
-  2: (0.4965, 0.0685),
-  3: (0.565, 0.0685),
-  4: (0.6335, 0.0685),
-  5: (0.702, 0.0685),
-  6: (0.7705, 0.0715),
+  1: (0.4278, 0.0685),
+  2: (0.4963, 0.0685),
+  3: (0.5648, 0.0676),
+  4: (0.6324, 0.0685),
+  5: (0.7009, 0.0685),
+  6: (0.7694, 0.0676),
 };
 
 bool _isLauhPage(int page) => page == 2 || page == 3;

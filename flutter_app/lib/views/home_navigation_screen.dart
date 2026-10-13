@@ -20,6 +20,7 @@ class HomeNavigationScreen extends StatefulWidget {
 class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   int _currentIndex = 0;
   int _mushafTargetPage = 2;
+  final List<int> _tabHistory = [];
 
   @override
   void initState() {
@@ -94,6 +95,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   }
 
   void _jumpToMushafPage(int page) {
+    if (_currentIndex != 1) {
+      _tabHistory.add(_currentIndex);
+    }
     setState(() {
       _mushafTargetPage = page;
       _currentIndex = 1; // Switch to Mushaf tab
@@ -125,9 +129,12 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   }
 
   void _selectTab(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (index != _currentIndex) {
+      _tabHistory.add(_currentIndex);
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   @override
@@ -148,12 +155,20 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
       ),
     ];
 
-    // Back button: on a non-home tab go back to Home; on Home ask for
+    // Back button: navigate backwards through tab history; on root Home ask for
     // confirmation before closing the app.
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
+        while (_tabHistory.isNotEmpty && _tabHistory.last == _currentIndex) {
+          _tabHistory.removeLast();
+        }
+        if (_tabHistory.isNotEmpty) {
+          final prevIndex = _tabHistory.removeLast();
+          setState(() => _currentIndex = prevIndex);
+          return;
+        }
         if (_currentIndex != 0) {
           setState(() => _currentIndex = 0);
           return;
@@ -235,9 +250,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                   child: NavigationBar(
                   selectedIndex: _currentIndex,
                   onDestinationSelected: (idx) {
-                    setState(() {
-                      _currentIndex = idx;
-                    });
+                    _selectTab(idx);
                   },
                   destinations: const [
                     NavigationDestination(
