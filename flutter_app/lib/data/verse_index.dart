@@ -14,8 +14,11 @@ Map<String, int> buildVersePageIndex(Map<String, dynamic> pageAyahs) {
     if (page == null || entries is! List) return;
     for (final entry in entries) {
       if (entry is Map<String, dynamic>) {
-        final verseKey = entry['verseKey'];
-        if (verseKey is String && verseKey.isNotEmpty) {
+        final s = entry['surah'];
+        final v = entry['ayah'];
+        final verseKey = (entry['verseKey'] as String?) ??
+            ((s != null && v != null) ? '$s:$v' : null);
+        if (verseKey != null && verseKey.isNotEmpty) {
           index[verseKey] = page;
         }
       }
@@ -33,8 +36,10 @@ Map<int, String> buildPageFirstVerseIndex(Map<String, dynamic> pageAyahs) {
     for (final e in entries) {
       if (e is Map<String, dynamic>) {
         final ayah = (e['ayah'] as num?)?.toInt() ?? 0;
-        final verseKey = e['verseKey'];
-        if (ayah > 0 && verseKey is String && verseKey.isNotEmpty) {
+        final s = e['surah'];
+        final verseKey = (e['verseKey'] as String?) ??
+            ((s != null && ayah > 0) ? '$s:$ayah' : null);
+        if (ayah > 0 && verseKey != null && verseKey.isNotEmpty) {
           index[page] = verseKey;
           break;
         }
