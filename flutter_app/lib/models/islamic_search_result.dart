@@ -276,3 +276,4 @@ class IslamicSearchResult {
     return b.toString();
   }
 }
+

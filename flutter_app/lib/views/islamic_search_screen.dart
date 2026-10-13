@@ -109,14 +109,16 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
     }
 
     setState(() => _isListening = true);
-    final ok = await _voiceService.listen((recognizedWords) {
-      if (mounted) {
-        _searchController.text = recognizedWords;
-        if (recognizedWords.trim().isNotEmpty) {
-          _performSearch(recognizedWords);
+    final ok = await _voiceService.startListening(
+      onResult: (spokenText, _) {
+        if (mounted) {
+          _searchController.text = spokenText;
+          if (spokenText.trim().isNotEmpty) {
+            _performSearch(spokenText);
+          }
         }
-      }
-    });
+      },
+    );
 
     if (!ok && mounted) {
       setState(() => _isListening = false);
@@ -628,7 +630,7 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: item.evidenceType == EvidenceType.quranNass
-                        ? Colors.emerald.withValues(alpha: 0.2)
+                        ? Nur.elevatedGreen.withValues(alpha: 0.2)
                         : cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -709,6 +711,7 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                       item.arabicText,
                       textDirection: TextDirection.rtl,
                       style: arabicStyle(
+                        prefs.scriptStyle,
                         fontSize: 18,
                         height: 1.8,
                         color: cs.onSurface,
@@ -729,7 +732,6 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
                   textDirection: TextDirection.rtl,
                   style: urduStyle(
                     fontSize: 14,
-                    height: 1.6,
                     color: cs.onSurface.withValues(alpha: 0.85),
                   ),
                 ),
@@ -997,3 +999,4 @@ class _IslamicSearchScreenState extends State<IslamicSearchScreen>
     );
   }
 }
+

@@ -191,27 +191,27 @@ class IslamicSearchService {
         final qLow = query.toLowerCase();
 
         for (final entry in quranText) {
-          final urdu = urduText['${entry.surah}:${entry.ayah}'] ?? '';
-          if (entry.textAr.contains(query) ||
+          final urdu = urduText['${entry.s}:${entry.v}'] ?? '';
+          if (entry.ar.contains(query) ||
               urdu.contains(query) ||
-              entry.textEn.toLowerCase().contains(qLow)) {
-            final surahName = allSurahs[(entry.surah - 1).clamp(0, allSurahs.length - 1)].nameAr;
+              entry.en.toLowerCase().contains(qLow)) {
+            final surahName = allSurahs[(entry.s - 1).clamp(0, allSurahs.length - 1)].nameAr;
             list.add(
               IslamicSearchResult(
-                id: 'quran_${entry.surah}_${entry.ayah}',
-                title: 'سورۃ $surahName — آیت ${entry.ayah}',
+                id: 'quran_${entry.s}_${entry.v}',
+                title: 'سورۃ $surahName — آیت ${entry.v}',
                 category: IslamicSearchCategory.quran,
                 evidenceType: EvidenceType.quranNass,
-                summary: 'سورۃ $surahName کی آیتِ مبارکہ ${entry.ayah} کا مستند متن و ترجمہ۔',
-                arabicText: entry.textAr,
+                summary: 'سورۃ $surahName کی آیتِ مبارکہ ${entry.v} کا مستند متن و ترجمہ۔',
+                arabicText: entry.ar,
                 translation: urdu,
-                englishTranslation: entry.textEn,
+                englishTranslation: entry.en,
                 citation: IslamicCitation(
                   bookName: 'القرآن الکریم',
-                  chapter: 'سورۃ $surahName (${entry.surah})',
-                  pageOrNumber: 'آیت ${entry.ayah}',
+                  chapter: 'سورۃ $surahName (${entry.s})',
+                  pageOrNumber: 'آیت ${entry.v}',
                   grading: 'قطعی الثبوت',
-                  sourceUrl: 'https://quran.com/${entry.surah}/${entry.ayah}',
+                  sourceUrl: 'https://quran.com/${entry.s}/${entry.v}',
                 ),
                 tafsirOrCommentary: 'تفسیر معارف القرآن (مفتی محمد شفیع عثمانی) و تفسیر ابن کثیر۔',
                 searchSource: 'Verified Quran Corpus (Offline Cache)',
@@ -234,8 +234,8 @@ class IslamicSearchService {
       final urduText = await loadUrduKanzulIman();
 
       final entry = quranText.firstWhere(
-        (e) => e.surah == surah && e.ayah == ayah,
-        orElse: () => QuranTextEntry(surah: surah, ayah: ayah, textAr: '', textEn: ''),
+        (e) => e.s == surah && e.v == ayah,
+        orElse: () => QuranTextEntry(s: surah, v: ayah, ar: '', en: ''),
       );
       final urdu = urduText[verseKey] ?? '';
       final surahName = allSurahs[(surah - 1).clamp(0, allSurahs.length - 1)].nameAr;
@@ -246,9 +246,9 @@ class IslamicSearchService {
         category: IslamicSearchCategory.quran,
         evidenceType: EvidenceType.quranNass,
         summary: 'سورۃ $surahName کی آیت نمبر $ayah کا براہِ راست متن اور مکمل تفسیر۔',
-        arabicText: entry.textAr,
+        arabicText: entry.ar,
         translation: urdu,
-        englishTranslation: entry.textEn,
+        englishTranslation: entry.en,
         citation: IslamicCitation(
           bookName: 'القرآن الکریم',
           chapter: 'سورۃ $surahName ($surah)',
@@ -781,3 +781,4 @@ Reply ONLY with the raw JSON array.
     return list;
   }
 }
+
