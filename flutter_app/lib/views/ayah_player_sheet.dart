@@ -719,7 +719,6 @@ class _TafsirSectionState extends State<_TafsirSection> {
                 style: urduStyle(
                   fontSize: 16,
                   color: cs.onSurface,
-                  height: 1.8,
                 ),
               );
             },
