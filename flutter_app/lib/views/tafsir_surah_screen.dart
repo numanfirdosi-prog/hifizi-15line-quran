@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../services/tafsir_service.dart';
 import '../utils/script_font.dart';
@@ -22,12 +23,20 @@ class TafsirSurahScreen extends StatefulWidget {
 class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
   Future<_SurahTafsirData>? _loadFuture;
   final Map<int, GlobalKey> _ayahKeys = {};
+  final ScrollController _scrollController = ScrollController();
   bool _scrolled = false;
+  int _scrollAttempts = 0;
 
   @override
   void initState() {
     super.initState();
     _loadFuture = _loadData();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   /// Loads Arabic+English, Urdu, and all tafsir for this surah.
@@ -52,21 +61,51 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
     return _SurahTafsirData(entries: entries, urdu: urdu, tafsir: tafsir);
   }
 
+  /// Scrolls to [widget.scrollToAyah] once its card is laid out.
+  ///
+  /// ListView only mounts near-visible children, so a far-down ayah
+  /// (e.g. 2:255 or 36:58) has no [GlobalKey] context on the first
+  /// frame — the old code returned silently and the list stayed at
+  /// Ayah 1. This version scrolls down in chunks to force layout of
+  /// further items, then retries [Scrollable.ensureVisible] until the
+  /// target context exists. [_scrolled] is set only after a successful
+  /// scroll (or after the bounded retry budget is exhausted).
   void _scrollToAyahIfNeeded() {
     if (_scrolled) return;
     final target = widget.scrollToAyah;
     if (target == null) return;
     final key = _ayahKeys[target];
-    if (key?.currentContext == null) return;
-    _scrolled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Scrollable.ensureVisible(
-        key!.currentContext!,
-        duration: const Duration(milliseconds: 600),
-        alignment: 0.05,
-      );
-    });
+    if (key?.currentContext != null) {
+      _scrolled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Scrollable.ensureVisible(
+          key!.currentContext!,
+          duration: const Duration(milliseconds: 600),
+          alignment: 0.05,
+        );
+      });
+      return;
+    }
+    // Target not laid out yet — scroll down a chunk to force the
+    // ListView to mount further children, then retry. Bounded so an
+    // invalid/out-of-range target can't loop forever. 8000px chunks
+    // converge fast even for the longest surahs (2:255 etc.).
+    if (_scrollAttempts < 100) {
+      _scrollAttempts++;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        final pos = _scrollController.position;
+        final next =
+            (pos.pixels + 8000).clamp(0.0, pos.maxScrollExtent);
+        if (next == pos.pixels) return; // Already at bottom.
+        _scrollController.jumpTo(next);
+        Future.delayed(const Duration(milliseconds: 120), () {
+          if (!mounted) return;
+          _scrollToAyahIfNeeded();
+        });
+      });
+    }
   }
 
   Widget _ayahCard(BuildContext context, _SurahTafsirData data,
@@ -97,7 +136,7 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Ayah number badge
+          // Ayah number badge + audio button
           Row(
             children: [
               Container(
@@ -118,6 +157,46 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+              const Spacer(),
+              // Per-ayah audio: plays this ayah (auto-advances ayah-by-ayah
+              // like the Ayah Player). Shows pause while this ayah plays.
+              Consumer<AudioRecitationService>(
+                builder: (context, audio, _) {
+                  final isThisPlaying = audio.isPlaying &&
+                      audio.currentSurah == entry.s &&
+                      audio.currentAyah == entry.v;
+                  return IconButton(
+                    icon: Icon(
+                      isThisPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_fill,
+                      color: cs.primary,
+                      size: 30,
+                    ),
+                    tooltip:
+                        isThisPlaying ? 'Pause' : 'Ayah ki audio sunain',
+                    onPressed: () async {
+                      final svc = Provider.of<AudioRecitationService>(
+                          context,
+                          listen: false);
+                      if (isThisPlaying) {
+                        await svc.pause();
+                        return;
+                      }
+                      final ok = await svc.playAyah(
+                          surah: entry.s, ayah: entry.v);
+                      if (!ok && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Audio nahi chal saka — internet check karein'),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                },
               ),
             ],
           ),
@@ -301,6 +380,7 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
           WidgetsBinding.instance.addPostFrameCallback(
               (_) => _scrollToAyahIfNeeded());
           return ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.only(top: 8, bottom: 24),
             children: [
               // Surah header: name + ayah count
