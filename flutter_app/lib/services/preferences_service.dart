@@ -85,15 +85,6 @@ class PreferencesService extends ChangeNotifier {
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
-  // Islamic Search Engine preferences
-  String _islamicSearchApiKey = '';
-  List<String> _islamicSearchHistory = [];
-  List<String> _savedIslamicAnswersJson = [];
-
-  String get islamicSearchApiKey => _islamicSearchApiKey;
-  List<String> get islamicSearchHistory => List.unmodifiable(_islamicSearchHistory);
-  List<String> get savedIslamicAnswersJson => List.unmodifiable(_savedIslamicAnswersJson);
-
   /// The retired 'nastaliq' (Gulzar) script style migrates to Noto Sans
   /// Arabic ('sans'). Applied both at startup and on backup import so old
   /// stored values and old backups can never bypass the migration.
@@ -139,16 +130,6 @@ class PreferencesService extends ChangeNotifier {
         _prefs.getBool('nur_background_playback') ?? true;
     _nightPageMode = _prefs.getBool('nur_night_page_mode') ?? false;
     _lastAutoBackup = _prefs.getString('nur_last_auto_backup') ?? '';
-    _islamicSearchApiKey = _prefs.getString('nur_islamic_search_api_key') ?? '';
-    final historyList = _prefs.getStringList('nur_islamic_search_history');
-    if (historyList != null) {
-      _islamicSearchHistory = List.from(historyList);
-    }
-    final savedAnswers = _prefs.getStringList('nur_saved_islamic_answers');
-    if (savedAnswers != null) {
-      _savedIslamicAnswersJson = List.from(savedAnswers);
-    }
-
     final savedAyahsJson = _prefs.getString('nur_saved_ayahs');
     if (savedAyahsJson != null) {
       try {
@@ -921,53 +902,6 @@ class PreferencesService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ---------------------------------------------------------------------------
-  // Islamic Knowledge Search Engine preferences
-  // ---------------------------------------------------------------------------
-  Future<void> setIslamicSearchApiKey(String key) async {
-    _islamicSearchApiKey = key.trim();
-    await _prefs.setString('nur_islamic_search_api_key', _islamicSearchApiKey);
-    notifyListeners();
-  }
-
-  Future<void> addIslamicSearchHistory(String query) async {
-    final q = query.trim();
-    if (q.isEmpty) return;
-    _islamicSearchHistory.remove(q);
-    _islamicSearchHistory.insert(0, q);
-    if (_islamicSearchHistory.length > 30) {
-      _islamicSearchHistory = _islamicSearchHistory.sublist(0, 30);
-    }
-    await _prefs.setStringList('nur_islamic_search_history', _islamicSearchHistory);
-    notifyListeners();
-  }
-
-  Future<void> clearIslamicSearchHistory() async {
-    _islamicSearchHistory.clear();
-    await _prefs.remove('nur_islamic_search_history');
-    notifyListeners();
-  }
-
-  Future<void> saveIslamicAnswer(String jsonStr) async {
-    if (!_savedIslamicAnswersJson.contains(jsonStr)) {
-      _savedIslamicAnswersJson.insert(0, jsonStr);
-      await _prefs.setStringList('nur_saved_islamic_answers', _savedIslamicAnswersJson);
-      notifyListeners();
-    }
-  }
-
-  Future<void> removeSavedIslamicAnswer(String id) async {
-    _savedIslamicAnswersJson.removeWhere((item) {
-      try {
-        final map = jsonDecode(item);
-        return map['id'] == id;
-      } catch (_) {
-        return false;
-      }
-    });
-    await _prefs.setStringList('nur_saved_islamic_answers', _savedIslamicAnswersJson);
-    notifyListeners();
-  }
 }
 
 /// Staged, fully validated backup data for [PreferencesService.importJson].

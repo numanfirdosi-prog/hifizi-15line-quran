@@ -13,7 +13,6 @@ import 'ramzan_duas_screen.dart';
 import 'search_quran_screen.dart';
 import 'settings_screen.dart';
 import 'mushaf_screen.dart';
-import 'islamic_search_screen.dart';
 
 /// "More" menu screen: one list of all app sections not on the bottom tabs.
 class MoreScreen extends StatelessWidget {
@@ -146,13 +145,6 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(height: 8),
           // ---- Read ----
           _sectionHeader(context, 'Read'),
-          _tile(
-            context,
-            icon: Icons.travel_explore,
-            title: 'Islamic Search Engine (الباحث الإسلامي)',
-            subtitle: 'مسائل، احادیث، تفسیر اور لغت کی باحوالہ تحقیق',
-            onTap: () => _push(context, const IslamicSearchScreen()),
-          ),
           _tile(
             context,
             icon: Icons.format_list_bulleted,

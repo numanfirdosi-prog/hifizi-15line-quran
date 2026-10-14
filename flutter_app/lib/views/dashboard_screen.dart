@@ -26,7 +26,6 @@ import 'ramzan_duas_screen.dart';
 import 'mushaf_screen.dart';
 import 'search_quran_screen.dart';
 import 'settings_screen.dart';
-import 'islamic_search_screen.dart';
 
 /// Home/dashboard view for the Nur-Al-Quran app: last-read position,
 /// reading progress, Ayah of the Day, quick-access grid, Mushaf info,
@@ -586,8 +585,6 @@ class DashboardScreen extends StatelessWidget {
   // ------------------------------------------------------------------
 
   List<_QuickItem> _quickItems(BuildContext context) => [
-        _QuickItem('Islamic Search (الباحث)', Icons.travel_explore,
-            () => _push(context, const IslamicSearchScreen())),
         _QuickItem(
             'All 114 Surahs', Icons.menu_book_outlined, () => onSelectTab(2)),
         _QuickItem('Juz Index', Icons.format_list_numbered,
