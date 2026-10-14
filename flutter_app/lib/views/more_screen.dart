@@ -12,6 +12,7 @@ import 'qiblah_screen.dart';
 import 'ramzan_duas_screen.dart';
 import 'search_quran_screen.dart';
 import 'settings_screen.dart';
+import 'tafsir_home_screen.dart';
 import 'mushaf_screen.dart';
 
 /// "More" menu screen: one list of all app sections not on the bottom tabs.
@@ -159,6 +160,13 @@ class MoreScreen extends StatelessWidget {
             subtitle: 'قرآن تلاش کریں',
             onTap: () =>
                 _pushJumpable(context, (open) => SearchQuranScreen(onOpenPage: open)),
+          ),
+          _tile(
+            context,
+            icon: Icons.auto_stories,
+            title: 'Tafsir',
+            subtitle: 'تفسیر ابن کثیر',
+            onTap: () => _push(context, const TafsirHomeScreen()),
           ),
           _tile(
             context,
