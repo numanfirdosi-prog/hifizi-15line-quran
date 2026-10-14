@@ -6,6 +6,7 @@ import '../data/quran_data.dart';
 import '../data/verse_index.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
+import '../services/tafsir_service.dart';
 import '../utils/script_font.dart';
 
 /// Cached full-Quran text (Arabic + English) for the player sheet.
@@ -269,15 +270,17 @@ class _AyahPlayerSheet extends StatelessWidget {
                           final urdu = v == 0
                               ? 'شروع اللہ کے نام سے جو بے انتہا مہربان، نہایت رحم فرمانے والا ہے'
                               : (urduMap?['$s:$v'] ?? '');
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: cs.primary.withValues(alpha: 0.5)),
-                            ),
+                          return Column(
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: cs.primary.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: cs.primary
+                                      .withValues(alpha: 0.5)),
+                                ),
                             child: entry == null
                                 ? Center(
                                     child: CircularProgressIndicator(
@@ -345,6 +348,10 @@ class _AyahPlayerSheet extends StatelessWidget {
                                       ),
                                     ],
                                   ),
+                              ),
+                              const SizedBox(height: 16),
+                              _TafsirSection(surah: s, ayah: v),
+                            ],
                           );
                         },
                       ),
@@ -573,6 +580,152 @@ class _RepeatRangeRowState extends State<_RepeatRangeRow> {
           child: const Text('Start'),
         ),
       ],
+    );
+  }
+}
+
+/// Tafsir Ibn Kathir (Urdu) section shown below the ayah + translations
+/// in the Ayah Player Sheet.
+///
+/// Loads the bundled offline tafsir for the current ayah via
+/// [TafsirService]. Shows a loading shimmer while fetching, the full
+/// tafsir text when available, and a graceful "not available" note
+/// when this ayah is not covered by the bundled data (expected for
+/// ayahs outside the bundled set — never an error).
+class _TafsirSection extends StatefulWidget {
+  final int surah;
+  final int ayah;
+
+  const _TafsirSection({required this.surah, required this.ayah});
+
+  @override
+  State<_TafsirSection> createState() => _TafsirSectionState();
+}
+
+class _TafsirSectionState extends State<_TafsirSection> {
+  Future<String?>? _tafsirFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TafsirSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.surah != widget.surah ||
+        oldWidget.ayah != widget.ayah) {
+      _load();
+    }
+  }
+
+  void _load() {
+    _tafsirFuture = TafsirService().getTafsir(widget.surah, widget.ayah);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Golden header: Tafsir Ibn Kathir.
+          Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              Icon(Icons.auto_stories, size: 18, color: cs.primary),
+              const SizedBox(width: 8),
+              Text(
+                'تفسیر ابن کثیر',
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  color: cs.primary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'حافظ عماد الدین ابن کثیر رحمہ اللہ',
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.6),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Divider(color: cs.primary.withValues(alpha: 0.4)),
+          const SizedBox(height: 8),
+          FutureBuilder<String?>(
+            future: _tafsirFuture,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: cs.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        'تفسیر لوڈ ہو رہی ہے...',
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.7),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              final text = snap.data;
+              if (text == null || text.trim().isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'اس آیت کی تفسیر دستیاب نہیں ہے۔',
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: TextStyle(
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
+                  ),
+                );
+              }
+              return Text(
+                text,
+                textDirection: TextDirection.rtl,
+                style: urduStyle(
+                  fontSize: 16,
+                  color: cs.onSurface,
+                  height: 1.8,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
