@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui' show PointMode;
+import 'dart:ui' show PointMode, PointerDownEvent, PointerEvent;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +32,14 @@ class _MushafScreenState extends State<MushafScreen> {
   late int _currentPage;
   final TransformationController _transformController =
       TransformationController();
+  // Pinch-zoom / page-swipe arbitration: PageView (page turns) and
+  // InteractiveViewer (zoom/pan) fight over the same gestures. Track the
+  // zoom scale and the number of pointers down so page turns are disabled
+  // while pinching or while zoomed in — drags then pan the zoomed page
+  // instead of flipping pages.
+  int _pointerCount = 0;
+  bool _twoFingerDown = false;
+  bool _zoomed = false;
   ScrollController? _scrollController;
   // List width the scroll controller was built for: the scroll item height
   // derives from the width, so on rotation the offset must be re-based.
@@ -44,6 +52,7 @@ class _MushafScreenState extends State<MushafScreen> {
 
   @override
   void dispose() {
+    _transformController.removeListener(_onTransformChanged);
     _audio.removeListener(_followAyah);
     _pageController.dispose();
     _scrollController?.dispose();
@@ -89,6 +98,8 @@ class _MushafScreenState extends State<MushafScreen> {
   @override
   void initState() {
     super.initState();
+    // Track pinch-zoom scale so page turns can be locked while zoomed in.
+    _transformController.addListener(_onTransformChanged);
     final prefs = Provider.of<PreferencesService>(context, listen: false);
     _currentPage =
         widget.initialPage > 0 ? widget.initialPage : prefs.lastReadPage;
@@ -146,6 +157,44 @@ class _MushafScreenState extends State<MushafScreen> {
       _transformController.value = Matrix4.identity();
     } catch (_) {}
   }
+
+  /// Fires on every transform change during pinch/pan. Only rebuilds when
+  /// the zoomed state actually flips (crossing the 1.01 threshold), so
+  /// continuous pinch updates don't spam setState.
+  void _onTransformChanged() {
+    final scale = _transformController.value.getMaxScaleOnAxis();
+    final zoomed = scale > 1.01;
+    if (zoomed != _zoomed) {
+      setState(() => _zoomed = zoomed);
+    }
+  }
+
+  /// A second finger touching down means a pinch is starting: lock page
+  /// turns immediately so the gesture goes to the InteractiveViewer
+  /// instead of the PageView (this is what makes pinch-zoom respond on
+  /// the FIRST attempt instead of after several tries).
+  void _onPointerDown(PointerDownEvent _) {
+    _pointerCount++;
+    if (_pointerCount >= 2 && !_twoFingerDown) {
+      setState(() => _twoFingerDown = true);
+    }
+  }
+
+  /// Finger lifted / cancelled: unlock page turns once fewer than two
+  /// pointers remain (unless still zoomed in, which keeps the lock).
+  void _onPointerUpOrCancel(PointerEvent _) {
+    if (_pointerCount > 0) _pointerCount--;
+    if (_pointerCount < 2 && _twoFingerDown) {
+      setState(() => _twoFingerDown = false);
+    }
+  }
+
+  /// Page turns are locked while pinching (2+ fingers), while zoomed in,
+  /// or while a drawing tool is active — so drags pan the zoomed page
+  /// instead of flipping pages (which also caused the zoomed pages to
+  /// visually overlap during a half-finished page transition).
+  bool _pageTurnsLocked(bool drawingActive) =>
+      drawingActive || _zoomed || _twoFingerDown;
 
   /// Records last-read surah/ayah/page from the page's first verse.
   Future<void> _markPageRead(int page, PreferencesService prefs) async {
@@ -959,11 +1008,12 @@ class _MushafScreenState extends State<MushafScreen> {
   /// targets drift further off with every page.
   double _scrollItemHeight(BuildContext context) {
     final mq = MediaQuery.of(context);
+    final orn = _ornamentHeights(context);
     return mq.padding.top +
-        _kTopOrnamentHeight +
+        orn.top +
         mq.size.width / _kPageAspect +
-        _kBottomOrnamentHeight +
-        _kBottomSpacerHeight +
+        orn.bottom +
+        orn.spacer +
         mq.padding.bottom;
   }
 
@@ -995,6 +1045,11 @@ class _MushafScreenState extends State<MushafScreen> {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
     // Theme gold token: primary in Night Slate, secondary in the light themes.
     final gold = isDarkTheme ? cs.primary : cs.secondary;
+    // Orientation-aware ornament heights: hidden in landscape so the page
+    // gets the full height; full royal framing in portrait.
+    final orn = _ornamentHeights(context);
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     // Royal golden background derived from the theme tokens (never
     // hardcoded): a luminous gold wash in light mode, a deep bronze in dark
     // mode. Night page mode stays pure black. The wash blends with the page
@@ -1034,19 +1089,23 @@ class _MushafScreenState extends State<MushafScreen> {
           ),
           child: Column(
             children: [
-              SizedBox(
-                // Fixed ornament heights: scroll-mode items size to their
-                // content, so these must be exact — _scrollItemHeight
-                // depends on them.
-                height: _kTopOrnamentHeight,
-                child: _buildTopOrnament(pageNum),
-              ),
+              if (orn.top > 0)
+                SizedBox(
+                  // Fixed ornament heights: scroll-mode items size to their
+                  // content, so these must be exact — _scrollItemHeight
+                  // depends on them.
+                  height: orn.top,
+                  child: _buildTopOrnament(pageNum),
+                ),
               // The page-image box keeps the exact page aspect in both
               // modes: in scroll mode the column height is unbounded, so
               // the box sizes purely from the list width instead of being
               // squeezed by the ornaments inside a fixed AspectRatio.
+              // In landscape the box is likewise width-driven (the page
+              // is taller than the screen and pans vertically).
               _buildImageBox(
                 scrollMode,
+                isLandscape,
                 Stack(
                   children: [
                 Positioned.fill(
@@ -1113,14 +1172,16 @@ class _MushafScreenState extends State<MushafScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: _kBottomOrnamentHeight,
-                child: Center(child: _buildBottomOrnament(pageNum)),
-              ),
+              if (orn.bottom > 0)
+                SizedBox(
+                  height: orn.bottom,
+                  child: Center(child: _buildBottomOrnament(pageNum)),
+                ),
               // Reserve space for the overlaying bottom control bar so the
-              // Manzil badge isn't hidden behind it.
+              // Manzil badge isn't hidden behind it (portrait only;
+              // landscape hides the bottom ornament).
               SizedBox(
-                height: _kBottomSpacerHeight +
+                height: orn.spacer +
                     MediaQuery.of(context).padding.bottom,
               ),
             ],
@@ -1133,10 +1194,13 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Wraps the page-image [stack] in a box with the exact page aspect.
   /// In scroll mode the column height is unbounded, so the box sizes
   /// purely from the list width (never squeezed); otherwise Expanded
-  /// fills the leftover column space as before.
-  Widget _buildImageBox(bool scrollMode, Widget stack) {
+  /// fills the leftover column space as before. In landscape the column
+  /// is likewise unbounded (unconstrained InteractiveViewer), so the box
+  /// sizes purely from the width — the page fills the screen width and
+  /// pans vertically to read the whole page.
+  Widget _buildImageBox(bool scrollMode, bool landscape, Widget stack) {
     final box = AspectRatio(aspectRatio: _kPageAspect, child: stack);
-    return scrollMode ? box : Expanded(child: box);
+    return (scrollMode || landscape) ? box : Expanded(child: box);
   }
 
   /// Ornamental header above the page. Pages whose edition page carries a
@@ -1215,6 +1279,24 @@ class _MushafScreenState extends State<MushafScreen> {
     if (surah <= 25) return 4;
     if (surah <= 36) return 5;
     return surah <= 49 ? 6 : 7;
+  }
+
+  /// Ornament heights framing the page image. In portrait the royal
+  /// golden framing (cartouche / Manzil badge / control-bar spacer) is
+  /// kept. In landscape the screen is short, so the decorative ornaments
+  /// are hidden to give the page the full height — the Quran text itself
+  /// lives inside the page image, so nothing sacred is lost. The page
+  /// then fills the screen width with large, readable text.
+  ({double top, double bottom, double spacer}) _ornamentHeights(
+      BuildContext context) {
+    if (MediaQuery.of(context).orientation == Orientation.landscape) {
+      return (top: 0.0, bottom: 0.0, spacer: 0.0);
+    }
+    return (
+      top: _kTopOrnamentHeight,
+      bottom: _kBottomOrnamentHeight,
+      spacer: _kBottomSpacerHeight,
+    );
   }
 
   /// True aspect ratio of the bundled page images (720x1080).
@@ -1375,6 +1457,8 @@ class _MushafScreenState extends State<MushafScreen> {
   /// is non-interactive (no pinch zoom) so the list can scroll.
   Widget _buildPageItem(BuildContext context, int pageNum,
       {bool interactive = true}) {
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
     final pageImage = _buildPageImage(context, pageNum, scrollMode: !interactive);
     if (!interactive) {
       // Scroll mode: the item sizes to its content (fixed-height ornaments
@@ -1390,6 +1474,18 @@ class _MushafScreenState extends State<MushafScreen> {
       transformationController: _transformController,
       minScale: 1.0,
       maxScale: 3.5,
+      // Generous boundary margin so a zoomed page can be panned freely
+      // without its edges sticking at the viewport (which felt like the
+      // page was refusing to move and letters were cut off).
+      boundaryMargin: const EdgeInsets.all(80),
+      // Landscape: the page is taller than the screen (width-driven), so
+      // the child must NOT be forced to viewport size — panning scrolls
+      // through the page vertically. Portrait: the page fits, so
+      // constrain it to the viewport as before.
+      constrained: !isLandscape,
+      // Landscape: start at the top of the page (like the reference
+      // video), not centered (which would cut off top and bottom).
+      alignment: isLandscape ? Alignment.topCenter : Alignment.center,
       panEnabled: !drawingActive,
       scaleEnabled: !drawingActive,
       child: pageImage,
@@ -1405,13 +1501,20 @@ class _MushafScreenState extends State<MushafScreen> {
     // interrupted by page changes.
     final drawingActive =
         Provider.of<PageDrawingService>(context).isDrawingMode;
-    return PageView.builder(
-      controller: _pageController,
-      reverse: true, // RTL for Mushaf reading
-      physics: drawingActive ? const NeverScrollableScrollPhysics() : null,
-      itemCount: totalPagesInMushaf,
-      onPageChanged: _onPageChanged,
-      itemBuilder: (context, index) => AnimatedBuilder(
+    return Listener(
+      // Pointer tracking for pinch-zoom arbitration: a second finger
+      // locks page turns so the pinch reaches the InteractiveViewer.
+      onPointerDown: _onPointerDown,
+      onPointerUp: _onPointerUpOrCancel,
+      onPointerCancel: _onPointerUpOrCancel,
+      child: PageView.builder(
+        controller: _pageController,
+        reverse: true, // RTL for Mushaf reading
+        physics:
+            _pageTurnsLocked(drawingActive) ? const NeverScrollableScrollPhysics() : null,
+        itemCount: totalPagesInMushaf,
+        onPageChanged: _onPageChanged,
+        itemBuilder: (context, index) => AnimatedBuilder(
         animation: _pageController,
         builder: (context, child) {
           double t = 0.0;
@@ -1431,6 +1534,7 @@ class _MushafScreenState extends State<MushafScreen> {
           );
         },
         child: _buildPageItem(context, index + 1),
+      ),
       ),
     );
   }
@@ -1527,15 +1631,23 @@ class _MushafScreenState extends State<MushafScreen> {
           else if (isTurn)
             _buildTurnView(context)
           else
-            PageView.builder(
-              controller: _pageController,
-              reverse: true, // RTL for Mushaf reading
-              physics:
-                  drawingActive ? const NeverScrollableScrollPhysics() : null,
-              itemCount: totalPagesInMushaf,
-              onPageChanged: _onPageChanged,
-              itemBuilder: (context, index) =>
-                  _buildPageItem(context, index + 1),
+            Listener(
+              // Pointer tracking for pinch-zoom arbitration: a second
+              // finger locks page turns so the pinch reaches the
+              // InteractiveViewer.
+              onPointerDown: _onPointerDown,
+              onPointerUp: _onPointerUpOrCancel,
+              onPointerCancel: _onPointerUpOrCancel,
+              child: PageView.builder(
+                controller: _pageController,
+                reverse: true, // RTL for Mushaf reading
+                physics:
+                    _pageTurnsLocked(drawingActive) ? const NeverScrollableScrollPhysics() : null,
+                itemCount: totalPagesInMushaf,
+                onPageChanged: _onPageChanged,
+                itemBuilder: (context, index) =>
+                    _buildPageItem(context, index + 1),
+              ),
             ),
 
           // Previous / next page chevrons. RTL reading: the next page is

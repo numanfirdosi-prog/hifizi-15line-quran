@@ -1,103 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../data/quran_data.dart';
 import '../models/surah.dart';
 import '../utils/script_font.dart';
 import 'tafsir_surah_screen.dart';
 
 /// Tafsir Home: list of all 114 Surahs. Tapping a surah opens its
-/// full Tafsir view (Ayah → Tarjuma → Tafsir, ayah by ayah).
-/// The AppBar Jump button opens a dialog to jump directly to any
-/// Surah + Ayah (like the Juz Para/Page jump).
+/// Ayah List (Arabic + Urdu tarjuma). Tapping an ayah in the list
+/// opens its detail page (ayah + tarjuma + Ibn Kathir tafsir).
 class TafsirHomeScreen extends StatelessWidget {
   const TafsirHomeScreen({super.key});
 
-  void _openSurah(BuildContext context, int surah, {int? scrollToAyah}) {
+  void _openSurah(BuildContext context, int surah) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TafsirSurahScreen(surah: surah, scrollToAyah: scrollToAyah),
-      ),
-    );
-  }
-
-  void _showJumpDialog(BuildContext context) {
-    final surahController = TextEditingController();
-    final ayahController = TextEditingController();
-    String? error;
-
-    showDialog(
-      context: context,
-      builder: (dctx) => StatefulBuilder(
-        builder: (dctx, setState) {
-          final cs = Theme.of(dctx).colorScheme;
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.location_searching, color: cs.primary),
-                const SizedBox(width: 8),
-                const Text('Jump to Ayah'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: surahController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: 'Surah Number (1–114)',
-                    hintText: 'e.g. 36',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: ayahController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: 'Ayah Number',
-                    hintText: 'e.g. 1',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                if (error != null) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    error!,
-                    style: TextStyle(color: cs.error, fontSize: 13),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dctx).pop(),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  final surahNum = int.tryParse(surahController.text.trim());
-                  final ayahNum = int.tryParse(ayahController.text.trim());
-                  if (surahNum == null || surahNum < 1 || surahNum > 114) {
-                    setState(() => error = 'Surah number 1 se 114 tak ho.');
-                    return;
-                  }
-                  final maxAyah = allSurahs[surahNum - 1].totalAyahs;
-                  if (ayahNum == null || ayahNum < 1 || ayahNum > maxAyah) {
-                    setState(() => error =
-                        'Surah $surahNum me sirf $maxAyah ayah hain.');
-                    return;
-                  }
-                  Navigator.of(dctx).pop();
-                  _openSurah(context, surahNum, scrollToAyah: ayahNum);
-                },
-                child: const Text('Jao'),
-              ),
-            ],
-          );
-        },
+        builder: (_) => TafsirSurahScreen(surah: surah),
       ),
     );
   }
@@ -197,13 +113,6 @@ class TafsirHomeScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.location_searching),
-            tooltip: 'Jump to Ayah',
-            onPressed: () => _showJumpDialog(context),
-          ),
-        ],
       ),
       body: Column(
         children: [
