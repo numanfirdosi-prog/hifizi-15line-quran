@@ -108,9 +108,10 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
                     ),
                   ),
                   const Spacer(),
-                  // Per-ayah audio: plays this ayah (auto-advances
-                  // ayah-by-ayah like the Ayah Player). Shows pause
-                  // while this ayah plays.
+                  // Per-ayah audio (Tafsir): plays ONLY this ayah once,
+                  // then STOPS — no auto-advance, so the user gets time
+                  // to read the tarjuma/tafsir. Shows pause while this
+                  // ayah plays.
                   Consumer<AudioRecitationService>(
                     builder: (context, audio, _) {
                       final isThisPlaying = audio.isPlaying &&
@@ -136,7 +137,9 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
                             return;
                           }
                           final ok = await svc.playAyah(
-                              surah: entry.s, ayah: entry.v);
+                              surah: entry.s,
+                              ayah: entry.v,
+                              singleAyah: true);
                           if (!ok && context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

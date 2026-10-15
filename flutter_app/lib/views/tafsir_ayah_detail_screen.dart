@@ -183,7 +183,9 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
                                 return;
                               }
                               final ok = await svc.playAyah(
-                                  surah: widget.surah, ayah: widget.ayah);
+                                  surah: widget.surah,
+                                  ayah: widget.ayah,
+                                  singleAyah: true);
                               if (!ok && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(

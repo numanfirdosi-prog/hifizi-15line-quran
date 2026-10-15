@@ -1194,13 +1194,20 @@ class _MushafScreenState extends State<MushafScreen> {
   /// Wraps the page-image [stack] in a box with the exact page aspect.
   /// In scroll mode the column height is unbounded, so the box sizes
   /// purely from the list width (never squeezed); otherwise Expanded
-  /// fills the leftover column space as before. In landscape the column
-  /// is likewise unbounded (unconstrained InteractiveViewer), so the box
-  /// sizes purely from the width — the page fills the screen width and
-  /// pans vertically to read the whole page.
+  /// fills the leftover column space as before. In landscape slide/turn
+  /// mode the InteractiveViewer is unconstrained (constrained: false),
+  /// so a bare AspectRatio collapses to zero — its Stack child has no
+  /// intrinsic size — and the page VANISHES. Pin the box to the
+  /// SafeArea-adjusted screen width so it gets a real size; the tall
+  /// page then pans vertically inside the InteractiveViewer.
   Widget _buildImageBox(bool scrollMode, bool landscape, Widget stack) {
     final box = AspectRatio(aspectRatio: _kPageAspect, child: stack);
-    return (scrollMode || landscape) ? box : Expanded(child: box);
+    if (landscape && !scrollMode) {
+      final mq = MediaQuery.of(context);
+      final w = mq.size.width - mq.padding.left - mq.padding.right;
+      return SizedBox(width: w, height: w / _kPageAspect, child: stack);
+    }
+    return scrollMode ? box : Expanded(child: box);
   }
 
   /// Ornamental header above the page. Pages whose edition page carries a
@@ -1591,10 +1598,21 @@ class _MushafScreenState extends State<MushafScreen> {
     // hardcoded): theme surfaces, theme gold accents (primary in Night
     // Slate, secondary in the light themes), subtle gold-tinted borders.
     // A dark bar is used in dark theme and in night-page mode.
+    //
+    // Light themes (Emerald Day, Antique Parchment) with the black night
+    // page: the generic dark bar (light surface lerped 35% toward black)
+    // came out a muddy mid-grey that clashed with the black page and
+    // washed out the cream text, ruining the page look. Use a properly
+    // dark bar instead (88% toward black) so the footer reads as
+    // intentional and premium. Night Slate (dark theme) is untouched —
+    // its deep-green bar already harmonizes with the black page.
+    final lightThemeNightPage = !isNightTheme && prefs.nightPageMode;
     final barDark = isDark;
-    final barSurface = barDark
-        ? Color.lerp(cs.surface, Colors.black, 0.35)!
-        : cs.surface;
+    final barSurface = lightThemeNightPage
+        ? Color.lerp(cs.surface, Colors.black, 0.88)!
+        : (barDark
+            ? Color.lerp(cs.surface, Colors.black, 0.35)!
+            : cs.surface);
     final barText = barDark
         ? (isNightTheme ? cs.onSurface : cs.surface)
         : cs.onSurface;

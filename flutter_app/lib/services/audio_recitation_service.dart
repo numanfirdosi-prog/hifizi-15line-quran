@@ -230,6 +230,7 @@ class AudioRecitationService extends ChangeNotifier {
   int? _lastSurah;
   int? _lastAyah;
   bool _lastWasAyahMode = false;
+  bool _lastWasSingleAyah = false;
 
   int _lastPersistMs = 0;
   bool _disposed = false;
@@ -254,6 +255,13 @@ class AudioRecitationService extends ChangeNotifier {
   /// the Mushaf until the user stops. Ignores [repeatMode].
   bool _ayahMode = false;
   bool get ayahMode => _ayahMode;
+
+  /// Single-ayah mode (Tafsir): when true, the current ayah plays once
+  /// and then STOPs instead of auto-advancing. Set by
+  /// [playAyah](singleAyah: true); consumed (cleared) when the ayah
+  /// completes. Normal playAyah calls always overwrite it, so a stale
+  /// value can never leak into a later session.
+  bool _singleAyah = false;
 
   /// Ayah-range repeat: when set, [_advanceAyah] loops within
   /// [_repeatRangeSurah]:[_repeatRangeStart]..[_repeatRangeEnd].
@@ -423,7 +431,15 @@ class AudioRecitationService extends ChangeNotifier {
         state.processingState == ProcessingState.buffering;
     if (state.processingState == ProcessingState.completed) {
       if (_ayahMode) {
-        await _advanceAyah(gen);
+        if (_singleAyah) {
+          // Tafsir single-ayah playback: play once, then STOP — do NOT
+          // auto-advance. The user needs time to read the tarjuma/tafsir.
+          _singleAyah = false;
+          _ayahMode = false;
+          await _player.stop();
+        } else {
+          await _advanceAyah(gen);
+        }
       } else if (repeatMode == -1) {
         // Infinite repeat.
         await _player.setLoopMode(LoopMode.one);
@@ -667,7 +683,11 @@ class AudioRecitationService extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     if (_lastWasAyahMode) {
-      return playAyah(surah: s, ayah: _lastAyah ?? 1, keepRepeatRange: true);
+      return playAyah(
+          surah: s,
+          ayah: _lastAyah ?? 1,
+          keepRepeatRange: true,
+          singleAyah: _lastWasSingleAyah);
     }
     await playSurah(surahNumber: s);
     return true;
@@ -689,18 +709,23 @@ class AudioRecitationService extends ChangeNotifier {
   /// (user-initiated playback), any stale ayah-repeat range is cleared so
   /// it can't hijack later sessions. [autoAdvance] marks internal
   /// auto-advance calls, which must not bump the play generation.
+  /// [singleAyah] (Tafsir only): play just this ayah once and STOP —
+  /// no auto-advance when it finishes. All other callers keep the
+  /// default `false` (unchanged auto-advance behavior).
   Future<bool> playAyah(
       {required int surah,
       required int ayah,
       bool keepRepeatRange = false,
-      bool autoAdvance = false}) async {
+      bool autoAdvance = false,
+      bool singleAyah = false}) async {
     // Surah At-Tawbah (9) has no Bismillah: redirect any request for 9:0 directly to 9:1.
     if (surah == 9 && ayah == 0) {
       return playAyah(
           surah: 9,
           ayah: 1,
           keepRepeatRange: keepRepeatRange,
-          autoAdvance: autoAdvance);
+          autoAdvance: autoAdvance,
+          singleAyah: singleAyah);
     }
 
     // Every user-initiated playback bumps the generation so a stale
@@ -708,6 +733,9 @@ class AudioRecitationService extends ChangeNotifier {
     if (!autoAdvance) _playGeneration++;
     final gen = _playGeneration;
     _ayahMode = true;
+    // Single-ayah (Tafsir) or normal ayah-by-ayah: always overwritten
+    // here, so a previous session's value can never leak through.
+    _singleAyah = singleAyah;
     _currentSurah = surah;
     _currentAyah = ayah;
     _completedPlays = 0;
@@ -715,6 +743,7 @@ class AudioRecitationService extends ChangeNotifier {
     _lastSurah = surah;
     _lastAyah = ayah;
     _lastWasAyahMode = true;
+    _lastWasSingleAyah = singleAyah;
     _hasActiveTrack = true;
     _errorMessage = null;
     _isLoading = true;
@@ -788,6 +817,7 @@ class AudioRecitationService extends ChangeNotifier {
     } catch (e) {
       debugPrint('[AudioRecitation] playAyah error: $e');
       _ayahMode = false;
+      _singleAyah = false;
       // The failed setAudioSource may have left stale "playing" state —
       // reset so the bottom bar doesn't show playing over silence.
       try {
@@ -816,6 +846,7 @@ class AudioRecitationService extends ChangeNotifier {
   Future<void> stop() async {
     _persistSession();
     _ayahMode = false;
+    _singleAyah = false;
     _hasActiveTrack = false;
     // Invalidate any in-flight auto-advance: it must not restart audio
     // after the user pressed stop (see _playGeneration).
