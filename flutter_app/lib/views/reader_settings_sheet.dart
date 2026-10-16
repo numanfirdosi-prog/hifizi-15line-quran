@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
+import '../main.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 
@@ -51,16 +52,15 @@ class _ReaderSettingsSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surface,
           borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
+              const BorderRadius.vertical(top: Radius.circular(Nur.radiusSheet)),
           border: Border(
-            top: BorderSide(
-                color: cs.primary.withValues(alpha: 0.35), width: 1),
+            top: BorderSide(color: Nur.goldBorder(), width: 1),
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
+            const SizedBox(height: Nur.s12),
             Container(
               width: 40,
               height: 4,
@@ -69,20 +69,20 @@ class _ReaderSettingsSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: Nur.s8),
             Text(
               prefs.isUrdu ? 'ریڈر سیٹنگز' : 'Reader Settings',
               style: TextStyle(
                 color: cs.onSurface,
-                fontSize: 18,
+                fontSize: Nur.fontTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: Nur.s4),
             Flexible(
               child: SingleChildScrollView(
                 padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewPadding.bottom + 24,
+                  bottom: MediaQuery.of(context).viewPadding.bottom + Nur.s24,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -237,12 +237,13 @@ class _ReaderSettingsSheet extends StatelessWidget {
   Widget _sectionLabel(BuildContext context, String text) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
+      padding: const EdgeInsets.fromLTRB(
+          Nur.s16, Nur.s12, Nur.s16, Nur.s4),
       child: Text(
         text,
         style: TextStyle(
           color: cs.primary,
-          fontSize: 12,
+          fontSize: Nur.fontCaption,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.2,
         ),
@@ -257,6 +258,8 @@ class _ReaderSettingsSheet extends StatelessWidget {
       context: context,
       builder: (dctx) => AlertDialog(
         backgroundColor: cs.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Nur.radiusLg)),
         title: Text('Display Mode', style: TextStyle(color: cs.onSurface)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -289,6 +292,8 @@ class _ReaderSettingsSheet extends StatelessWidget {
       context: context,
       builder: (dctx) => AlertDialog(
         backgroundColor: cs.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Nur.radiusLg)),
         title: Text('Qari (Reciter)', style: TextStyle(color: cs.onSurface)),
         content: SizedBox(
           width: double.maxFinite,
@@ -333,6 +338,8 @@ class _ReaderSettingsSheet extends StatelessWidget {
       builder: (dctx) => StatefulBuilder(
         builder: (dctx, setState) => AlertDialog(
           backgroundColor: cs.surface,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(Nur.radiusLg)),
           title: Text('Ayah (Range)', style: TextStyle(color: cs.onSurface)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -605,17 +612,18 @@ class _JumpDialogState extends State<_JumpDialog> {
     final preview = _mode == 0 ? _previewText : _modeTargetPreview();
     return AlertDialog(
       backgroundColor: cs.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.radiusLg)),
       title: Row(
         children: [
-          Icon(Icons.auto_stories, color: cs.primary, size: 24),
-          const SizedBox(width: 10),
+          Icon(Icons.auto_stories, color: cs.primary, size: Nur.iconSize),
+          const SizedBox(width: Nur.s8),
           Expanded(
             child: Text(
               widget.isUrdu ? 'پارہ / صفحہ پر جائیں' : 'Jump to Page / Juz',
               style: TextStyle(
                 color: cs.onSurface,
-                fontSize: 18,
+                fontSize: Nur.fontTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -666,7 +674,8 @@ class _JumpDialogState extends State<_JumpDialog> {
                         labelStyle: TextStyle(
                             color: cs.onSurface.withValues(alpha: 0.7)),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(Nur.buttonRadius),
                         ),
                       ),
                     ),
@@ -683,7 +692,8 @@ class _JumpDialogState extends State<_JumpDialog> {
                         labelStyle: TextStyle(
                             color: cs.onSurface.withValues(alpha: 0.7)),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(Nur.buttonRadius),
                         ),
                       ),
                     ),
@@ -713,7 +723,7 @@ class _JumpDialogState extends State<_JumpDialog> {
                   labelStyle: TextStyle(
                       color: cs.onSurface.withValues(alpha: 0.7)),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(Nur.buttonRadius),
                   ),
                 ),
               ),
@@ -781,10 +791,10 @@ class _JumpDialogState extends State<_JumpDialog> {
               const SizedBox(height: 10),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: Nur.s12, vertical: Nur.s4),
                 decoration: BoxDecoration(
                   color: cs.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Nur.s8),
                 ),
                 child: Text(
                   preview,
@@ -816,7 +826,7 @@ class _JumpDialogState extends State<_JumpDialog> {
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Nur.buttonRadius),
             ),
           ),
         ),

@@ -5,6 +5,7 @@ import '../data/quran_data.dart';
 import '../data/surah_intros.dart';
 import '../data/surah_intros_urdu.dart';
 import '../models/surah.dart';
+import '../main.dart';
 import '../services/voice_search_service.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
@@ -137,8 +138,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(Nur.radiusSheet)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: SingleChildScrollView(
@@ -416,22 +417,25 @@ class _SurahsScreenState extends State<SurahsScreen> {
 
     return Card(
       color: cs.surface,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 1,
+      shadowColor: cs.shadow.withValues(alpha: 0.08),
+      margin: const EdgeInsets.symmetric(
+          horizontal: Nur.screenMargin, vertical: Nur.s8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         side: BorderSide(
-          // Full gold ring while its recitation is playing.
+          // Full primary ring while its recitation is playing.
           color: isCurrentlyPlaying
               ? cs.primary
-              : cs.primary.withValues(alpha: 0.25),
+              : cs.outlineVariant,
           width: isCurrentlyPlaying ? 2 : 1,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         onTap: () => widget.onOpenPage(surah.startPage),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(Nur.screenMargin),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -443,8 +447,10 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     height: 46,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: cs.primary.withValues(alpha: 0.12),
-                      border: Border.all(color: cs.primary, width: 1.5),
+                      color: cs.primary.withValues(alpha: 0.10),
+                      border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.55),
+                          width: 1),
                     ),
                     child: Center(
                       child: Text(
@@ -523,8 +529,8 @@ class _SurahsScreenState extends State<SurahsScreen> {
                 ],
               ),
               Divider(
-                color: cs.primary.withValues(alpha: 0.25),
-                height: 20,
+                color: cs.outlineVariant,
+                height: Nur.s20,
               ),
               // Verified metadata
               _metaRow(
@@ -554,9 +560,10 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     backgroundColor: cs.primary,
                     foregroundColor: cs.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(Nur.buttonRadius),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: Nur.s12),
                   ),
                   onPressed: () => widget.onOpenPage(surah.startPage),
                   label:
@@ -646,12 +653,13 @@ class _SurahsScreenState extends State<SurahsScreen> {
           // Search & Voice Action Header (theme-driven so it matches the
           // active Night Slate / Emerald Day / Antique Parchment palette).
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+                horizontal: Nur.screenMargin, vertical: Nur.s12),
             decoration: BoxDecoration(
               color: cs.surface,
               border: Border(
                 bottom: BorderSide(
-                  color: cs.primary.withValues(alpha: 0.25),
+                  color: cs.outlineVariant,
                   width: 1,
                 ),
               ),
@@ -694,6 +702,12 @@ class _SurahsScreenState extends State<SurahsScreen> {
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide.none,
                           ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(
+                                color: cs.primary
+                                    .withValues(alpha: 0.55)),
+                          ),
                         ),
                       ),
                     ),
@@ -709,8 +723,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
                           boxShadow: [
                             BoxShadow(
                               color: (_isListening ? cs.error : cs.primary)
-                                  .withValues(alpha: 0.35),
+                                  .withValues(alpha: 0.20),
                               blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -816,10 +831,21 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off,
-                              size: 54,
-                              color: cs.onSurface.withValues(alpha: 0.38)),
-                          const SizedBox(height: 12),
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: cs.primary.withValues(alpha: 0.08),
+                              border: Border.all(
+                                  color: cs.primary
+                                      .withValues(alpha: 0.30)),
+                            ),
+                            child: Icon(Icons.search_off,
+                                size: 32,
+                                color: cs.primary),
+                          ),
+                          const SizedBox(height: Nur.screenMargin),
                           Text(
                             'No Surah matched your search.',
                             textAlign: TextAlign.center,
@@ -842,6 +868,7 @@ class _SurahsScreenState extends State<SurahsScreen> {
                     ),
                   )
                 : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: Nur.screenMargin),
                     itemCount: displayedSurahs.length,
                     itemBuilder: (context, index) {
                       final surah = displayedSurahs[index];

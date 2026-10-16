@@ -92,7 +92,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         body: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+              padding: const EdgeInsets.fromLTRB(
+                  Nur.screenMargin, Nur.s8, Nur.screenMargin, Nur.s4),
               child: TextField(
                 controller: _searchController,
                 onChanged: (v) => setState(() => _query = v.trim()),
@@ -122,6 +123,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(
+                        color: cs.primary.withValues(alpha: 0.55)),
                   ),
                 ),
               ),
@@ -176,6 +182,10 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.cardRadius),
+          side: BorderSide(color: cs.outlineVariant),
+        ),
         title: const Text('Export Backup'),
         content: SizedBox(
           width: double.maxFinite,
@@ -235,6 +245,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.cardRadius),
+          side: BorderSide(
+              color: Theme.of(ctx).colorScheme.outlineVariant),
+        ),
         title: const Text('Import Backup'),
         content: SizedBox(
           width: double.maxFinite,
@@ -283,6 +298,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.cardRadius),
+          side: BorderSide(
+              color: Theme.of(ctx).colorScheme.outlineVariant),
+        ),
         title: const Text('Clear all saved data?'),
         content: const Text(
           'This removes all bookmarks, saved ayahs, page notes and tints. '
@@ -316,6 +336,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.cardRadius),
+          side: BorderSide(
+              color: Theme.of(ctx).colorScheme.outlineVariant),
+        ),
         title: Text('Note — Page $page'),
         content: TextField(
           controller: controller,
@@ -359,6 +384,7 @@ Widget _sectionHeader(BuildContext context, String title) {
       style: theme.textTheme.titleSmall?.copyWith(
         color: theme.colorScheme.primary,
         fontWeight: FontWeight.bold,
+        letterSpacing: 0.6,
       ),
     ),
   );
@@ -372,7 +398,7 @@ Widget _typeLabel(BuildContext context, String label) {
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
     decoration: BoxDecoration(
       color: cs.primary.withValues(alpha: 0.14),
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(Nur.s4),
       border: Border.all(color: cs.primary.withValues(alpha: 0.4)),
     ),
     child: Text(
@@ -450,6 +476,11 @@ Future<bool> _confirmDelete(
   return await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Nur.cardRadius),
+            side: BorderSide(
+                color: Theme.of(ctx).colorScheme.outlineVariant),
+          ),
           title: Text(title),
           content: Text(message),
           actions: [
@@ -477,10 +508,17 @@ Widget _pageTile(
   final cs = theme.colorScheme;
   return Card(
     color: cs.surface,
+    elevation: 1,
+    shadowColor: cs.shadow.withValues(alpha: 0.08),
+    margin: const EdgeInsets.only(bottom: Nur.s8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(Nur.cardRadius),
+      side: BorderSide(color: cs.outlineVariant),
+    ),
     child: ListTile(
       // Saved page preview from the bundled mushaf page images.
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(Nur.s8),
         child: Image.asset(
           'assets/pages/$page.webp',
           width: 40,
@@ -533,6 +571,13 @@ Widget _noteTile(
   final page = int.tryParse(entry.key) ?? 0;
   return Card(
     color: cs.surface,
+    elevation: 1,
+    shadowColor: cs.shadow.withValues(alpha: 0.08),
+    margin: const EdgeInsets.only(bottom: Nur.s8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(Nur.cardRadius),
+      side: BorderSide(color: cs.outlineVariant),
+    ),
     child: ListTile(
       leading: Icon(Icons.note_alt_outlined, color: cs.primary, size: 32),
       title: Row(
@@ -591,6 +636,13 @@ Widget _ayahTile(
   final page = index?[key];
   return Card(
     color: cs.surface,
+    elevation: 1,
+    shadowColor: cs.shadow.withValues(alpha: 0.08),
+    margin: const EdgeInsets.only(bottom: Nur.s8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(Nur.cardRadius),
+      side: BorderSide(color: cs.outlineVariant),
+    ),
     child: ListTile(
       leading: Icon(Icons.favorite, color: cs.primary, size: 30),
       title: Row(
@@ -673,7 +725,7 @@ Widget _buildPagesList(
     );
   }
   return ListView(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.all(Nur.screenMargin),
     children: [
       for (final page in pages) _pageTile(context, prefs, page, onOpenPage),
     ],
@@ -704,7 +756,7 @@ Widget _buildNotesList(
     );
   }
   return ListView(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.all(Nur.screenMargin),
     children: [
       for (final entry in notes)
         _noteTile(context, prefs, entry, onOpenPage, onEditNote),
@@ -752,7 +804,7 @@ class _AllSavedTab extends StatelessWidget {
       );
     }
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Nur.screenMargin),
       children: [
         if (pages.isNotEmpty) ...[
           _sectionHeader(context, 'Bookmarked Pages'),
@@ -811,7 +863,7 @@ class _SavedAyahsListState extends State<_SavedAyahsList> {
       builder: (context, snapshot) {
         final index = snapshot.data;
         return ListView(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(Nur.screenMargin),
           children: [
             for (final key in ayahs)
               _ayahTile(context, prefs, key, index, widget.onOpenPage),

@@ -39,11 +39,15 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
       appBar: AppBar(title: const Text('Ramzan & Duas')),
       body: Consumer<PreferencesService>(
         builder: (context, prefs, _) => ListView(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           children: [
             // Today's Reminder card.
             Card(
               color: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -125,6 +129,10 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
     final theme = Theme.of(context);
     return Card(
       color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+      ),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),

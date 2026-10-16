@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart';
+
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
@@ -68,10 +70,11 @@ class MoreScreen extends StatelessWidget {
   }) {
     final cs = Theme.of(context).colorScheme;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: Nur.s20, vertical: Nur.s8),
       leading: CircleAvatar(
         backgroundColor: cs.primary.withOpacity(0.15),
-        child: Icon(icon, color: cs.primary),
+        child: Icon(icon, color: cs.primary, size: Nur.iconSizeSm),
       ),
       title: Text(
         title,
@@ -93,6 +96,7 @@ class MoreScreen extends StatelessWidget {
       trailing: Icon(
         Icons.chevron_right,
         color: cs.primary,
+        size: Nur.iconSizeSm,
       ),
       onTap: onTap,
     );
@@ -101,19 +105,20 @@ class MoreScreen extends StatelessWidget {
   Widget _sectionHeader(BuildContext context, String label) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 2),
+      padding: const EdgeInsets.fromLTRB(
+          Nur.s20, Nur.s16, Nur.s20, Nur.s4),
       child: Row(
         children: [
           Text(
             label.toUpperCase(),
             style: TextStyle(
               color: cs.primary,
-              fontSize: 11.5,
+              fontSize: Nur.fontSmall,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.4,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: Nur.s8),
           Expanded(
             child: Divider(
               color: cs.primary.withOpacity(0.25),
@@ -143,7 +148,7 @@ class MoreScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          const SizedBox(height: 8),
+          const SizedBox(height: Nur.s8),
           // ---- Read ----
           _sectionHeader(context, 'Read'),
           _tile(
@@ -269,7 +274,7 @@ class MoreScreen extends StatelessWidget {
             subtitle: 'رازداری کی پالیسی',
             onTap: () => _push(context, PrivacyScreen()),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: Nur.s24),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
@@ -52,24 +53,25 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
     final urduText = data.urdu['${entry.s}:${entry.v}'] ?? '';
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.symmetric(
+          horizontal: Nur.screenMargin, vertical: Nur.s8),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         border: Border.all(
-          color: cs.primary.withValues(alpha: 0.25),
+          color: cs.outlineVariant,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: cs.shadow.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -81,7 +83,7 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Nur.screenMargin),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -92,7 +94,7 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.12),
+                      color: cs.primary.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: cs.primary.withValues(alpha: 0.4),
@@ -170,7 +172,8 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
               ),
               // Urdu tarjuma
               if (urduText.isNotEmpty) ...[
-                const SizedBox(height: 14),
+                Divider(color: cs.outlineVariant, height: Nur.s24),
+                const SizedBox(height: 2),
                 Text(
                   urduText,
                   textDirection: TextDirection.rtl,
@@ -271,8 +274,19 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, color: cs.error, size: 36),
-                    const SizedBox(height: 8),
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: cs.error.withValues(alpha: 0.08),
+                        border: Border.all(
+                            color: cs.error.withValues(alpha: 0.30)),
+                      ),
+                      child: Icon(Icons.error_outline,
+                          color: cs.error, size: 32),
+                    ),
+                    const SizedBox(height: Nur.s12),
                     const Text(
                       'Ayah list load nahi ho saki',
                       textAlign: TextAlign.center,
@@ -295,8 +309,8 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
             children: [
               // Surah header: name + ayah count
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Nur.screenMargin, vertical: Nur.s8),
                 child: Column(
                   children: [
                     Text(
@@ -326,7 +340,7 @@ class _TafsirSurahScreenState extends State<TafsirSurahScreen> {
               if (widget.surah != 1 && widget.surah != 9)
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                      horizontal: Nur.screenMargin, vertical: Nur.s8),
                   child: Text(
                     'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
                     textDirection: TextDirection.rtl,

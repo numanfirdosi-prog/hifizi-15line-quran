@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
+import '../main.dart';
 import '../services/audio_recitation_service.dart';
 import '../services/preferences_service.dart';
 import '../services/tafsir_service.dart';
@@ -104,17 +105,16 @@ class _AyahPlayerSheet extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surface,
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+                  const BorderRadius.vertical(top: Radius.circular(Nur.radiusSheet)),
               border: Border(
-                top: BorderSide(
-                    color: cs.primary.withValues(alpha: 0.35), width: 1),
+                top: BorderSide(color: Nur.goldBorder(), width: 1),
               ),
             ),
             padding: EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              left: Nur.s20,
+              right: Nur.s20,
+              top: Nur.s12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + Nur.s16,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -128,7 +128,7 @@ class _AyahPlayerSheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: Nur.s12),
                 // Header: Surah name + ayah number, share, close.
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +143,7 @@ class _AyahPlayerSheet extends StatelessWidget {
                             style: TextStyle(
                               color: cs.onSurface,
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: Nur.fontTitle,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -199,11 +199,11 @@ class _AyahPlayerSheet extends StatelessWidget {
                     '${audio.isPlaying ? 'Playing' : 'Paused'} • ${audio.selectedQari.name}',
                     style: TextStyle(
                       color: cs.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
+                      fontSize: Nur.fontCaption,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: Nur.s8),
                 // Scrollable content: Arabic, Urdu (RTL), English.
                 // Flexible (not fixed) so short ayat shrink-wrap while long
                 // translations scroll — never clipped behind the controls.
@@ -274,12 +274,15 @@ class _AyahPlayerSheet extends StatelessWidget {
                             children: [
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(Nur.s16),
                                 decoration: BoxDecoration(
-                                  color: cs.primary.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: cs.primary
-                                      .withValues(alpha: 0.5)),
+                                  // Restrained gold wash (not pale gold on
+                                  // white): the ayah text stays the focus.
+                                  color: cs.primary.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(
+                                      Nur.buttonRadius),
+                                  border: Border.all(
+                                      color: Nur.goldBorder(0.35)),
                                 ),
                             child: entry == null
                                 ? Center(
@@ -431,13 +434,13 @@ class _AyahPlayerSheet extends StatelessWidget {
   }) {
     final cs = Theme.of(context).colorScheme;
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(Nur.s24),
       onTap: onTap,
       child: Tooltip(
         message: tooltip,
         child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(minWidth: 48, minHeight: 48),
+          constraints: const BoxConstraints(
+              minWidth: Nur.minTouchTarget, minHeight: Nur.minTouchTarget),
           child: Center(
             child: Icon(icon, color: cs.primary, size: iconSize),
           ),
@@ -476,10 +479,10 @@ class _RepeatRangeRowState extends State<_RepeatRangeRow> {
     final total = allSurahs[(widget.surah - 1).clamp(0, 113)].totalAyahs;
     if (audio.hasAyahRepeatRange) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: Nur.s12, vertical: Nur.s8),
         decoration: BoxDecoration(
           color: cs.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(Nur.radiusSm),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -521,7 +524,9 @@ class _RepeatRangeRowState extends State<_RepeatRangeRow> {
               hintStyle: TextStyle(
                   color: cs.onSurface.withValues(alpha: 0.4)),
               isDense: true,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(Nur.buttonRadius),
+              ),
             ),
           ),
         ),
@@ -542,7 +547,9 @@ class _RepeatRangeRowState extends State<_RepeatRangeRow> {
               hintStyle: TextStyle(
                   color: cs.onSurface.withValues(alpha: 0.4)),
               isDense: true,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(Nur.buttonRadius),
+              ),
             ),
           ),
         ),
@@ -575,7 +582,10 @@ class _RepeatRangeRowState extends State<_RepeatRangeRow> {
             backgroundColor: cs.primary,
             foregroundColor: cs.onPrimary,
             padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: Nur.s12, vertical: Nur.s8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(Nur.buttonRadius),
+            ),
           ),
           child: const Text('Start'),
         ),
@@ -629,11 +639,11 @@ class _TafsirSectionState extends State<_TafsirSection> {
     final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Nur.s16),
       decoration: BoxDecoration(
         color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        border: Border.all(color: Nur.goldBorder(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -664,9 +674,9 @@ class _TafsirSectionState extends State<_TafsirSection> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Divider(color: cs.primary.withValues(alpha: 0.4)),
-          const SizedBox(height: 8),
+          const SizedBox(height: Nur.s4),
+          Divider(color: Nur.goldBorder(0.4)),
+          const SizedBox(height: Nur.s8),
           FutureBuilder<String?>(
             future: _tafsirFuture,
             builder: (context, snap) {

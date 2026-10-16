@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio/just_audio.dart';
 import '../data/quran_data.dart';
+import '../main.dart';
 import '../data/verse_index.dart';
 import '../data/ayah_layout.dart';
 import '../services/preferences_service.dart';
@@ -406,11 +407,11 @@ class _MushafScreenState extends State<MushafScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Nur.s8, vertical: Nur.s4),
                 decoration: BoxDecoration(
                   color: chipBg.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(Nur.radiusMd),
                 ),
                 child: Text(
                   _toolLabel(tool),
@@ -420,7 +421,7 @@ class _MushafScreenState extends State<MushafScreen> {
                       fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: Nur.s4),
               Material(
                 color: chipBg.withValues(alpha: 0.92),
                 shape: const CircleBorder(),
@@ -431,7 +432,7 @@ class _MushafScreenState extends State<MushafScreen> {
                     draw.exitDrawing();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(Nur.s16),
                     child: Icon(Icons.close, color: chipFg, size: 16),
                   ),
                 ),
@@ -545,11 +546,13 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(Nur.cardRadius)),
       ),
       builder: (sheetCtx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+          padding: const EdgeInsets.symmetric(
+              vertical: Nur.s20, horizontal: Nur.s8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -584,15 +587,16 @@ class _MushafScreenState extends State<MushafScreen> {
       String label, VoidCallback onTap) {
     final cs = Theme.of(sheetCtx).colorScheme;
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(Nur.buttonRadius),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+            horizontal: Nur.s16, vertical: Nur.s8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 6),
+            Icon(icon, color: color, size: Nur.iconSizeLg),
+            const SizedBox(height: Nur.s4),
             Text(label, style: TextStyle(color: cs.onSurface, fontSize: 13)),
           ],
         ),
@@ -608,11 +612,13 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(Nur.cardRadius)),
       ),
       builder: (sheetCtx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          padding: const EdgeInsets.symmetric(
+              vertical: Nur.s20, horizontal: Nur.s16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -664,11 +670,13 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(Nur.cardRadius)),
       ),
       builder: (sheetCtx) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.fromLTRB(
+              Nur.s16, Nur.s12, Nur.s16, Nur.s24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -678,7 +686,7 @@ class _MushafScreenState extends State<MushafScreen> {
                     child: Text('Drawing Tools',
                         style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 17,
+                            fontSize: Nur.fontTitle,
                             fontWeight: FontWeight.bold)),
                   ),
                   IconButton(
@@ -720,13 +728,13 @@ class _MushafScreenState extends State<MushafScreen> {
     final draw = Provider.of<PageDrawingService>(sheetCtx, listen: false);
     final selected = draw.selectedTool == id;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(Nur.cardRadius),
       onTap: onTap,
       child: Container(
         width: 96,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: Nur.s16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(Nur.cardRadius),
           border: Border.all(
             color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.25),
             width: selected ? 2 : 1,
@@ -740,8 +748,8 @@ class _MushafScreenState extends State<MushafScreen> {
                 color: selected
                     ? cs.primary
                     : cs.onSurface.withValues(alpha: 0.75),
-                size: 30),
-            const SizedBox(height: 6),
+                size: Nur.iconSizeLg),
+            const SizedBox(height: Nur.s4),
             Text(label,
                 style: TextStyle(
                     color: selected ? cs.primary : cs.onSurface,
@@ -764,6 +772,8 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Nur.radiusLg)),
         title:
             Text('Page $pageNum note', style: TextStyle(color: cs.onSurface)),
         content: TextField(
@@ -773,7 +783,9 @@ class _MushafScreenState extends State<MushafScreen> {
           decoration: InputDecoration(
             hintText: 'Write a note for this page…',
             hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(Nur.buttonRadius),
+            ),
           ),
         ),
         actions: [
@@ -814,6 +826,8 @@ class _MushafScreenState extends State<MushafScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(Nur.radiusLg)),
         title:
             Text('Clear page markings?', style: TextStyle(color: cs.onSurface)),
         content: Text(
@@ -870,10 +884,11 @@ class _MushafScreenState extends State<MushafScreen> {
   /// a generous ink splash, regardless of the icon/label size inside.
   Widget _barControl({required VoidCallback onTap, required Widget child}) {
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(Nur.buttonRadius),
       onTap: onTap,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        constraints: const BoxConstraints(
+            minWidth: Nur.minTouchTarget, minHeight: Nur.minTouchTarget),
         child: Center(child: child),
       ),
     );
@@ -893,17 +908,25 @@ class _MushafScreenState extends State<MushafScreen> {
       opacity: enabled ? 0.92 : 0.28,
       child: Material(
         color: buttonColor.withValues(alpha: 0.78),
-        shape: const CircleBorder(),
-        elevation: 2,
+        // Hairline outline keeps the chevron legible over the page
+        // without a heavy shadow.
+        shape: CircleBorder(
+          side: BorderSide(
+            color: iconColor.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        elevation: 0,
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: enabled ? onTap : null,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            constraints: const BoxConstraints(
+                minWidth: Nur.minTouchTarget, minHeight: Nur.minTouchTarget),
             child: Center(
               child: Tooltip(
                 message: tooltip,
-                child: Icon(icon, color: iconColor, size: 30),
+                child: Icon(icon, color: iconColor, size: Nur.iconSizeLg),
               ),
             ),
           ),
@@ -1734,7 +1757,7 @@ class _MushafScreenState extends State<MushafScreen> {
                       child: Icon(
                         isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                         color: isBookmarked ? barOnAccent : barText,
-                        size: 22,
+                        size: Nur.iconSizeSm,
                       ),
                     ),
                   ),
@@ -1749,8 +1772,13 @@ class _MushafScreenState extends State<MushafScreen> {
               left: 14,
               child: Material(
                 color: barSurface.withValues(alpha: 0.88),
-                shape: const CircleBorder(),
-                elevation: 3,
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: barBorder.withValues(alpha: 0.6),
+                    width: 1,
+                  ),
+                ),
+                elevation: 2,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: _handleBack,
@@ -1759,7 +1787,7 @@ class _MushafScreenState extends State<MushafScreen> {
                     child: Icon(
                       Icons.arrow_back,
                       color: barText,
-                      size: 22,
+                      size: Nur.iconSizeSm,
                     ),
                   ),
                 ),
@@ -1778,10 +1806,10 @@ class _MushafScreenState extends State<MushafScreen> {
                 shape: CircleBorder(
                   side: BorderSide(
                     color: barBorder,
-                    width: 1.4,
+                    width: 1,
                   ),
                 ),
-                elevation: 4,
+                elevation: 2,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () {
@@ -1793,11 +1821,11 @@ class _MushafScreenState extends State<MushafScreen> {
                         .exitDrawing();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(Nur.s12),
                     child: Icon(
                       Icons.close,
                       color: barText,
-                      size: 24,
+                      size: Nur.iconSize,
                     ),
                   ),
                 ),
@@ -1812,10 +1840,10 @@ class _MushafScreenState extends State<MushafScreen> {
                 shape: CircleBorder(
                   side: BorderSide(
                     color: barBorder,
-                    width: 1.4,
+                    width: 1,
                   ),
                 ),
-                elevation: 4,
+                elevation: 2,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () {
@@ -1824,13 +1852,13 @@ class _MushafScreenState extends State<MushafScreen> {
                     });
                   },
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(Nur.s12),
                     child: Icon(
                       _highlightsVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
                       color: barText,
-                      size: 24,
+                      size: Nur.iconSize,
                     ),
                   ),
                 ),
@@ -1846,10 +1874,10 @@ class _MushafScreenState extends State<MushafScreen> {
                 shape: CircleBorder(
                   side: BorderSide(
                     color: barBorder,
-                    width: 1.2,
+                    width: 1,
                   ),
                 ),
-                elevation: 3,
+                elevation: 2,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () => _showDrawingMenu(_currentPage),
@@ -1874,16 +1902,16 @@ class _MushafScreenState extends State<MushafScreen> {
               bottom: 76 + MediaQuery.of(context).padding.bottom,
               child: Center(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: Nur.s16, vertical: Nur.s8),
                   decoration: BoxDecoration(
                     color: barSurface,
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: barBorder, width: 1.5),
+                    border: Border.all(color: barBorder, width: 1),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.25),
-                        blurRadius: 10,
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: Nur.s8,
                         offset: const Offset(0, 4),
                       ),
                     ],
@@ -1902,8 +1930,8 @@ class _MushafScreenState extends State<MushafScreen> {
                               });
                             },
                             child: Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 6),
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: Nur.s4),
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
@@ -1948,15 +1976,15 @@ class _MushafScreenState extends State<MushafScreen> {
                 border: Border(
                   top: BorderSide(
                     color: barBorder,
-                    width: 1.5,
+                    width: 1,
                   ),
                 ),
               ),
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: Nur.screenMargin, vertical: Nur.s4),
                   child: drawingActive
                       ? Consumer<PageDrawingService>(
                           builder: (context, draw, _) => Row(
@@ -1973,8 +2001,8 @@ class _MushafScreenState extends State<MushafScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Container(
-                                      width: 24,
-                                      height: 24,
+                                      width: Nur.iconSize,
+                                      height: Nur.iconSize,
                                       decoration: BoxDecoration(
                                         color: draw.selectedColor,
                                         shape: BoxShape.circle,
@@ -1989,7 +2017,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                       'Color',
                                       style: TextStyle(
                                         color: barText.withValues(alpha: 0.85),
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -2008,7 +2036,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                     Icon(
                                       _toolIcon(draw.selectedTool),
                                       color: barAccent,
-                                      size: 24,
+                                      size: Nur.iconSize,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
@@ -2016,7 +2044,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                       style: TextStyle(
                                         color: barAccent,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                       ),
                                     ),
                                   ],
@@ -2032,14 +2060,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                     Icon(
                                       Icons.note_alt_outlined,
                                       color: barText.withValues(alpha: 0.85),
-                                      size: 24,
+                                      size: Nur.iconSize,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       'Notes',
                                       style: TextStyle(
                                         color: barText.withValues(alpha: 0.65),
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                       ),
                                     ),
                                   ],
@@ -2055,14 +2083,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                     Icon(
                                       Icons.delete_outline,
                                       color: barText.withValues(alpha: 0.85),
-                                      size: 24,
+                                      size: Nur.iconSize,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       'Clear',
                                       style: TextStyle(
                                         color: barText.withValues(alpha: 0.65),
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                       ),
                                     ),
                                   ],
@@ -2082,14 +2110,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                               : barText.withValues(
                                                   alpha: 0.35))
                                           .withValues(alpha: 0.85),
-                                      size: 24,
+                                      size: Nur.iconSize,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       'Undo',
                                       style: TextStyle(
                                         color: barText.withValues(alpha: 0.65),
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                       ),
                                     ),
                                   ],
@@ -2109,14 +2137,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                               : barText.withValues(
                                                   alpha: 0.35))
                                           .withValues(alpha: 0.85),
-                                      size: 24,
+                                      size: Nur.iconSize,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       'Redo',
                                       style: TextStyle(
                                         color: barText.withValues(alpha: 0.65),
-                                        fontSize: 11,
+                                        fontSize: Nur.fontSmall,
                                       ),
                                     ),
                                   ],
@@ -2139,14 +2167,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                     style: TextStyle(
                                       color: barAccent,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                      fontSize: Nur.s16,
                                     ),
                                   ),
                                   Text(
                                     'Speed',
                                     style: TextStyle(
                                       color: barText.withValues(alpha: 0.65),
-                                      fontSize: 11,
+                                      fontSize: Nur.fontSmall,
                                     ),
                                   ),
                                 ],
@@ -2161,7 +2189,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border:
-                                      Border.all(color: barAccent, width: 2.5),
+                                      Border.all(color: barAccent, width: 2),
                                 ),
                                 child: Icon(
                                   audio.isPlaying
@@ -2184,7 +2212,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                       Icon(
                                         Icons.repeat,
                                         color: barText.withValues(alpha: 0.85),
-                                        size: 24,
+                                        size: Nur.iconSize,
                                       ),
                                       if (prefs.repeatMode != 0)
                                         Positioned(
@@ -2198,7 +2226,8 @@ class _MushafScreenState extends State<MushafScreen> {
                                             decoration: BoxDecoration(
                                               color: barAccent,
                                               borderRadius:
-                                                  BorderRadius.circular(8),
+                                                  BorderRadius.circular(
+                                                      Nur.s8),
                                             ),
                                             child: Text(
                                               _repeatLabels[
@@ -2218,7 +2247,7 @@ class _MushafScreenState extends State<MushafScreen> {
                                     'Repeat',
                                     style: TextStyle(
                                       color: barText.withValues(alpha: 0.65),
-                                      fontSize: 11,
+                                      fontSize: Nur.fontSmall,
                                     ),
                                   ),
                                 ],
@@ -2238,13 +2267,13 @@ class _MushafScreenState extends State<MushafScreen> {
                                     color: prefs.nightPageMode
                                         ? barAccent
                                         : barText.withValues(alpha: 0.85),
-                                    size: 24,
+                                    size: Nur.iconSize,
                                   ),
                                   Text(
                                     'Night',
                                     style: TextStyle(
                                       color: barText.withValues(alpha: 0.65),
-                                      fontSize: 11,
+                                      fontSize: Nur.fontSmall,
                                     ),
                                   ),
                                 ],
@@ -2260,14 +2289,14 @@ class _MushafScreenState extends State<MushafScreen> {
                                   Icon(
                                     Icons.more_vert,
                                     color: barText.withValues(alpha: 0.85),
-                                    size: 24,
+                                    size: Nur.iconSize,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     'More',
                                     style: TextStyle(
                                       color: barSubText,
-                                      fontSize: 11,
+                                      fontSize: Nur.fontSmall,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),

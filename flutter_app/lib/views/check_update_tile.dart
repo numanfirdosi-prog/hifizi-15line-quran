@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import '../main.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// "Check Update" menu tile: compares the installed app version against the
@@ -164,38 +166,43 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
     switch (_status) {
       case _UpdateStatus.checking:
         trailing = const SizedBox(
-          width: 24,
-          height: 24,
+          width: Nur.iconSize,
+          height: Nur.iconSize,
           child: CircularProgressIndicator(strokeWidth: 2.5),
         );
         subtitle = 'Check ho raha hai...';
         break;
       case _UpdateStatus.upToDate:
-        trailing =
-            const Icon(Icons.check_circle, color: Colors.green, size: 28);
+        trailing = Icon(Icons.check_circle,
+            color: cs.primary, size: Nur.iconSizeLg);
         subtitle = 'Aap latest version par hain';
         break;
       case _UpdateStatus.updateAvailable:
-        trailing = Icon(Icons.download, color: cs.error, size: 28);
+        trailing =
+            Icon(Icons.download, color: cs.error, size: Nur.iconSizeLg);
         subtitle =
             'Nayi version $_latestVersion available hai — tap karke download karein';
         break;
       case _UpdateStatus.error:
-        trailing = Icon(Icons.error_outline, color: cs.error, size: 28);
+        trailing =
+            Icon(Icons.error_outline, color: cs.error, size: Nur.iconSizeLg);
         subtitle = 'Check nahi ho saka — dobara try karein';
         break;
       case _UpdateStatus.idle:
-        trailing = Icon(Icons.system_update, color: cs.primary, size: 28);
+        trailing =
+            Icon(Icons.system_update, color: cs.primary, size: Nur.iconSizeLg);
         subtitle = _installedVersion.isEmpty
             ? 'Tap karke check karein'
             : 'Version $_installedVersion — tap karke check karein';
         break;
     }
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: Nur.s20, vertical: Nur.s8),
       leading: CircleAvatar(
         backgroundColor: cs.primary.withOpacity(0.15),
-        child: Icon(Icons.system_update, color: cs.primary),
+        child: Icon(Icons.system_update,
+            color: cs.primary, size: Nur.iconSizeSm),
       ),
       title: Text(
         'Check Update',

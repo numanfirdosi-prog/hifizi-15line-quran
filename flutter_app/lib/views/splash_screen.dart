@@ -137,7 +137,8 @@ class _SplashScreenState extends State<SplashScreen>
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding:
+              const EdgeInsets.symmetric(horizontal: Nur.s24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -147,7 +148,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   child: const _NurEmblem(size: 112),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: Nur.s24),
                 Text(
                   'نور القرآن',
                   textDirection: TextDirection.rtl,
@@ -160,7 +161,7 @@ class _SplashScreenState extends State<SplashScreen>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: Nur.s8),
                 Text(
                   'Nur Al-Quran',
                   style: TextStyle(
@@ -170,7 +171,7 @@ class _SplashScreenState extends State<SplashScreen>
                     letterSpacing: 1.2,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: Nur.s4),
                 Text(
                   '15-Line Hifzi Mushaf',
                   style: TextStyle(
@@ -178,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen>
                     fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: Nur.s24 + Nur.s16),
                 if (_failed) ...[
                   Icon(Icons.error_outline,
                       color: cs.error, size: 40),
@@ -209,6 +210,11 @@ class _SplashScreenState extends State<SplashScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: cs.primary,
                       foregroundColor: cs.onPrimary,
+                      minimumSize: const Size(0, Nur.buttonHeight),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(Nur.buttonRadius),
+                      ),
                     ),
                   ),
                 ] else ...[

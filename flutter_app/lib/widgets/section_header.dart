@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart';
+
 /// Shared section header: small gold-accented title with an optional
 /// trailing action (e.g. "Browse All" / "View All"). Keeps the home
 /// dashboard and other lists visually consistent.
@@ -21,11 +23,12 @@ class NurSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+      padding: const EdgeInsets.fromLTRB(
+          Nur.s20, Nur.s16, Nur.s20, Nur.s8),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: cs.primary),
-          const SizedBox(width: 8),
+          Icon(icon, size: Nur.s16, color: cs.primary),
+          const SizedBox(width: Nur.s8),
           Expanded(
             child: Text(
               title.toUpperCase(),
@@ -42,7 +45,7 @@ class NurSectionHeader extends StatelessWidget {
               onPressed: onAction,
               style: TextButton.styleFrom(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: Nur.s8, vertical: Nur.s4),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

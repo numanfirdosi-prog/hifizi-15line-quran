@@ -17,15 +17,27 @@ import 'views/splash_screen.dart';
 /// Gold is reserved for important actions, selected states, progress and
 /// meaningful accents — never decoration.
 abstract final class Nur {
-  // Brand greens
-  static const Color deepGreen = Color(0xFF0B3027); // primary deep green
-  static const Color green = Color(0xFF104537); // secondary green
-  static const Color cardGreen = Color(0xFF154638); // card green
-  static const Color elevatedGreen = Color(0xFF1B5140); // elevated green
+  // Brand greens — re-based to the premium prompt palette (v1.0.91 redesign).
+  // Deep Emerald #064E3B is the primary brand green; Dark Emerald #033B2D
+  // is the deepest surface. Night Slate keeps its signature deep-green
+  // identity — these are a subtle refinement, not a recolor.
+  static const Color deepGreen = Color(0xFF064E3B); // primary deep emerald
+  static const Color darkEmerald = Color(0xFF033B2D); // deepest emerald
+  static const Color green = Color(0xFF0A5C46); // secondary green
+  static const Color cardGreen = Color(0xFF0C4A38); // card green
+  static const Color elevatedGreen = Color(0xFF10563F); // elevated green
 
-  // Brand golds
-  static const Color gold = Color(0xFFE7C547); // primary gold
-  static const Color goldDeep = Color(0xFFC9A936); // secondary gold
+  // Brand golds — Premium Gold #D4AF37, Soft Gold #E8D29A.
+  // Gold is reserved for important actions, selected states, progress and
+  // meaningful accents — never decoration, never pale gold on white.
+  static const Color gold = Color(0xFFD4AF37); // primary premium gold
+  static const Color softGold = Color(0xFFE8D29A); // soft gold highlight
+  static const Color goldDeep = Color(0xFFB8963A); // secondary gold
+
+  // Premium neutrals (prompt palette).
+  static const Color ivory = Color(0xFFFFFDF5); // warm ivory light surface
+  static const Color navy = Color(0xFF101B35); // dark navy
+  static const Color darkSurface = Color(0xFF121A1A); // dark surface
 
   // Text on dark greens
   static const Color ink = Color(0xFFF7F5EC); // primary text
@@ -40,8 +52,40 @@ abstract final class Nur {
   static const Color errorDark = Color(0xFFE57373);
   static const Color errorLight = Color(0xFFB3261E);
 
+  // ---- Spacing scale (single source of truth) ----
+  static const double s4 = 4;
+  static const double s8 = 8;
+  static const double s12 = 12;
+  static const double s16 = 16;
+  static const double s20 = 20;
+  static const double s24 = 24;
+  static const double screenMargin = 16; // default horizontal screen margin
+
+  // ---- Radii ----
   static const double cardRadius = 16;
   static const double buttonRadius = 12;
+  static const double radiusSm = 10;
+  static const double radiusMd = 14;
+  static const double radiusLg = 20;
+  static const double radiusSheet = 24; // bottom-sheet top corners
+
+  // ---- Control sizes ----
+  static const double buttonHeight = 48; // min touch-friendly button height
+  static const double iconSize = 24; // standard icon size
+  static const double iconSizeSm = 20;
+  static const double iconSizeLg = 28;
+  static const double minTouchTarget = 48; // min tap target (a11y)
+
+  // ---- Elevation / shadows (restrained, no heavy shadows) ----
+  static const double elevationCard = 0; // flat cards with hairline borders
+  static const double elevationSheet = 8;
+  static const double elevationDialog = 12;
+
+  // ---- Typography scale (English/labels; Arabic/Urdu via script_font.dart) ----
+  static const double fontTitle = 18;
+  static const double fontBody = 14;
+  static const double fontCaption = 12;
+  static const double fontSmall = 11;
 
   /// Subtle translucent gold border for premium cards on dark greens.
   static Color goldBorder([double alpha = 0.22]) =>
@@ -199,6 +243,33 @@ ThemeData _nightTheme() {
       titleTextStyle: TextStyle(
           color: Nur.ink, fontSize: 18, fontWeight: FontWeight.bold),
       contentTextStyle: TextStyle(color: Nur.sage, fontSize: 14),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Nur.cardGreen,
+      modalBackgroundColor: Nur.cardGreen,
+      elevation: Nur.elevationSheet,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: Nur.deepGreen,
+      indicatorColor: Nur.gold.withValues(alpha: 0.20),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? Nur.gold
+                  : Nur.sage)),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? Nur.gold
+                  : Nur.sage,
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
     ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: Nur.elevatedGreen,
@@ -360,6 +431,33 @@ ThemeData _emeraldTheme() {
           color: Nur.inkDark, fontSize: 18, fontWeight: FontWeight.bold),
       contentTextStyle: TextStyle(color: Color(0xFF41564C), fontSize: 14),
     ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Nur.ivory,
+      modalBackgroundColor: Nur.ivory,
+      elevation: Nur.elevationSheet,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: const Color(0xFFE9F1EB),
+      indicatorColor: Nur.deepGreen.withValues(alpha: 0.12),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? Nur.deepGreen
+                  : const Color(0xFF6E857A))),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? Nur.deepGreen
+                  : const Color(0xFF6E857A),
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
+    ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: Nur.deepGreen,
       contentTextStyle: TextStyle(color: Nur.ink),
@@ -520,6 +618,33 @@ ThemeData _parchmentTheme() {
       titleTextStyle: TextStyle(
           color: Nur.inkWarm, fontSize: 18, fontWeight: FontWeight.bold),
       contentTextStyle: TextStyle(color: Color(0xFF6B5636), fontSize: 14),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: const Color(0xFFFFF9E8),
+      modalBackgroundColor: const Color(0xFFFFF9E8),
+      elevation: Nur.elevationSheet,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: const Color(0xFFF3E6C3),
+      indicatorColor: bronze.withValues(alpha: 0.12),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? bronze
+                  : const Color(0xFF8A7350))),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? bronze
+                  : const Color(0xFF8A7350),
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
     ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: bronze,

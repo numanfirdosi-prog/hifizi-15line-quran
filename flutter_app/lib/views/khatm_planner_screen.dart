@@ -53,6 +53,7 @@ class _KhatmPlannerScreenState extends State<KhatmPlannerScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reset Khatm plan?'),
         content: const Text(
           'This unmarks all 30 days. Your opened-page history stays '
@@ -107,7 +108,7 @@ class _KhatmPlannerScreenState extends State<KhatmPlannerScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: cs.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
             ),
             child: Column(
@@ -172,7 +173,7 @@ class _KhatmPlannerScreenState extends State<KhatmPlannerScreen> {
           ),
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -194,15 +195,15 @@ class _KhatmPlannerScreenState extends State<KhatmPlannerScreen> {
                 final openedPct =
                     totalPages > 0 ? openedCount / totalPages : 0.0;
                 return InkWell(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   onTap: () => _toggleDay(prefs, day),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isDone
                           ? cs.primary.withValues(alpha: 0.18)
                           : cs.surface,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isDone
                             ? cs.primary

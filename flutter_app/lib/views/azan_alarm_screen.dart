@@ -109,7 +109,7 @@ class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
                     fontSize: 16,
                   ),
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: 48),
                 SizedBox(
                   width: double.infinity,
                   height: 64,
@@ -123,8 +123,9 @@ class _AzanAlarmScreenState extends State<AzanAlarmScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: cs.primary,
                       foregroundColor: cs.onPrimary,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),

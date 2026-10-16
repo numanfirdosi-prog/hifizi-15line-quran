@@ -48,12 +48,16 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Offline Download Center')),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         children: [
           // Mushaf pages: genuinely offline — all 611 pages are bundled in
           // the app package, so no download is needed or offered here.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -93,6 +97,10 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
           // Audio quick set.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -135,6 +143,10 @@ class _OfflineDownloadScreenState extends State<OfflineDownloadScreen> {
           // Clear cache.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -209,6 +221,10 @@ class _QariAudioSectionState extends State<_QariAudioSection> {
     final totalBytes = _bytes.values.fold<int>(0, (sum, b) => sum + b);
     return Card(
       color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -396,7 +412,15 @@ class _QariRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          LinearProgressIndicator(value: barValue),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: barValue,
+              minHeight: 6,
+              backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(gold),
+            ),
+          ),
           const SizedBox(height: 6),
           Wrap(spacing: 8, children: actions),
         ],

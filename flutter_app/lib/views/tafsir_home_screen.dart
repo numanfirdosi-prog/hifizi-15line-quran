@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import '../data/quran_data.dart';
 import '../models/surah.dart';
 import '../utils/script_font.dart';
@@ -23,29 +24,34 @@ class TafsirHomeScreen extends StatelessWidget {
     final badge = surah.number.toString().padLeft(2, '0');
     return Card(
       color: cs.surface,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 1,
+      shadowColor: cs.shadow.withValues(alpha: 0.08),
+      margin: const EdgeInsets.symmetric(
+          horizontal: Nur.screenMargin, vertical: Nur.s8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         side: BorderSide(
-          color: cs.primary.withValues(alpha: 0.25),
+          color: cs.outlineVariant,
           width: 1,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
         onTap: () => _openSurah(context, surah.number),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(Nur.screenMargin),
           child: Row(
             children: [
-              // Gold-ringed number medallion
+              // Number medallion
               Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: cs.primary.withValues(alpha: 0.12),
-                  border: Border.all(color: cs.primary, width: 1.5),
+                  color: cs.primary.withValues(alpha: 0.10),
+                  border: Border.all(
+                      color: cs.primary.withValues(alpha: 0.55),
+                      width: 1),
                 ),
                 child: Center(
                   child: Text(
@@ -119,13 +125,15 @@ class TafsirHomeScreen extends StatelessWidget {
           // Golden subtitle banner
           Container(
             width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.fromLTRB(
+                Nur.screenMargin, Nur.s8, Nur.screenMargin, Nur.s4),
+            padding: const EdgeInsets.symmetric(
+                horizontal: Nur.screenMargin, vertical: Nur.s12),
             decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: cs.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(Nur.buttonRadius),
               border: Border.all(
-                color: cs.primary.withValues(alpha: 0.3),
+                color: cs.primary.withValues(alpha: 0.25),
               ),
             ),
             child: Row(
@@ -144,6 +152,8 @@ class TafsirHomeScreen extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
+              padding:
+                  const EdgeInsets.only(bottom: Nur.screenMargin),
               itemCount: allSurahs.length,
               itemBuilder: (context, index) =>
                   _buildSurahCard(context, allSurahs[index]),

@@ -72,13 +72,13 @@ class _QiblahScreenState extends State<QiblahScreen> {
         ),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.compass_calibration,
                     size: 72, color: cs.primary),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Text(
                   '${prefs.selectedCity.name}\nQiblah: ${qiblah.bearing}° ${qiblah.cardinal} • ${qiblah.distanceKm} km',
                   textAlign: TextAlign.center,
@@ -114,7 +114,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -124,7 +124,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: cs.surface,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                       color: cs.primary.withValues(alpha: 0.5)),
                 ),
@@ -137,7 +137,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
                 ),
               ),
 
-              const SizedBox(height: 36),
+              const SizedBox(height: 28),
 
               // Animated Compass Dial
               Stack(
@@ -242,7 +242,7 @@ class _QiblahScreenState extends State<QiblahScreen> {
                 ],
               ),
 
-              const SizedBox(height: 36),
+              const SizedBox(height: 28),
 
               // Status Banner
               Text(

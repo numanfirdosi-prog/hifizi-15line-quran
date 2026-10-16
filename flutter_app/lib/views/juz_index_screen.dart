@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'package:provider/provider.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart' show totalPagesInMushaf;
@@ -98,7 +99,8 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
           // Search: Juz number, Arabic name, transliteration, start page,
           // verse refs.
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            padding: const EdgeInsets.fromLTRB(
+                Nur.screenMargin, Nur.s8, Nur.screenMargin, 0),
             child: TextField(
               controller: _searchController,
               onChanged: (v) => setState(() => _query = v),
@@ -128,6 +130,11 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
                 ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(
+                      color: cs.primary.withValues(alpha: 0.55)),
+                ),
               ),
             ),
           ),
@@ -156,11 +163,20 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off,
-                              size: 48,
-                              color:
-                                  cs.onSurface.withValues(alpha: 0.38)),
-                          const SizedBox(height: 12),
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: cs.primary.withValues(alpha: 0.08),
+                              border: Border.all(
+                                  color: cs.primary
+                                      .withValues(alpha: 0.30)),
+                            ),
+                            child: Icon(Icons.search_off,
+                                size: 32, color: cs.primary),
+                          ),
+                          const SizedBox(height: Nur.screenMargin),
                           Text(
                             'No Juz matched "${_query.trim()}".',
                             textAlign: TextAlign.center,
@@ -200,8 +216,8 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.primary.withValues(alpha: 0.4)),
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+          border: Border.all(color: cs.outlineVariant),
         ),
         child: Text(
           label,
@@ -229,6 +245,10 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+            color: _filter == value
+                ? cs.primary
+                : cs.outlineVariant),
       ),
     );
   }
@@ -246,27 +266,31 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
 
     return Card(
       color: cs.surface,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 1,
+      shadowColor: cs.shadow.withValues(alpha: 0.08),
+      margin: const EdgeInsets.symmetric(
+          horizontal: Nur.screenMargin, vertical: Nur.s8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: cs.primary.withValues(alpha: 0.25)),
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
+        side: BorderSide(color: cs.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(Nur.screenMargin),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                // Gold-ringed number medallion
+                // Number medallion
                 Container(
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: cs.primary.withValues(alpha: 0.12),
-                    border:
-                        Border.all(color: cs.primary, width: 1.5),
+                    color: cs.primary.withValues(alpha: 0.10),
+                    border: Border.all(
+                        color: cs.primary.withValues(alpha: 0.55),
+                        width: 1),
                   ),
                   child: Center(
                     child: Text(
@@ -330,8 +354,8 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
               ],
             ),
             Divider(
-              color: cs.primary.withValues(alpha: 0.25),
-              height: 20,
+              color: cs.outlineVariant,
+              height: Nur.s20,
             ),
             // Verified metadata from juz_data.dart
             _metaRow(
@@ -361,9 +385,10 @@ class _JuzIndexScreenState extends State<JuzIndexScreen> {
                   backgroundColor: cs.primary,
                   foregroundColor: cs.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                        BorderRadius.circular(Nur.buttonRadius),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: Nur.s12),
                 ),
                 onPressed: () => widget.onOpenPage(j.startPage),
                 label: Text('Read Juz $badge • Page ${j.startPage}'),

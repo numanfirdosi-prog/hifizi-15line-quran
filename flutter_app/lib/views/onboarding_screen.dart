@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../main.dart';
 import '../services/preferences_service.dart';
 import 'home_navigation_screen.dart';
 
@@ -91,22 +92,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: List.generate(
                 _pages.length,
                 (i) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _page == i ? 24 : 8,
-                  height: 8,
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: Nur.s4),
+                  width: _page == i ? Nur.s24 : Nur.s8,
+                  height: Nur.s8,
                   decoration: BoxDecoration(
                     color: _page == i
                         ? cs.primary
                         : cs.onSurface.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(Nur.s4),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: Nur.s24),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Nur.s24, vertical: Nur.s24),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -120,9 +122,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: cs.primary,
                     foregroundColor: cs.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    minimumSize:
+                        const Size(double.infinity, Nur.buttonHeight),
+                    padding: const EdgeInsets.symmetric(vertical: Nur.s12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius:
+                          BorderRadius.circular(Nur.buttonRadius),
                     ),
                   ),
                   child: Text(last ? 'Get Started' : 'Next'),
@@ -169,23 +174,23 @@ class _OnboardPage extends StatelessWidget {
             ),
             child: Icon(icon, size: 56, color: cs.primary),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: Nur.s24 + Nur.s8),
           Text(
             title,
             textAlign: TextAlign.center,
             style: textTheme.titleLarge?.copyWith(fontSize: 22),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Nur.s12),
           // Small gold divider — the premium accent for key headings.
           Container(
-            width: 44,
+            width: Nur.s24 + Nur.s20,
             height: 3,
             decoration: BoxDecoration(
               color: cs.primary,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
           Text(
             body,
             textAlign: TextAlign.center,

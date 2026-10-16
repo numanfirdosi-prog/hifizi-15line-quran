@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/quran_data.dart';
+import '../main.dart';
 import '../data/verse_index.dart';
 import '../services/preferences_service.dart';
 import '../services/voice_search_service.dart';
@@ -259,7 +260,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(Nur.screenMargin),
             child: Row(
               children: [
                 Expanded(
@@ -274,16 +275,25 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: Icon(
-                              _listening ? Icons.mic : Icons.mic_none,
-                              color: _listening ? cs.error : null,
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _listening
+                                  ? cs.error.withValues(alpha: 0.12)
+                                  : cs.primary.withValues(alpha: 0.10),
                             ),
-                            tooltip: _listening
-                                ? 'Stop voice input'
-                                : 'Voice search',
-                            onPressed:
-                                _listening ? _stopVoice : _startVoice,
+                            child: IconButton(
+                              icon: Icon(
+                                _listening ? Icons.mic : Icons.mic_none,
+                                color:
+                                    _listening ? cs.error : cs.primary,
+                              ),
+                              tooltip: _listening
+                                  ? 'Stop voice input'
+                                  : 'Voice search',
+                              onPressed:
+                                  _listening ? _stopVoice : _startVoice,
+                            ),
                           ),
                           IconButton(
                             icon: const Icon(Icons.clear),
@@ -292,8 +302,19 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                           ),
                         ],
                       ),
+                      filled: true,
+                      fillColor: cs.surfaceContainerHighest
+                          .withValues(alpha: 0.6),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius:
+                            BorderRadius.circular(Nur.cardRadius),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(Nur.cardRadius),
+                        borderSide: BorderSide(
+                            color: cs.primary.withValues(alpha: 0.55)),
                       ),
                     ),
                   ),
@@ -304,7 +325,8 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                     backgroundColor: cs.primary,
                     foregroundColor: cs.onPrimary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius:
+                          BorderRadius.circular(Nur.buttonRadius),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -468,8 +490,8 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                   color: cs.primary.withValues(
                                       alpha: 0.6)),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                    Nur.buttonRadius),
                               ),
                             ),
                             onPressed: () => setState(() =>
@@ -483,17 +505,20 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                       final surahName = allSurahs[e.s - 1].nameEn;
                       return Card(
                         color: cs.surface,
+                        elevation: 1,
+                        shadowColor: cs.shadow.withValues(alpha: 0.08),
                         margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: Nur.screenMargin,
+                          vertical: Nur.s8,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(16),
+                              BorderRadius.circular(Nur.cardRadius),
+                          side: BorderSide(color: cs.outlineVariant),
                         ),
                         child: InkWell(
                           borderRadius:
-                              BorderRadius.circular(16),
+                              BorderRadius.circular(Nur.cardRadius),
                           onTap: () {
                             // Tapping a result opens the ayah player:
                             // highlights the ayah and plays its audio
@@ -502,7 +527,8 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                 context, surah: e.s, ayah: e.v);
                           },
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(
+                                Nur.screenMargin),
                             child: Column(
                               crossAxisAlignment:
                                   CrossAxisAlignment.stretch,
@@ -560,7 +586,10 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                                     color: cs.onSurfaceVariant,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                Divider(
+                                    color: cs.outlineVariant,
+                                    height: Nur.s20,
+                                  ),
                                 Row(
                                   children: [
                                     Expanded(
@@ -628,8 +657,18 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search, size: 64, color: cs.onSurfaceVariant),
-            const SizedBox(height: 12),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.primary.withValues(alpha: 0.08),
+                border: Border.all(
+                    color: cs.primary.withValues(alpha: 0.30)),
+              ),
+              child: Icon(Icons.search, size: 36, color: cs.primary),
+            ),
+            const SizedBox(height: Nur.screenMargin),
             Text(
               'Search the Holy Quran',
               style: TextStyle(
@@ -660,9 +699,19 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off,
-                size: 64, color: cs.onSurfaceVariant),
-            const SizedBox(height: 12),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.primary.withValues(alpha: 0.08),
+                border: Border.all(
+                    color: cs.primary.withValues(alpha: 0.30)),
+              ),
+              child:
+                  Icon(Icons.search_off, size: 36, color: cs.primary),
+            ),
+            const SizedBox(height: Nur.screenMargin),
             Text(
               'No verses found',
               style: TextStyle(

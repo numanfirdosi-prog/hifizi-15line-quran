@@ -23,11 +23,15 @@ class FaqScreen extends StatelessWidget {
       appBar:
           AppBar(title: Text(isUrdu ? 'سوالات و جوابات' : 'Questions & FAQ')),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         children: [
           for (final faq in faqs)
             Card(
               color: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+              ),
               margin: const EdgeInsets.only(bottom: 8),
               child: ExpansionTile(
                 title: Text(
@@ -66,6 +70,7 @@ class AboutScreen extends StatelessWidget {
     final description = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(isUrdu ? 'مسئلہ رپورٹ کریں' : 'Report an Issue'),
         content: TextField(
           controller: controller,
@@ -75,7 +80,7 @@ class AboutScreen extends StatelessWidget {
             hintText: isUrdu
                 ? 'مسئلے کی تفصیل لکھیں…'
                 : 'Describe the issue…',
-            border: const OutlineInputBorder(),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
         actions: [
@@ -141,6 +146,10 @@ class AboutScreen extends StatelessWidget {
         children: [
           Card(
             color: cs.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -225,6 +234,10 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Card(
             color: cs.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: ListTile(
               leading: Icon(Icons.bug_report_outlined, color: cs.primary),
               title: Text(
@@ -244,6 +257,10 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Card(
             color: cs.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: ListTile(
               leading: Icon(Icons.email_outlined, color: cs.primary),
               title: Text(isUrdu ? 'رابطہ' : 'Contact', textDirection: dir),
@@ -281,6 +298,10 @@ class AboutScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+      ),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -406,6 +427,10 @@ class PrivacyScreen extends StatelessWidget {
     final cs = theme.colorScheme;
     return Card(
       color: cs.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+      ),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16),

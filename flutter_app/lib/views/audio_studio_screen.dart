@@ -175,7 +175,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
             Card(
               color: colorScheme.surface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
                     color: colorScheme.error.withValues(alpha: 0.5)),
               ),
@@ -245,7 +245,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                         horizontal: 14, vertical: 4),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                           color: gold.withValues(alpha: 0.5)),
                     ),
@@ -290,7 +290,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                               },
                             ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 12),
@@ -427,7 +427,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                     color: colorScheme.surface,
                     margin: EdgeInsets.zero,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
                         color: isPlaying
                             ? gold
@@ -668,14 +668,14 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
       color: cs.surface,
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: selected ? gold : theme.dividerColor.withValues(alpha: 0.3),
           width: selected ? 2 : 1,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () => audio.setQari(q),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -715,7 +715,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                                 decoration: BoxDecoration(
                                   color: gold,
                                   borderRadius:
-                                      BorderRadius.circular(10),
+                                      BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   'Selected',
@@ -773,7 +773,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
           const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
@@ -877,7 +877,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: cs.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                           color: cs.error.withValues(alpha: 0.4)),
                     ),
@@ -1007,8 +1007,8 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                             boxShadow: [
                               BoxShadow(
                                 color:
-                                    gold.withValues(alpha: 0.4),
-                                blurRadius: 12,
+                                    gold.withValues(alpha: 0.25),
+                                blurRadius: 8,
                               ),
                             ],
                           ),
@@ -1058,7 +1058,7 @@ class _AudioStudioScreenState extends State<AudioStudioScreen> {
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: gold.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                           color: gold.withValues(alpha: 0.4)),
                     ),
@@ -1249,7 +1249,7 @@ class _ResumeLastSessionButtonState
             side: BorderSide(
                 color: gold.withValues(alpha: 0.6)),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           onPressed: () => widget.audio.resumeLastSession(),

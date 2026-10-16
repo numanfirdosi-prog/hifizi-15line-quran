@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../main.dart';
 import '../services/preferences_service.dart';
 import '../services/azan_alarm_service.dart';
 import '../services/deep_link_service.dart';
@@ -49,6 +50,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: cs.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Nur.cardRadius),
+              ),
               title: Text('Allow Exact Alarms?',
                   style: TextStyle(
                       color: cs.onSurface, fontWeight: FontWeight.bold)),
@@ -194,6 +198,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
         final exit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(Nur.cardRadius),
+            ),
             title: const Text('App band karein?'),
             content:
                 const Text('Kya aap Nur-ul-Quran app band karna chahte hain?'),
@@ -250,10 +257,12 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                   iconTheme: MaterialStateProperty.resolveWith<IconThemeData>(
                       (states) {
                     if (states.contains(MaterialState.selected)) {
-                      return IconThemeData(color: cs.primary, size: 24);
+                      return IconThemeData(
+                          color: cs.primary, size: Nur.iconSize);
                     }
                     return IconThemeData(
-                        color: cs.onSurface.withValues(alpha: 0.6), size: 22);
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        size: Nur.iconSizeSm);
                   }),
                 ),
                 child: Container(
@@ -266,6 +275,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                     ),
                   ),
                   child: NavigationBar(
+                  elevation: Nur.elevationCard,
                   selectedIndex: _currentIndex,
                   onDestinationSelected: (idx) {
                     _selectTab(idx);

@@ -244,7 +244,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
       context: context,
       backgroundColor: cs.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(Nur.radiusSheet)),
       ),
       builder: (ctx) => ListView.builder(
         // +1 for the "Use Device GPS" header row (M4)
@@ -405,7 +405,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
             child: Container(
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(Nur.radiusSheet),
                 // Gold border: visible on the dark AppBar in all 3 themes
                 // (cs.primary is dark in Emerald/Parchment themes).
                 border: Border.all(
@@ -434,7 +434,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Nur.screenMargin),
         children: [
           // Next Prayer Live Countdown Banner
           Container(
@@ -445,14 +445,14 @@ class _PrayerScreenState extends State<PrayerScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(Nur.cardRadius),
               border: Border.all(
                   color: cs.primary.withValues(alpha: 0.5), width: 1.5),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                    color: Colors.black45,
-                    blurRadius: 10,
-                    offset: Offset(0, 4)),
+                    color: cs.shadow.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2)),
               ],
             ),
             child: Column(
@@ -487,7 +487,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
                         color: cs.primary, size: 36),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: Nur.s16),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -509,13 +509,13 @@ class _PrayerScreenState extends State<PrayerScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Azan & Alarm Settings
           Card(
             color: cs.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Nur.cardRadius),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,7 +629,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Asr calculation method + Daily Prayer Timings Table header
           Row(
@@ -691,7 +691,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: cs.surface,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(Nur.radiusSm),
                 border:
                     Border.all(color: cs.onSurface.withValues(alpha: 0.1)),
               ),

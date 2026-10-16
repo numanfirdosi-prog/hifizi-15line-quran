@@ -22,11 +22,15 @@ class BackupRestoreScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Backup & Restore')),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         children: [
           // Automatic backup card.
           Card(
             color: cs.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Consumer<PreferencesService>(
@@ -105,10 +109,14 @@ class BackupRestoreScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           // Export card.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -125,8 +133,9 @@ class BackupRestoreScreen extends StatelessWidget {
                   const Text(
                     'Save all your bookmarks, notes and settings as a backup.',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                     onPressed: () => _showExportDialog(context),
                     child: const Text('Export Backup JSON'),
                   ),
@@ -134,10 +143,14 @@ class BackupRestoreScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           // Import card.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -152,16 +165,20 @@ class BackupRestoreScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text('Paste a previously exported backup JSON.'),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   const _ImportField(),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           // Danger zone card.
           Card(
             color: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -178,7 +195,7 @@ class BackupRestoreScreen extends StatelessWidget {
                   const Text(
                     'Reset everything to defaults. This cannot be undone.',
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   OutlinedButton.icon(
                     icon: Icon(
                       Icons.warning_amber_outlined,
@@ -221,6 +238,7 @@ class BackupRestoreScreen extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Export Backup'),
         content: SizedBox(
           width: double.maxFinite,
@@ -278,6 +296,7 @@ class BackupRestoreScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Reset all data?'),
         content: const Text(
           'All settings, bookmarks, notes and saved data will be erased.',
@@ -343,11 +362,12 @@ class _ImportFieldState extends State<_ImportField> {
           maxLines: 6,
           decoration: const InputDecoration(
             hintText: 'Paste backup JSON here',
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         ElevatedButton(
+          style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
           onPressed: () async {
             final prefs =
                 Provider.of<PreferencesService>(context, listen: false);

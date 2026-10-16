@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'package:provider/provider.dart';
 import '../data/quran_data.dart';
 import '../data/verse_index.dart';
@@ -90,8 +91,19 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, color: cs.error, size: 36),
-                    const SizedBox(height: 8),
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: cs.error.withValues(alpha: 0.08),
+                        border: Border.all(
+                            color: cs.error.withValues(alpha: 0.30)),
+                      ),
+                      child: Icon(Icons.error_outline,
+                          color: cs.error, size: 32),
+                    ),
+                    const SizedBox(height: Nur.s12),
                     const Text(
                       'Ayah load nahi ho saki',
                       textAlign: TextAlign.center,
@@ -113,19 +125,20 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
           final tafsirText = data.tafsir;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+            padding: const EdgeInsets.fromLTRB(
+                Nur.screenMargin, Nur.s8, Nur.screenMargin, Nur.s24),
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(Nur.s20),
               decoration: BoxDecoration(
                 color: cs.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Nur.cardRadius),
                 border: Border.all(
-                  color: cs.primary.withValues(alpha: 0.25),
+                  color: cs.outlineVariant,
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: cs.shadow.withValues(alpha: 0.06),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -141,7 +154,7 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: cs.primary.withValues(alpha: 0.12),
+                          color: cs.primary.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: cs.primary.withValues(alpha: 0.4),
@@ -266,15 +279,14 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
                   Row(
                     children: [
                       Expanded(
-                          child: Divider(
-                              color: cs.primary.withValues(alpha: 0.4))),
+                          child: Divider(color: cs.outlineVariant)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(Icons.diamond, size: 12, color: cs.primary),
+                        child: Icon(Icons.diamond,
+                            size: 12, color: Nur.gold),
                       ),
                       Expanded(
-                          child: Divider(
-                              color: cs.primary.withValues(alpha: 0.4))),
+                          child: Divider(color: cs.outlineVariant)),
                     ],
                   ),
                   const SizedBox(height: 12),

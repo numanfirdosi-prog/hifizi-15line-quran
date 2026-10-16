@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../main.dart';
 import '../data/ayah_of_day.dart';
 import '../data/juz_data.dart';
 import '../data/quran_data.dart';
@@ -71,22 +72,23 @@ class DashboardScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      padding: const EdgeInsets.fromLTRB(
+          Nur.s20, Nur.s12, Nur.s20, Nur.s4),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: Nur.buttonHeight,
+            height: Nur.buttonHeight,
             decoration: BoxDecoration(
               color: cs.primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Nur.buttonRadius),
               border: Border.all(
                   color: cs.primary.withValues(alpha: 0.35)),
             ),
             child: Icon(Icons.menu_book_rounded,
-                color: cs.primary, size: 24),
+                color: cs.primary, size: Nur.iconSize),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: Nur.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,6 +186,7 @@ class DashboardScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: cs.primary,
                 foregroundColor: cs.onPrimary,
+                minimumSize: const Size(0, Nur.buttonHeight),
               ),
             ),
           ],
@@ -254,6 +257,7 @@ class DashboardScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: cs.primary,
                   foregroundColor: cs.onPrimary,
+                  minimumSize: const Size(0, Nur.buttonHeight),
                 ),
               ),
               OutlinedButton.icon(
@@ -271,6 +275,7 @@ class DashboardScreen extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: cs.primary,
                   side: BorderSide(color: cs.primary),
+                  minimumSize: const Size(0, Nur.buttonHeight),
                 ),
               ),
             ],
@@ -425,6 +430,7 @@ class DashboardScreen extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: cs.primary,
                   side: BorderSide(color: cs.primary),
+                  minimumSize: const Size(0, Nur.buttonHeight),
                 ),
               ),
               const SizedBox(width: 12),
@@ -438,6 +444,7 @@ class DashboardScreen extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: cs.primary,
                   side: BorderSide(color: cs.primary),
+                  minimumSize: const Size(0, Nur.buttonHeight),
                 ),
               ),
             ],
@@ -460,8 +467,9 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.menu_book_outlined, color: cs.primary, size: 22),
-              const SizedBox(width: 10),
+              Icon(Icons.menu_book_outlined,
+                  color: cs.primary, size: Nur.iconSize),
+              const SizedBox(width: Nur.s8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +495,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               TextButton.icon(
                 onPressed: () => onSelectTab(2),
-                icon: const Icon(Icons.list, size: 18),
+                icon: const Icon(Icons.list, size: Nur.iconSizeSm),
                 label: const Text('Browse All'),
                 style: TextButton.styleFrom(foregroundColor: cs.primary),
               ),
@@ -519,7 +527,8 @@ class DashboardScreen extends StatelessWidget {
                   fillColor:
                       cs.onSurface.withValues(alpha: 0.06),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius:
+                        BorderRadius.circular(Nur.buttonRadius),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -532,7 +541,7 @@ class DashboardScreen extends StatelessWidget {
                 child: Material(
                   color: cs.surface,
                   elevation: 4,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(Nur.buttonRadius),
                   child: SizedBox(
                     width: MediaQuery.of(context).size.width - 64,
                     child: ConstrainedBox(
@@ -630,18 +639,19 @@ class DashboardScreen extends StatelessWidget {
           crossAxisCount: 3,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
+          padding: const EdgeInsets.fromLTRB(
+              Nur.screenMargin, Nur.s8, Nur.screenMargin, Nur.s8),
+          mainAxisSpacing: Nur.s12,
+          crossAxisSpacing: Nur.s12,
           children: items.map((item) {
             return InkWell(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Nur.radiusMd),
               onTap: item.onTap,
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(Nur.s8),
                 decoration: BoxDecoration(
                   color: cs.surface,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(Nur.radiusMd),
                   border: Border.all(color: cs.primary.withOpacity(0.25)),
                 ),
                 child: Column(
@@ -649,9 +659,10 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: cs.primary.withOpacity(0.15),
-                      child: Icon(item.icon, color: cs.primary),
+                      child: Icon(item.icon,
+                          color: cs.primary, size: Nur.iconSize),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: Nur.s8),
                     Text(
                       item.title,
                       textAlign: TextAlign.center,
@@ -684,16 +695,17 @@ class DashboardScreen extends StatelessWidget {
     return _card(
       context,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Nur.buttonRadius),
         onTap: () => onOpenPage(prefs.lastReadPage),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Nur.s8, vertical: Nur.s4),
               decoration: BoxDecoration(
                 color: cs.primary,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(Nur.radiusLg),
               ),
               child: Text(
                 'SPECIAL EDITION',
@@ -822,7 +834,8 @@ class DashboardScreen extends StatelessWidget {
                       allSurahs[(s - 1).clamp(0, allSurahs.length - 1)].nameEn;
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.bookmark, color: cs.primary),
+                    leading: Icon(Icons.bookmark,
+                        color: cs.primary, size: Nur.iconSize),
                     title: Text(
                       '$surahName $s:$v',
                       style: TextStyle(
@@ -846,7 +859,7 @@ class DashboardScreen extends StatelessWidget {
     return ListView(
       children: [
         _brandHeader(context),
-        const SizedBox(height: 4),
+        const SizedBox(height: Nur.s4),
         _lastReadCard(context),
         _progressCard(context),
         _ayahOfDayCard(context),
@@ -854,7 +867,7 @@ class DashboardScreen extends StatelessWidget {
         _quickAccessSection(context),
         _mushafInfoCard(context),
         _savedAyahsSection(context),
-        const SizedBox(height: 16),
+        const SizedBox(height: Nur.screenMargin),
       ],
     );
   }

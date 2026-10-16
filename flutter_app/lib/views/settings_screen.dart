@@ -42,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
             color: selected
                 ? cs.primary.withValues(alpha: 0.15)
                 : cs.surface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(Nur.radiusSm),
             border: Border.all(
               color: selected
                   ? cs.primary
@@ -104,7 +104,7 @@ class SettingsScreen extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: previewBg,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(Nur.radiusSm),
                     border: Border.all(
                       color: selected
                           ? cs.primary
@@ -238,7 +238,7 @@ class SettingsScreen extends StatelessWidget {
             color: selected
                 ? cs.primary.withValues(alpha: 0.15)
                 : cs.surface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(Nur.radiusSm),
             border: Border.all(
               color: selected
                   ? cs.primary
@@ -278,15 +278,15 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Nur.screenMargin),
         children: [
           // Juristic Method Card
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -327,13 +327,13 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Alarm & Azan Sound Switches
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Column(
               children: [
                 SwitchListTile(
@@ -373,15 +373,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Reading Section (mode, script, theme, ayah scale)
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -524,15 +524,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Language Section (UI language toggle)
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -583,15 +583,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Audio Section (default qari, repeat, speed)
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Consumer<AudioRecitationService>(
                 builder: (context, audio, _) {
                   const repeatModes = [0, 1, 3, 5, -1];
@@ -702,15 +702,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Reading Goal Section
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -752,15 +752,15 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // Bookmarks Section
           Card(
             color: cs.surface,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(Nur.cardRadius)),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Nur.screenMargin),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -807,14 +807,14 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: Nur.s16),
 
           // About App
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(Nur.screenMargin),
             decoration: BoxDecoration(
               color: cs.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(Nur.cardRadius),
               border: Border.all(
                   color: cs.onSurface.withValues(alpha: 0.15)),
             ),
