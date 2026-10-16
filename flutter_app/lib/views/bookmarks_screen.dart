@@ -177,6 +177,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   Future<void> _showExportDialog(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final cs = Theme.of(context).colorScheme;
     final json =
         Provider.of<PreferencesService>(context, listen: false).exportJson();
     await showDialog<void>(

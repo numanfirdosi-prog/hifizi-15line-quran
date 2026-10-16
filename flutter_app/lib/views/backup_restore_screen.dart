@@ -360,7 +360,7 @@ class _ImportFieldState extends State<_ImportField> {
         TextField(
           controller: _controller,
           maxLines: 6,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Paste backup JSON here',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
