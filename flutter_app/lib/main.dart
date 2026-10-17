@@ -97,7 +97,7 @@ abstract final class Nur {
 }
 
 /// App theme palettes, switchable live from Preferences (themeName:
-/// 'night' | 'emerald' | 'parchment'). Theme changes apply immediately
+/// 'night' | 'emerald' | 'parchment' | 'modern'). Theme changes apply immediately
 /// (Consumer rebuild in [NurAlQuranApp]) and persist via
 /// PreferencesService ('nur_theme_name').
 ThemeData buildTheme(String name) {
@@ -106,6 +106,8 @@ ThemeData buildTheme(String name) {
       return _emeraldTheme();
     case 'parchment':
       return _parchmentTheme();
+    case 'modern':
+      return _modernTheme();
     case 'night':
     default:
       return _nightTheme();
@@ -667,6 +669,201 @@ ThemeData _parchmentTheme() {
           color: bronze, fontWeight: FontWeight.bold, height: 1.3),
       labelLarge: TextStyle(
           color: Color(0xFFFFF6DC), fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Modern Teal — contemporary glassmorphic aesthetic; vibrant teal, soft mint
+// background, crisp translucent white cards and elegant accents.
+// ---------------------------------------------------------------------------
+ThemeData _modernTheme() {
+  const modernTeal = Color(0xFF0C7B70);
+  const modernTealDark = Color(0xFF08544D);
+  const modernTealAccent = Color(0xFF26A69A);
+  const modernScaffold = Color(0xFFE4F3EF);
+  const modernSurface = Color(0xFFFFFFFF);
+  const modernInk = Color(0xFF0F3B35);
+  const modernMuted = Color(0xFF5A7B76);
+
+  const cs = ColorScheme.light(
+    primary: modernTeal,
+    onPrimary: Colors.white,
+    secondary: modernTealAccent,
+    onSecondary: Colors.white,
+    tertiary: Color(0xFFD4EFE8),
+    surface: modernSurface,
+    onSurface: modernInk,
+    surfaceContainerHighest: Color(0xFFE2F1ED),
+    outline: Color(0xFFB0D8CF),
+    outlineVariant: Color(0xFFCCE8E1),
+    error: Nur.errorLight,
+    onError: Colors.white,
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: modernScaffold,
+    colorScheme: cs,
+    hintColor: modernMuted,
+    dividerColor: const Color(0xFFCCE4DD),
+    cardTheme: CardThemeData(
+      color: modernSurface,
+      elevation: 0,
+      shadowColor: modernTeal.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
+        side: BorderSide(color: modernTeal.withValues(alpha: 0.18)),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: modernTeal,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: modernTeal,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: modernTeal,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: modernTeal,
+        side: const BorderSide(color: modernTeal),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: modernTeal),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      hintStyle: const TextStyle(color: modernMuted),
+      prefixIconColor: modernTeal,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: modernTeal.withValues(alpha: 0.22)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: modernTeal, width: 1.5),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? modernTeal
+              : const Color(0xFF90ABA4)),
+      trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? modernTeal.withValues(alpha: 0.45)
+              : const Color(0xFFD0E6E0)),
+    ),
+    sliderTheme: const SliderThemeData(
+      activeTrackColor: modernTeal,
+      inactiveTrackColor: Color(0xFFCCE8E1),
+      thumbColor: modernTeal,
+      overlayColor: Color(0x220C7B70),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: modernTeal,
+      linearTrackColor: Color(0xFFCCE8E1),
+    ),
+    chipTheme: const ChipThemeData(
+      selectedColor: modernTeal,
+      backgroundColor: Color(0xFFE2F1ED),
+      labelStyle: TextStyle(color: modernInk, fontSize: 12),
+      secondaryLabelStyle: TextStyle(
+          color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+      side: BorderSide(color: Color(0xFFB0D8CF)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: modernSurface,
+      titleTextStyle: TextStyle(
+          color: modernInk, fontSize: 18, fontWeight: FontWeight.bold),
+      contentTextStyle: TextStyle(color: modernMuted, fontSize: 14),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: modernSurface,
+      modalBackgroundColor: modernSurface,
+      elevation: Nur.elevationSheet,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: const Color(0xFFF3FBF8),
+      indicatorColor: modernTeal.withValues(alpha: 0.18),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? modernTeal
+                  : modernMuted)),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? modernTeal
+                  : modernMuted,
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: modernTealDark,
+      contentTextStyle: TextStyle(color: Colors.white),
+      actionTextColor: Nur.gold,
+    ),
+    listTileTheme: const ListTileThemeData(
+      iconColor: modernTeal,
+      textColor: modernInk,
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: modernInk, height: 1.5),
+      bodyMedium: TextStyle(color: Color(0xFF335C55), height: 1.5),
+      bodySmall: TextStyle(color: modernMuted, height: 1.5),
+      titleLarge: TextStyle(
+          color: modernInk, fontWeight: FontWeight.bold, height: 1.3),
+      titleMedium: TextStyle(
+          color: modernInk, fontWeight: FontWeight.w600, height: 1.3),
+      titleSmall: TextStyle(
+          color: modernTeal, fontWeight: FontWeight.bold, height: 1.3),
+      labelLarge: TextStyle(
+          color: Colors.white, fontWeight: FontWeight.bold),
     ),
   );
 }

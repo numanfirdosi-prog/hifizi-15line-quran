@@ -456,30 +456,46 @@ class SettingsScreen extends StatelessWidget {
                     style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Column(
                     children: [
-                      _themeCard(
-                        context,
-                        label: 'Night Slate',
-                        themeName: 'night',
-                        selected: prefs.themeName == 'night',
-                        onTap: () => prefs.setThemeName('night'),
+                      Row(
+                        children: [
+                          _themeCard(
+                            context,
+                            label: ur ? 'نائٹ سلیٹ' : 'Night Slate',
+                            themeName: 'night',
+                            selected: prefs.themeName == 'night',
+                            onTap: () => prefs.setThemeName('night'),
+                          ),
+                          const SizedBox(width: 8),
+                          _themeCard(
+                            context,
+                            label: ur ? 'ایمرالڈ ڈے' : 'Emerald Day',
+                            themeName: 'emerald',
+                            selected: prefs.themeName == 'emerald',
+                            onTap: () => prefs.setThemeName('emerald'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      _themeCard(
-                        context,
-                        label: 'Emerald Day',
-                        themeName: 'emerald',
-                        selected: prefs.themeName == 'emerald',
-                        onTap: () => prefs.setThemeName('emerald'),
-                      ),
-                      const SizedBox(width: 8),
-                      _themeCard(
-                        context,
-                        label: 'Antique Parchment',
-                        themeName: 'parchment',
-                        selected: prefs.themeName == 'parchment',
-                        onTap: () => prefs.setThemeName('parchment'),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _themeCard(
+                            context,
+                            label: ur ? 'اینٹیک پارچمنٹ' : 'Antique Parchment',
+                            themeName: 'parchment',
+                            selected: prefs.themeName == 'parchment',
+                            onTap: () => prefs.setThemeName('parchment'),
+                          ),
+                          const SizedBox(width: 8),
+                          _themeCard(
+                            context,
+                            label: ur ? 'جدید گلاس' : 'Modern Teal',
+                            themeName: 'modern',
+                            selected: prefs.themeName == 'modern',
+                            onTap: () => prefs.setThemeName('modern'),
+                          ),
+                        ],
                       ),
                     ],
                   ),

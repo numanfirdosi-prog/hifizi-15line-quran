@@ -237,7 +237,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                   // active destination.
                   indicatorColor: cs.primary.withValues(alpha: 0.22),
                   labelTextStyle:
-                      MaterialStateProperty.resolveWith<TextStyle>((states) {
+                      WidgetStateProperty.resolveWith<TextStyle>((states) {
                     // Urdu destination labels use the bundled Noto Nastaliq
                     // Urdu font; the tall line height keeps glyphs from
                     // clipping inside the bar.
@@ -246,7 +246,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                       fontSize: 12,
                       height: 2.0,
                     );
-                    if (states.contains(MaterialState.selected)) {
+                    if (states.contains(WidgetState.selected)) {
                       return urduLabel.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.bold);
@@ -254,9 +254,9 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                     return urduLabel.copyWith(
                         color: cs.onSurface.withValues(alpha: 0.6));
                   }),
-                  iconTheme: MaterialStateProperty.resolveWith<IconThemeData>(
+                  iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
                       (states) {
-                    if (states.contains(MaterialState.selected)) {
+                    if (states.contains(WidgetState.selected)) {
                       return IconThemeData(
                           color: cs.primary, size: Nur.iconSize);
                     }
@@ -267,12 +267,20 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
+                    color: cs.surface,
                     border: Border(
                       top: BorderSide(
-                        color: cs.primary.withValues(alpha: 0.25),
+                        color: cs.primary.withValues(alpha: 0.22),
                         width: 1,
                       ),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
                   child: NavigationBar(
                   elevation: Nur.elevationCard,

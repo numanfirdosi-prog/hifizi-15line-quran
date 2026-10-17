@@ -503,10 +503,11 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                       final e = _results[index];
                       final page = verseIndex['${e.s}:${e.v}'];
                       final surahName = allSurahs[e.s - 1].nameEn;
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
                       return Card(
                         color: cs.surface,
-                        elevation: 1,
-                        shadowColor: cs.shadow.withValues(alpha: 0.08),
+                        elevation: isDark ? 2 : 1,
+                        shadowColor: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                         margin: const EdgeInsets.symmetric(
                           horizontal: Nur.screenMargin,
                           vertical: Nur.s8,
@@ -514,7 +515,9 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(Nur.cardRadius),
-                          side: BorderSide(color: cs.outlineVariant),
+                          side: BorderSide(
+                            color: cs.primary.withValues(alpha: 0.22),
+                          ),
                         ),
                         child: InkWell(
                           borderRadius:
