@@ -95,13 +95,32 @@ class _SurahsScreenState extends State<SurahsScreen> {
       return;
     }
 
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final targetLocale = _voiceService.resolveLocale(
+      preferred: prefs.voiceLanguage,
+      textContext: _searchController.text,
+      systemLocale: Localizations.maybeLocaleOf(context),
+      isUrduApp: prefs.isUrdu,
+    );
+
+    String langDisplay = 'Urdu (اردو)';
+    if (targetLocale.startsWith('ar')) {
+      langDisplay = 'Arabic (العربية)';
+    } else if (targetLocale.startsWith('en')) {
+      langDisplay = 'English';
+    } else if (targetLocale.startsWith('hi')) {
+      langDisplay = 'Hindi (हिन्दी)';
+    }
+
     setState(() {
       _isListening = true;
-      _voiceFeedback = 'Listening in Hindi / English / Urdu...';
+      _voiceFeedback = prefs.isUrdu
+          ? 'سن رہا ہے: $langDisplay...'
+          : 'Listening in $langDisplay...';
     });
 
     final started = await _voiceService.startListening(
-      localeId: 'hi_IN',
+      localeId: targetLocale,
       onResult: (spokenText, matchedSurahs) {
         if (!mounted) return;
         setState(() {
@@ -118,7 +137,9 @@ class _SurahsScreenState extends State<SurahsScreen> {
       // mic UI instead of leaving it stuck on "Listening...".
       setState(() {
         _isListening = false;
-        _voiceFeedback = 'Voice search unavailable on this device.';
+        _voiceFeedback = prefs.isUrdu
+            ? 'صوتی تلاش اس ڈیوائس پر دستیاب نہیں ہے۔'
+            : 'Voice search unavailable on this device.';
       });
     }
   }
@@ -712,6 +733,76 @@ class _SurahsScreenState extends State<SurahsScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // Voice Language Selector
+                    PopupMenuButton<String>(
+                      tooltip: prefs.isUrdu ? 'صوتی زبان' : 'Voice Language',
+                      initialValue: prefs.voiceLanguage,
+                      onSelected: (val) => prefs.setVoiceLanguage(val),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      itemBuilder: (ctx) => [
+                        PopupMenuItem(
+                          value: 'auto',
+                          child: Text(prefs.isUrdu
+                              ? 'خودکار (Auto)'
+                              : 'Auto Detect (خودکار)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'ur',
+                          child: Text('اردو (Urdu)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'ar',
+                          child: Text('العربية (Arabic)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'en',
+                          child: Text('English'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'hi',
+                          child: Text('हिन्दी (Hindi)'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: cs.onSurface.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: cs.primary.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              prefs.voiceLanguage == 'ur'
+                                  ? 'اردو'
+                                  : prefs.voiceLanguage == 'ar'
+                                      ? 'عربي'
+                                      : prefs.voiceLanguage == 'hi'
+                                          ? 'हिन्दी'
+                                          : prefs.voiceLanguage == 'en'
+                                              ? 'EN'
+                                              : (prefs.isUrdu
+                                                  ? 'خودکار'
+                                                  : 'Auto'),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: cs.primary,
+                              ),
+                            ),
+                            Icon(Icons.arrow_drop_down,
+                                size: 16, color: cs.primary),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     // Voice Search Mic Button
                     GestureDetector(
                       onTap: _toggleVoiceSearch,

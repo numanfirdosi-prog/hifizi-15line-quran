@@ -674,29 +674,30 @@ ThemeData _parchmentTheme() {
 }
 
 // ---------------------------------------------------------------------------
-// Modern Teal — contemporary glassmorphic aesthetic; vibrant teal, soft mint
-// background, crisp translucent white cards and elegant accents.
+// Modern Emerald — signature Deep Emerald Green (#064E3B) & Dark Emerald (#033B2D)
+// with Premium Gold (#D4AF37), Soft Gold (#E8D29A), Warm Ivory (#FFFDF5)
+// and Dark Navy (#101B35).
 // ---------------------------------------------------------------------------
 ThemeData _modernTheme() {
-  const modernTeal = Color(0xFF0C7B70);
-  const modernTealDark = Color(0xFF08544D);
-  const modernTealAccent = Color(0xFF26A69A);
-  const modernScaffold = Color(0xFFE4F3EF);
-  const modernSurface = Color(0xFFFFFFFF);
-  const modernInk = Color(0xFF0F3B35);
-  const modernMuted = Color(0xFF5A7B76);
+  const deepEmerald = Color(0xFF064E3B);
+  const darkEmerald = Color(0xFF033B2D);
+  const premiumGold = Color(0xFFD4AF37);
+  const softGold = Color(0xFFE8D29A);
+  const warmIvory = Color(0xFFFFFDF5);
+  const darkNavy = Color(0xFF101B35);
+  const mutedGreen = Color(0xFF52786D);
 
   const cs = ColorScheme.light(
-    primary: modernTeal,
+    primary: deepEmerald,
     onPrimary: Colors.white,
-    secondary: modernTealAccent,
-    onSecondary: Colors.white,
-    tertiary: Color(0xFFD4EFE8),
-    surface: modernSurface,
-    onSurface: modernInk,
-    surfaceContainerHighest: Color(0xFFE2F1ED),
-    outline: Color(0xFFB0D8CF),
-    outlineVariant: Color(0xFFCCE8E1),
+    secondary: premiumGold,
+    onSecondary: darkEmerald,
+    tertiary: softGold,
+    surface: warmIvory,
+    onSurface: darkNavy,
+    surfaceContainerHighest: Color(0xFFF0F6F2),
+    outline: Color(0xFFB5D1C6),
+    outlineVariant: Color(0xFFD3E5DC),
     error: Nur.errorLight,
     onError: Colors.white,
   );
@@ -704,25 +705,25 @@ ThemeData _modernTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: modernScaffold,
+    scaffoldBackgroundColor: const Color(0xFFF5F9F6),
     colorScheme: cs,
-    hintColor: modernMuted,
-    dividerColor: const Color(0xFFCCE4DD),
+    hintColor: mutedGreen,
+    dividerColor: const Color(0xFFD8E7DF),
     cardTheme: CardThemeData(
-      color: modernSurface,
+      color: warmIvory,
       elevation: 0,
-      shadowColor: modernTeal.withValues(alpha: 0.08),
+      shadowColor: deepEmerald.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Nur.cardRadius),
-        side: BorderSide(color: modernTeal.withValues(alpha: 0.18)),
+        side: BorderSide(color: deepEmerald.withValues(alpha: 0.18)),
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: modernTeal,
+      backgroundColor: deepEmerald,
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: false,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: premiumGold),
       titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 18,
@@ -731,7 +732,7 @@ ThemeData _modernTheme() {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: modernTeal,
+        backgroundColor: deepEmerald,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
@@ -742,7 +743,7 @@ ThemeData _modernTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: modernTeal,
+        backgroundColor: deepEmerald,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
@@ -751,117 +752,117 @@ ThemeData _modernTheme() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: modernTeal,
-        side: const BorderSide(color: modernTeal),
+        foregroundColor: deepEmerald,
+        side: const BorderSide(color: deepEmerald),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
         ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: modernTeal),
+      style: TextButton.styleFrom(foregroundColor: deepEmerald),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
-      hintStyle: const TextStyle(color: modernMuted),
-      prefixIconColor: modernTeal,
+      hintStyle: const TextStyle(color: mutedGreen),
+      prefixIconColor: deepEmerald,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: modernTeal.withValues(alpha: 0.22)),
+        borderSide: BorderSide(color: deepEmerald.withValues(alpha: 0.22)),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: modernTeal, width: 1.5),
+        borderSide: BorderSide(color: deepEmerald, width: 1.5),
       ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) =>
           states.contains(WidgetState.selected)
-              ? modernTeal
-              : const Color(0xFF90ABA4)),
+              ? deepEmerald
+              : const Color(0xFF88A89E)),
       trackColor: WidgetStateProperty.resolveWith((states) =>
           states.contains(WidgetState.selected)
-              ? modernTeal.withValues(alpha: 0.45)
-              : const Color(0xFFD0E6E0)),
+              ? premiumGold.withValues(alpha: 0.45)
+              : const Color(0xFFD4E5DC)),
     ),
     sliderTheme: const SliderThemeData(
-      activeTrackColor: modernTeal,
-      inactiveTrackColor: Color(0xFFCCE8E1),
-      thumbColor: modernTeal,
-      overlayColor: Color(0x220C7B70),
+      activeTrackColor: deepEmerald,
+      inactiveTrackColor: Color(0xFFD4E5DC),
+      thumbColor: deepEmerald,
+      overlayColor: Color(0x22064E3B),
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: modernTeal,
-      linearTrackColor: Color(0xFFCCE8E1),
+      color: premiumGold,
+      linearTrackColor: Color(0xFFD4E5DC),
     ),
     chipTheme: const ChipThemeData(
-      selectedColor: modernTeal,
-      backgroundColor: Color(0xFFE2F1ED),
-      labelStyle: TextStyle(color: modernInk, fontSize: 12),
+      selectedColor: deepEmerald,
+      backgroundColor: Color(0xFFEDF5F1),
+      labelStyle: TextStyle(color: darkNavy, fontSize: 12),
       secondaryLabelStyle: TextStyle(
           color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-      side: BorderSide(color: Color(0xFFB0D8CF)),
+      side: BorderSide(color: Color(0xFFB5D1C6)),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
     ),
     dialogTheme: const DialogThemeData(
-      backgroundColor: modernSurface,
+      backgroundColor: warmIvory,
       titleTextStyle: TextStyle(
-          color: modernInk, fontSize: 18, fontWeight: FontWeight.bold),
-      contentTextStyle: TextStyle(color: modernMuted, fontSize: 14),
+          color: darkNavy, fontSize: 18, fontWeight: FontWeight.bold),
+      contentTextStyle: TextStyle(color: mutedGreen, fontSize: 14),
     ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: modernSurface,
-      modalBackgroundColor: modernSurface,
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: warmIvory,
+      modalBackgroundColor: warmIvory,
       elevation: Nur.elevationSheet,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
             top: Radius.circular(Nur.radiusSheet)),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: const Color(0xFFF3FBF8),
-      indicatorColor: modernTeal.withValues(alpha: 0.18),
+      backgroundColor: const Color(0xFFF2F7F4),
+      indicatorColor: deepEmerald.withValues(alpha: 0.16),
       iconTheme: WidgetStateProperty.resolveWith((states) =>
           IconThemeData(
               color: states.contains(WidgetState.selected)
-                  ? modernTeal
-                  : modernMuted)),
+                  ? deepEmerald
+                  : mutedGreen)),
       labelTextStyle: WidgetStateProperty.resolveWith((states) =>
           TextStyle(
               color: states.contains(WidgetState.selected)
-                  ? modernTeal
-                  : modernMuted,
+                  ? deepEmerald
+                  : mutedGreen,
               fontSize: 12,
               fontWeight: states.contains(WidgetState.selected)
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
     snackBarTheme: const SnackBarThemeData(
-      backgroundColor: modernTealDark,
+      backgroundColor: darkEmerald,
       contentTextStyle: TextStyle(color: Colors.white),
-      actionTextColor: Nur.gold,
+      actionTextColor: premiumGold,
     ),
     listTileTheme: const ListTileThemeData(
-      iconColor: modernTeal,
-      textColor: modernInk,
+      iconColor: deepEmerald,
+      textColor: darkNavy,
     ),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: modernInk, height: 1.5),
-      bodyMedium: TextStyle(color: Color(0xFF335C55), height: 1.5),
-      bodySmall: TextStyle(color: modernMuted, height: 1.5),
+      bodyLarge: TextStyle(color: darkNavy, height: 1.5),
+      bodyMedium: TextStyle(color: Color(0xFF26483E), height: 1.5),
+      bodySmall: TextStyle(color: mutedGreen, height: 1.5),
       titleLarge: TextStyle(
-          color: modernInk, fontWeight: FontWeight.bold, height: 1.3),
+          color: darkNavy, fontWeight: FontWeight.bold, height: 1.3),
       titleMedium: TextStyle(
-          color: modernInk, fontWeight: FontWeight.w600, height: 1.3),
+          color: darkNavy, fontWeight: FontWeight.w600, height: 1.3),
       titleSmall: TextStyle(
-          color: modernTeal, fontWeight: FontWeight.bold, height: 1.3),
+          color: deepEmerald, fontWeight: FontWeight.bold, height: 1.3),
       labelLarge: TextStyle(
           color: Colors.white, fontWeight: FontWeight.bold),
     ),

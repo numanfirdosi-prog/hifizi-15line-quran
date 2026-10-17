@@ -263,6 +263,43 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Widget _voiceLangChip(
+    BuildContext context, {
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? cs.primary.withValues(alpha: 0.15)
+              : cs.surface,
+          borderRadius: BorderRadius.circular(Nur.radiusSm),
+          border: Border.all(
+            color: selected
+                ? cs.primary
+                : cs.onSurface.withValues(alpha: 0.15),
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected
+                ? cs.primary
+                : cs.onSurface.withValues(alpha: 0.8),
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prefs = Provider.of<PreferencesService>(context);
@@ -435,18 +472,26 @@ class SettingsScreen extends StatelessWidget {
                     children: [
                       _scriptCard(
                         context,
-                        style: 'sans',
-                        label: 'Noto Sans Arabic',
-                        selected: prefs.scriptStyle == 'sans',
-                        onTap: () => prefs.setScriptStyle('sans'),
+                        style: 'uthmani',
+                        label: ur ? 'عثمانی مدینہ' : 'Uthmani Madinah',
+                        selected: prefs.scriptStyle == 'uthmani',
+                        onTap: () => prefs.setScriptStyle('uthmani'),
                       ),
                       const SizedBox(width: 8),
                       _scriptCard(
                         context,
-                        style: 'uthmani',
-                        label: 'Uthmani Madinah',
-                        selected: prefs.scriptStyle == 'uthmani',
-                        onTap: () => prefs.setScriptStyle('uthmani'),
+                        style: 'amiri',
+                        label: ur ? 'امیری قرآن' : 'Amiri Quran',
+                        selected: prefs.scriptStyle == 'amiri',
+                        onTap: () => prefs.setScriptStyle('amiri'),
+                      ),
+                      const SizedBox(width: 8),
+                      _scriptCard(
+                        context,
+                        style: 'sans',
+                        label: ur ? 'نوٹو سادہ' : 'Noto Sans',
+                        selected: prefs.scriptStyle == 'sans',
+                        onTap: () => prefs.setScriptStyle('sans'),
                       ),
                     ],
                   ),
@@ -490,7 +535,7 @@ class SettingsScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           _themeCard(
                             context,
-                            label: ur ? 'جدید گلاس' : 'Modern Teal',
+                            label: ur ? 'ماڈرن ایمرالڈ' : 'Modern Emerald',
                             themeName: 'modern',
                             selected: prefs.themeName == 'modern',
                             onTap: () => prefs.setThemeName('modern'),
@@ -593,6 +638,61 @@ class SettingsScreen extends StatelessWidget {
                     style: TextStyle(
                         color: cs.onSurface.withValues(alpha: 0.6),
                         fontSize: 12),
+                  ),
+                  Divider(
+                      color: cs.onSurface.withValues(alpha: 0.12), height: 24),
+                  Text(
+                    ur ? 'صوتی تلاش کی زبان' : 'Voice Search Language',
+                    style: TextStyle(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    ur
+                        ? 'بول کر تلاش کرنے کی زبان منتخب کریں (کی بورڈ یا ان پٹ کے مطابق خودکار بھی تبدیل ہوتی ہے)'
+                        : 'Choose speech language (auto-adapts to active keyboard text as well)',
+                    style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.7),
+                        fontSize: 12),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _voiceLangChip(
+                        context,
+                        label: ur ? 'خودکار / Auto' : 'Auto Detect',
+                        selected: prefs.voiceLanguage == 'auto',
+                        onTap: () => prefs.setVoiceLanguage('auto'),
+                      ),
+                      _voiceLangChip(
+                        context,
+                        label: 'اردو (Urdu)',
+                        selected: prefs.voiceLanguage == 'ur',
+                        onTap: () => prefs.setVoiceLanguage('ur'),
+                      ),
+                      _voiceLangChip(
+                        context,
+                        label: 'العربية (Arabic)',
+                        selected: prefs.voiceLanguage == 'ar',
+                        onTap: () => prefs.setVoiceLanguage('ar'),
+                      ),
+                      _voiceLangChip(
+                        context,
+                        label: 'English',
+                        selected: prefs.voiceLanguage == 'en',
+                        onTap: () => prefs.setVoiceLanguage('en'),
+                      ),
+                      _voiceLangChip(
+                        context,
+                        label: 'हिन्दी (Hindi)',
+                        selected: prefs.voiceLanguage == 'hi',
+                        onTap: () => prefs.setVoiceLanguage('hi'),
+                      ),
+                    ],
                   ),
                 ],
               ),

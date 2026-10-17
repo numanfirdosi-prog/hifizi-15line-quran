@@ -28,6 +28,7 @@ class PreferencesService extends ChangeNotifier {
   String _themeName = 'night'; // night | emerald | parchment
   String _scriptStyle = 'sans'; // sans | uthmani
   String _language = 'ur'; // 'ur' | 'en' — UI language toggle (Settings)
+  String _voiceLanguage = 'auto'; // 'auto' | 'ur' | 'ar' | 'en' | 'hi'
   double _ayahScale = 1.0;
   String _readingMode = 'slide'; // slide | scroll | turn
   int _repeatMode = 0; // 0=off, 1/3/5, -1=infinite
@@ -68,6 +69,7 @@ class PreferencesService extends ChangeNotifier {
   String get themeName => _themeName;
   String get scriptStyle => _scriptStyle;
   String get language => _language; // 'ur' | 'en'
+  String get voiceLanguage => _voiceLanguage; // 'auto' | 'ur' | 'ar' | 'en' | 'hi'
   bool get isUrdu => _language == 'ur';
   double get ayahScale => _ayahScale;
   String get readingMode => _readingMode;
@@ -111,7 +113,8 @@ class PreferencesService extends ChangeNotifier {
     _dailyTargetPages = _prefs.getInt('nur_daily_target_pages') ?? 4;
     _themeName = _prefs.getString('nur_theme_name') ?? 'night';
     _language = _prefs.getString('nur_language') ?? 'ur';
-    _scriptStyle = _prefs.getString('nur_script_style') ?? 'sans';
+    _voiceLanguage = _prefs.getString('nur_voice_language') ?? 'auto';
+    _scriptStyle = _prefs.getString('nur_script_style') ?? 'uthmani';
     // Migrate the retired 'nastaliq' (Gulzar) style to Noto Sans Arabic.
     final migratedStyle = _migrateScriptStyle(_scriptStyle);
     if (migratedStyle != _scriptStyle) {
@@ -298,10 +301,15 @@ class PreferencesService extends ChangeNotifier {
   }
 
   Future<void> setScriptStyle(String style) async {
-    // Only 'sans' (Noto Sans Arabic) and 'uthmani' (Amiri Quran) are offered.
-    if (style != 'sans' && style != 'uthmani') return;
+    if (style != 'sans' && style != 'uthmani' && style != 'amiri' && style != 'kfgqpc') return;
     _scriptStyle = style;
     await _prefs.setString('nur_script_style', style);
+    notifyListeners();
+  }
+
+  Future<void> setVoiceLanguage(String lang) async {
+    _voiceLanguage = lang;
+    await _prefs.setString('nur_voice_language', lang);
     notifyListeners();
   }
 

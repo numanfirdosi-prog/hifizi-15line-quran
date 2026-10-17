@@ -193,8 +193,17 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
   /// Voice input: fills the search field with the recognized words and
   /// runs the search when the recognizer stops.
   Future<void> _startVoice() async {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    final targetLocale = _voice.resolveLocale(
+      preferred: prefs.voiceLanguage,
+      textContext: _controller.text,
+      systemLocale: Localizations.maybeLocaleOf(context),
+      isUrduApp: prefs.isUrdu,
+    );
+
     setState(() => _listening = true);
     final ok = await _voice.startListening(
+      localeId: targetLocale,
       onResult: (words, _) {
         if (!mounted) return;
         _controller.text = words;
@@ -249,9 +258,26 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
     final total = _results.length;
     final visible = _visibleCount.clamp(0, total);
     final hasMore = visible < total;
+
+    final voiceLocale = _voice.resolveLocale(
+      preferred: prefs.voiceLanguage,
+      textContext: _controller.text,
+      systemLocale: Localizations.maybeLocaleOf(context),
+      isUrduApp: prefs.isUrdu,
+    );
+
+    String voiceLangName = 'Urdu (اردو)';
+    if (voiceLocale.startsWith('ar')) {
+      voiceLangName = 'Arabic (العربية)';
+    } else if (voiceLocale.startsWith('en')) {
+      voiceLangName = 'English';
+    } else if (voiceLocale.startsWith('hi')) {
+      voiceLangName = 'Hindi (हिन्दी)';
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -275,6 +301,66 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                       suffixIcon: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          PopupMenuButton<String>(
+                            tooltip: prefs.isUrdu ? 'صوتی زبان' : 'Voice Language',
+                            initialValue: prefs.voiceLanguage,
+                            onSelected: (val) => prefs.setVoiceLanguage(val),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            itemBuilder: (ctx) => [
+                              PopupMenuItem(
+                                value: 'auto',
+                                child: Text(prefs.isUrdu ? 'خودکار (Auto)' : 'Auto Detect (خودکار)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'ur',
+                                child: Text('اردو (Urdu)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'ar',
+                                child: Text('العربية (Arabic)'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'en',
+                                child: Text('English'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'hi',
+                                child: Text('हिन्दी (Hindi)'),
+                              ),
+                            ],
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: cs.primary.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    prefs.voiceLanguage == 'ur'
+                                        ? 'اردو'
+                                        : prefs.voiceLanguage == 'ar'
+                                            ? 'عربي'
+                                            : prefs.voiceLanguage == 'hi'
+                                                ? 'हिन्दी'
+                                                : prefs.voiceLanguage == 'en'
+                                                    ? 'EN'
+                                                    : (prefs.isUrdu ? 'خودکار' : 'Auto'),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                  Icon(Icons.arrow_drop_down, size: 14, color: cs.primary),
+                                ],
+                              ),
+                            ),
+                          ),
                           Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -290,7 +376,7 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                               ),
                               tooltip: _listening
                                   ? 'Stop voice input'
-                                  : 'Voice search',
+                                  : 'Voice search ($voiceLangName)',
                               onPressed:
                                   _listening ? _stopVoice : _startVoice,
                             ),
@@ -356,7 +442,9 @@ class _SearchQuranScreenState extends State<SearchQuranScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Listening… speak now',
+                    prefs.isUrdu
+                        ? 'سن رہا ہے ($voiceLangName)… بولیں'
+                        : 'Listening in $voiceLangName… speak now',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: cs.error,
                       fontWeight: FontWeight.w600,

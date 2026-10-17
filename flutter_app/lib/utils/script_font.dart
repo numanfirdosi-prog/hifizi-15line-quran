@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 
 /// Maps a script-style preference to the bundled Arabic font family.
-/// Both fonts are bundled in assets/fonts (OFL licensed) so the style
-/// renders identically on every device, online or offline.
-String arabicFontFamily(String scriptStyle) =>
-    scriptStyle == 'uthmani' ? 'Amiri Quran' : 'Noto Sans Arabic';
+/// Fonts are bundled in assets/fonts so the style renders identically on
+/// every device, online or offline.
+/// 'kfgqpc' / 'uthmani': Authentic Madinah Quran script (KFGQPC Uthmanic)
+/// 'amiri': Classical calligraphic Naskh (Amiri Quran)
+/// 'sans': Modern plain Arabic (Noto Sans Arabic)
+String arabicFontFamily(String scriptStyle) {
+  switch (scriptStyle) {
+    case 'sans':
+      return 'Noto Sans Arabic';
+    case 'amiri':
+      return 'Amiri Quran';
+    case 'kfgqpc':
+    case 'uthmani':
+    default:
+      return 'KFGQPC Uthmanic';
+  }
+}
 
 /// Display-layer normalization for Quranic Arabic text.
 ///
