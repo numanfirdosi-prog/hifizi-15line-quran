@@ -27,7 +27,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
-        android:label="Hafizi Quran & Tafsir"
+        android:label="Hafizi Quran &amp; Tafsir"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
