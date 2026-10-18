@@ -113,26 +113,37 @@ ThemeData buildTheme(String name) {
 }
 
 // ---------------------------------------------------------------------------
-// Theme 1: Soft Green (Premium) — Calm • Readable • Modern
+// Theme 1: Soft Green (Premium) — Calm • Readable • Spiritually Peaceful
+// Palette:
+//   Main background:    soft sage green (#F4F8F5)
+//   Primary surface:    warm ivory / cream (#FFFFFF)
+//   Secondary surface:  pale green (#E8F3EE)
+//   Primary accent:     rich emerald green (#0E6848)
+//   Secondary accent:   restrained antique gold (#D4AF37)
+//   Primary text:       deep forest green (#16261E)
+//   Secondary text:     muted green-grey (#607369)
+//   Borders:            subtle sage (#C7DCD2)
 // ---------------------------------------------------------------------------
 ThemeData _softGreenTheme() {
-  const primaryGreen = Color(0xFF0E6848);
-  const secondaryGreen = Color(0xFF10B981);
-  const bg = Color(0xFFF4F8F5);
-  const surface = Color(0xFFFFFFFF);
-  const containerHighest = Color(0xFFE8F3EE);
-  const textDark = Color(0xFF16261E);
-  const textMedium = Color(0xFF3E5147);
-  const textMuted = Color(0xFF607369);
-  const outline = Color(0xFFC7DCD2);
-  const outlineVariant = Color(0xFFE2ECE7);
+  const primaryGreen = Color(0xFF0E6848); // rich emerald green
+  const secondaryGreen = Color(0xFF10B981); // fresh emerald accent
+  const tertiaryGold = Color(0xFFD4AF37); // restrained antique gold
+  const bg = Color(0xFFF4F8F5); // soft sage green background
+  const surface = Color(0xFFFFFFFF); // warm ivory / cream surface
+  const containerHighest = Color(0xFFE8F3EE); // pale green secondary surface
+  const textDark = Color(0xFF16261E); // deep forest green text
+  const textMedium = Color(0xFF3E5147); // medium forest text
+  const textMuted = Color(0xFF607369); // muted green-grey secondary text
+  const outline = Color(0xFFC7DCD2); // subtle sage borders
+  const outlineVariant = Color(0xFFE2ECE7); // light sage separators
 
   const cs = ColorScheme.light(
     primary: primaryGreen,
     onPrimary: Colors.white,
     secondary: secondaryGreen,
     onSecondary: Colors.white,
-    tertiary: primaryGreen,
+    tertiary: tertiaryGold,
+    onTertiary: Colors.white,
     surface: surface,
     onSurface: textDark,
     surfaceContainerHighest: containerHighest,
@@ -149,6 +160,7 @@ ThemeData _softGreenTheme() {
     colorScheme: cs,
     hintColor: textMuted,
     dividerColor: outlineVariant,
+    iconTheme: const IconThemeData(color: primaryGreen),
     cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
@@ -158,13 +170,13 @@ ThemeData _softGreenTheme() {
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: primaryGreen,
-      foregroundColor: Colors.white,
+      backgroundColor: bg,
+      foregroundColor: primaryGreen,
       elevation: 0,
       centerTitle: false,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: primaryGreen),
       titleTextStyle: TextStyle(
-        color: Colors.white,
+        color: primaryGreen,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -283,6 +295,17 @@ ThemeData _softGreenTheme() {
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
+    tabBarTheme: const TabBarTheme(
+      labelColor: primaryGreen,
+      unselectedLabelColor: textMuted,
+      indicatorColor: primaryGreen,
+      indicatorSize: TabBarIndicatorSize.label,
+    ),
+    dividerTheme: const DividerThemeData(
+      color: outlineVariant,
+      thickness: 1,
+      space: 1,
+    ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: primaryGreen,
       contentTextStyle: TextStyle(color: Colors.white),
@@ -309,26 +332,37 @@ ThemeData _softGreenTheme() {
 }
 
 // ---------------------------------------------------------------------------
-// Theme 2: Light Blue (Modern) — Fresh • Elegant • Premium
+// Theme 2: Light Blue (Modern) — Fresh • Bright • Clean • Modern
+// Palette:
+//   Main background:    very light blue (#F0F6FB)
+//   Primary surface:    clean white (#FFFFFF)
+//   Secondary surface:  pale blue (#E0F2FE)
+//   Primary accent:     refined medium blue (#0284C7)
+//   Secondary accent:   restrained gold (#D4AF37)
+//   Primary text:       deep navy-blue (#0F1D33)
+//   Secondary text:     muted slate-blue (#5B7288)
+//   Borders:            subtle blue-grey (#BAD7E9)
 // ---------------------------------------------------------------------------
 ThemeData _lightBlueTheme() {
-  const primaryBlue = Color(0xFF0284C7);
-  const secondaryBlue = Color(0xFF0EA5E9);
-  const bg = Color(0xFFF0F6FB);
-  const surface = Color(0xFFFFFFFF);
-  const containerHighest = Color(0xFFE0F2FE);
-  const textDark = Color(0xFF0F1D33);
-  const textMedium = Color(0xFF33475B);
-  const textMuted = Color(0xFF5B7288);
-  const outline = Color(0xFFBAD7E9);
-  const outlineVariant = Color(0xFFDFECF5);
+  const primaryBlue = Color(0xFF0284C7); // refined medium blue
+  const secondaryBlue = Color(0xFF0EA5E9); // sky blue highlight
+  const tertiaryGold = Color(0xFFD4AF37); // restrained gold
+  const bg = Color(0xFFF0F6FB); // very light blue background
+  const surface = Color(0xFFFFFFFF); // clean white surface
+  const containerHighest = Color(0xFFE0F2FE); // pale blue secondary surface
+  const textDark = Color(0xFF0F1D33); // deep navy-blue text
+  const textMedium = Color(0xFF33475B); // medium slate text
+  const textMuted = Color(0xFF5B7288); // muted slate-blue secondary text
+  const outline = Color(0xFFBAD7E9); // subtle blue-grey borders
+  const outlineVariant = Color(0xFFDFECF5); // light separator
 
   const cs = ColorScheme.light(
     primary: primaryBlue,
     onPrimary: Colors.white,
     secondary: secondaryBlue,
     onSecondary: Colors.white,
-    tertiary: primaryBlue,
+    tertiary: tertiaryGold,
+    onTertiary: Colors.white,
     surface: surface,
     onSurface: textDark,
     surfaceContainerHighest: containerHighest,
@@ -345,6 +379,7 @@ ThemeData _lightBlueTheme() {
     colorScheme: cs,
     hintColor: textMuted,
     dividerColor: outlineVariant,
+    iconTheme: const IconThemeData(color: primaryBlue),
     cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
@@ -354,13 +389,13 @@ ThemeData _lightBlueTheme() {
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
+      backgroundColor: bg,
+      foregroundColor: primaryBlue,
       elevation: 0,
       centerTitle: false,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: primaryBlue),
       titleTextStyle: TextStyle(
-        color: Colors.white,
+        color: primaryBlue,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -479,6 +514,17 @@ ThemeData _lightBlueTheme() {
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
+    tabBarTheme: const TabBarTheme(
+      labelColor: primaryBlue,
+      unselectedLabelColor: textMuted,
+      indicatorColor: primaryBlue,
+      indicatorSize: TabBarIndicatorSize.label,
+    ),
+    dividerTheme: const DividerThemeData(
+      color: outlineVariant,
+      thickness: 1,
+      space: 1,
+    ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: primaryBlue,
       contentTextStyle: TextStyle(color: Colors.white),
@@ -505,26 +551,37 @@ ThemeData _lightBlueTheme() {
 }
 
 // ---------------------------------------------------------------------------
-// Theme 3: Royal Navy (Modern) — Rich • Soft • Eye Friendly
+// Theme 3: Royal Navy (Modern) — Luxurious • Deep • Immersive Dark Reading
+// Palette:
+//   Main background:    deep royal navy (#0B1324)
+//   Primary surface:    dark navy-blue (#132035)
+//   Secondary surface:  slightly lighter navy (#1D2C46)
+//   Primary accent:     elegant gold (#D4AF37)
+//   Secondary accent:   muted warm gold (#E8D29A)
+//   Primary text:       soft white (#F8FAFC)
+//   Secondary text:     readable blue-grey (#8295AF)
+//   Borders:            restrained blue-grey (#2C3E5E)
 // ---------------------------------------------------------------------------
 ThemeData _royalNavyTheme() {
-  const gold = Color(0xFFD4AF37);
-  const skyBlue = Color(0xFF38BDF8);
-  const bg = Color(0xFF0B1324);
-  const surface = Color(0xFF132035);
-  const containerHighest = Color(0xFF1D2C46);
-  const textLight = Color(0xFFF8FAFC);
-  const textMuted = Color(0xFF8295AF);
-  const outline = Color(0xFF2C3E5E);
-  const outlineVariant = Color(0xFF1E2D47);
+  const gold = Color(0xFFD4AF37); // elegant gold
+  const skyBlue = Color(0xFF38BDF8); // secondary blue accent
+  const warmGold = Color(0xFFE8D29A); // muted warm gold
+  const bg = Color(0xFF0B1324); // deep royal navy background
+  const surface = Color(0xFF132035); // dark navy-blue surface
+  const containerHighest = Color(0xFF1D2C46); // slightly lighter navy secondary surface
+  const textLight = Color(0xFFF8FAFC); // soft white text
+  const textMedium = Color(0xFFCBD5E1); // readable light slate text
+  const textMuted = Color(0xFF8295AF); // readable blue-grey secondary text
+  const outline = Color(0xFF2C3E5E); // restrained blue-grey borders
+  const outlineVariant = Color(0xFF1E2D47); // separator navy
 
   const cs = ColorScheme.dark(
     primary: gold,
     onPrimary: Color(0xFF0B1324),
     secondary: skyBlue,
     onSecondary: Color(0xFF0B1324),
-    tertiary: Color(0xFF2563EB),
-    onTertiary: Colors.white,
+    tertiary: warmGold,
+    onTertiary: Color(0xFF0B1324),
     surface: surface,
     onSurface: textLight,
     surfaceContainerHighest: containerHighest,
@@ -541,6 +598,7 @@ ThemeData _royalNavyTheme() {
     colorScheme: cs,
     hintColor: textMuted,
     dividerColor: outlineVariant,
+    iconTheme: const IconThemeData(color: gold),
     cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
@@ -550,13 +608,13 @@ ThemeData _royalNavyTheme() {
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: surface,
-      foregroundColor: textLight,
+      backgroundColor: bg,
+      foregroundColor: gold,
       elevation: 0,
       centerTitle: false,
       iconTheme: IconThemeData(color: gold),
       titleTextStyle: TextStyle(
-        color: textLight,
+        color: gold,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -674,6 +732,17 @@ ThemeData _royalNavyTheme() {
               fontWeight: states.contains(WidgetState.selected)
                   ? FontWeight.bold
                   : FontWeight.normal)),
+    ),
+    tabBarTheme: const TabBarTheme(
+      labelColor: gold,
+      unselectedLabelColor: textMuted,
+      indicatorColor: gold,
+      indicatorSize: TabBarIndicatorSize.label,
+    ),
+    dividerTheme: const DividerThemeData(
+      color: outlineVariant,
+      thickness: 1,
+      space: 1,
     ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: containerHighest,

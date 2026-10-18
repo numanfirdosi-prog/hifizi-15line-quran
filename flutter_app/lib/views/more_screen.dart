@@ -73,7 +73,7 @@ class MoreScreen extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(
           horizontal: Nur.s20, vertical: Nur.s8),
       leading: CircleAvatar(
-        backgroundColor: cs.primary.withOpacity(0.15),
+        backgroundColor: cs.primary.withValues(alpha: 0.15),
         child: Icon(icon, color: cs.primary, size: Nur.iconSizeSm),
       ),
       title: Text(
@@ -89,7 +89,7 @@ class MoreScreen extends StatelessWidget {
           : Text(
               subtitle,
               style: TextStyle(
-                color: cs.onSurface.withOpacity(0.6),
+                color: cs.onSurface.withValues(alpha: 0.6),
                 fontSize: 12,
               ),
             ),
@@ -121,7 +121,7 @@ class MoreScreen extends StatelessWidget {
           const SizedBox(width: Nur.s8),
           Expanded(
             child: Divider(
-              color: cs.primary.withOpacity(0.25),
+              color: cs.primary.withValues(alpha: 0.25),
               thickness: 1,
               height: 1,
             ),

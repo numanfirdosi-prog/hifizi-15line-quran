@@ -406,25 +406,21 @@ class _PrayerScreenState extends State<PrayerScreen> {
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(Nur.radiusSheet),
-                // Gold border: visible on the dark AppBar in all 3 themes
-                // (cs.primary is dark in Emerald/Parchment themes).
                 border: Border.all(
-                    color: Nur.gold.withValues(alpha: 0.5)),
+                    color: cs.primary.withValues(alpha: 0.5)),
               ),
               child: TextButton.icon(
-                icon: Icon(Icons.location_on, color: Nur.gold, size: 18),
+                icon: Icon(Icons.location_on, color: cs.primary, size: 18),
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       prefs.selectedCity.name.split('/')[0].trim(),
-                      // Light ink: readable on the dark AppBar in all
-                      // 3 themes (cs.onSurface is dark in Emerald/Parchment).
                       style:
-                          const TextStyle(color: Nur.ink, fontSize: 13),
+                          TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w600),
                     ),
                     Icon(Icons.arrow_drop_down,
-                        color: Nur.gold, size: 18),
+                        color: cs.primary, size: 18),
                   ],
                 ),
                 onPressed: () => _showCityPickerDialog(prefs),
@@ -441,7 +437,7 @@ class _PrayerScreenState extends State<PrayerScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [cs.surface, cs.secondary],
+                colors: [cs.surface, cs.surfaceContainerHighest],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),

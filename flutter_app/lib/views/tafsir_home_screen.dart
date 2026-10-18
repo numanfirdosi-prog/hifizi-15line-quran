@@ -140,11 +140,15 @@ class TafsirHomeScreen extends StatelessWidget {
               children: [
                 Icon(Icons.auto_stories, color: cs.primary, size: 20),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'تفسیر ابن کثیر — ہر آیت کے ساتھ ترجمہ اور تفسیر',
                     textDirection: TextDirection.rtl,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

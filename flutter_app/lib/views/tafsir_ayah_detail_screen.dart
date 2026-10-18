@@ -283,7 +283,7 @@ class _TafsirAyahDetailScreenState extends State<TafsirAyahDetailScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Icon(Icons.diamond,
-                            size: 12, color: Nur.gold),
+                            size: 12, color: cs.tertiary),
                       ),
                       Expanded(
                           child: Divider(color: cs.outlineVariant)),

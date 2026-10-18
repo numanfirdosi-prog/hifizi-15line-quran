@@ -501,38 +501,30 @@ class SettingsScreen extends StatelessWidget {
                     style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                   const SizedBox(height: 8),
-                  Column(
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          _themeCard(
-                            context,
-                            label: ur ? 'سافٹ گرین (پریمیم)' : 'Soft Green (Premium)',
-                            themeName: 'soft_green',
-                            selected: prefs.themeName == 'soft_green',
-                            onTap: () => prefs.setThemeName('soft_green'),
-                          ),
-                          const SizedBox(width: 8),
-                          _themeCard(
-                            context,
-                            label: ur ? 'لائٹ بلیو (ماڈرن)' : 'Light Blue (Modern)',
-                            themeName: 'light_blue',
-                            selected: prefs.themeName == 'light_blue',
-                            onTap: () => prefs.setThemeName('light_blue'),
-                          ),
-                        ],
+                      _themeCard(
+                        context,
+                        label: ur ? 'سافٹ گرین\n(پریمیم)' : 'Soft Green\n(Premium)',
+                        themeName: 'soft_green',
+                        selected: prefs.themeName == 'soft_green',
+                        onTap: () => prefs.setThemeName('soft_green'),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _themeCard(
-                            context,
-                            label: ur ? 'رائل نیوی (ماڈرن)' : 'Royal Navy (Modern)',
-                            themeName: 'royal_navy',
-                            selected: prefs.themeName == 'royal_navy',
-                            onTap: () => prefs.setThemeName('royal_navy'),
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      _themeCard(
+                        context,
+                        label: ur ? 'لائٹ بلیو\n(ماڈرن)' : 'Light Blue\n(Modern)',
+                        themeName: 'light_blue',
+                        selected: prefs.themeName == 'light_blue',
+                        onTap: () => prefs.setThemeName('light_blue'),
+                      ),
+                      const SizedBox(width: 8),
+                      _themeCard(
+                        context,
+                        label: ur ? 'رائل نیوی\n(ماڈرن)' : 'Royal Navy\n(Modern)',
+                        themeName: 'royal_navy',
+                        selected: prefs.themeName == 'royal_navy',
+                        onTap: () => prefs.setThemeName('royal_navy'),
                       ),
                     ],
                   ),

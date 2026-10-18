@@ -57,15 +57,30 @@ void main() {
     expect(navBar.selectedIndex, 0);
   });
 
-  test('all 3 new themes build without error', () {
+  test('all 3 new themes build without error and match token specifications', () {
     final green = buildTheme('soft_green');
     expect(green.colorScheme.primary, const Color(0xFF0E6848));
+    expect(green.colorScheme.tertiary, const Color(0xFFD4AF37));
+    expect(green.scaffoldBackgroundColor, const Color(0xFFF4F8F5));
+    expect(green.colorScheme.surface, const Color(0xFFFFFFFF));
+    expect(green.colorScheme.surfaceContainerHighest, const Color(0xFFE8F3EE));
+    expect(green.colorScheme.onSurface, const Color(0xFF16261E));
 
     final blue = buildTheme('light_blue');
     expect(blue.colorScheme.primary, const Color(0xFF0284C7));
+    expect(blue.colorScheme.tertiary, const Color(0xFFD4AF37));
+    expect(blue.scaffoldBackgroundColor, const Color(0xFFF0F6FB));
+    expect(blue.colorScheme.surface, const Color(0xFFFFFFFF));
+    expect(blue.colorScheme.surfaceContainerHighest, const Color(0xFFE0F2FE));
+    expect(blue.colorScheme.onSurface, const Color(0xFF0F1D33));
 
     final navy = buildTheme('royal_navy');
     expect(navy.colorScheme.primary, const Color(0xFFD4AF37));
+    expect(navy.colorScheme.tertiary, const Color(0xFFE8D29A));
+    expect(navy.scaffoldBackgroundColor, const Color(0xFF0B1324));
+    expect(navy.colorScheme.surface, const Color(0xFF132035));
+    expect(navy.colorScheme.surfaceContainerHighest, const Color(0xFF1D2C46));
+    expect(navy.colorScheme.onSurface, const Color(0xFFF8FAFC));
     expect(navy.brightness, Brightness.dark);
   });
 }
