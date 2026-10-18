@@ -88,7 +88,7 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
                         ),
                         OutlinedButton.icon(
                           onPressed: () => Share.share(reflection,
-                              subject: "Today's Reflection — Nur-ul-Quran"),
+                              subject: "Today's Reflection — Hafizi Quran & Tafsir"),
                           icon: const Icon(Icons.share, size: 16),
                           label: const Text('Share'),
                         ),
@@ -196,7 +196,7 @@ class _RamzanDuasScreenState extends State<RamzanDuasScreen> {
                     label: const Text('Share'),
                     onPressed: () => Share.share(
                       '${dua.title}\n\n${dua.arabic}\n\n${dua.transliteration}\n\n${dua.translation}\n\n${dua.translationUrdu}',
-                      subject: '${dua.title} — Nur-ul-Quran',
+                      subject: '${dua.title} — Hafizi Quran & Tafsir',
                     ),
                   ),
                   const SizedBox(width: 8),

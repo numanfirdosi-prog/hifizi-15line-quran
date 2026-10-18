@@ -102,7 +102,7 @@ class AboutScreen extends StatelessWidget {
       scheme: 'mailto',
       path: supportEmail,
       queryParameters: {
-        'subject': 'Nur-ul-Quran Bug Report',
+        'subject': 'Hafizi Quran & Tafsir Bug Report',
         'body': description,
       },
     );
@@ -154,31 +154,28 @@ class AboutScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Icon(
-                      Icons.menu_book,
-                      size: 40,
-                      color: cs.onPrimary,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      'assets/icons/icon-512.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'نور القرآن',
+                    'حافظی قرآن و تفسیر',
+                    textDirection: TextDirection.rtl,
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: cs.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Nur-ul-Quran',
+                    'Hafizi Quran & Tafsir',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -350,9 +347,9 @@ class PrivacyScreen extends StatelessWidget {
             icon: Icons.smartphone,
             title: isUrdu ? '100٪ آن ڈیوائس ایپ' : '100% On-Device App',
             body: isUrdu
-                ? 'نور القرآن میں کوئی اکاؤنٹ نہیں بنتا، کوئی ٹریکنگ یا اینالیٹکس نہیں ہے۔ '
+                ? 'حافظی قرآن و تفسیر میں کوئی اکاؤنٹ نہیں بنتا، کوئی ٹریکنگ یا اینالیٹکس نہیں ہے۔ '
                     'آپ کا کوئی ذاتی ڈیٹا کسی سرور پر بھیجا یا محفوظ نہیں کیا جاتا۔'
-                : 'Nur-ul-Quran has no accounts, no tracking and no analytics. '
+                : 'Hafizi Quran & Tafsir has no accounts, no tracking and no analytics. '
                     'None of your personal data is sent to or stored on any server.',
             textDirection: dir,
           ),

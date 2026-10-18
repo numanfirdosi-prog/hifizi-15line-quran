@@ -203,7 +203,7 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
             ),
             title: const Text('App band karein?'),
             content:
-                const Text('Kya aap Nur-ul-Quran app band karna chahte hain?'),
+                const Text('Kya aap Hafizi Quran & Tafsir app band karna chahte hain?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(false),

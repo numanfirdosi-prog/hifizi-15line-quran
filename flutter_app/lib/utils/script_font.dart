@@ -29,7 +29,20 @@ const _splitTanweenMarks = 'ࣰًٌࣱٍ';
 
 String normalizeArabicDisplay(String text) {
   var s = text;
+
+  // 0. Map Open Tanween (U+08F0, U+08F1, U+08F2) which are missing in KFGQPC
+  // and cause OS font fallback / glyph separation in calligraphic fonts
+  s = s.replaceAll('\u08f0', '\u064b')
+       .replaceAll('\u08f1', '\u064c')
+       .replaceAll('\u08f2', '\u064d');
+
   // 1. False ya-hamza-below (e.g. 16:90 وَإِيتَاءِ instead of وَإِيتَآيِٕ)
+  s = s.replaceAll('وَإِيتَآيِ', 'وَإِيتَاءِ')
+       .replaceAll('وَإِيتَآيِ', 'وَإِيتَاءِ')
+       .replaceAll('وَإِيتَآيِٕ', 'وَإِيتَاءِ')
+       .replaceAll('إِيتَآيِ', 'إِيتَاءِ')
+       .replaceAll('إِيتَآيِٕ', 'إِيتَاءِ');
+
   s = s.replaceAllMapped(
       RegExp(r'([اآءَُِٰۡٓ])ي[\u0650\u064e\u064f]?\u0655'),
       (m) => '${m[1]}ءِ');

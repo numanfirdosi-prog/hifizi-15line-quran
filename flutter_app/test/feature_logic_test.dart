@@ -94,27 +94,18 @@ void main() {
       }
       expect(find.text('Start your journey'), findsOneWidget);
       expect(find.text('Ayah of the Day'), findsOneWidget);
-      // Scroll to the Surahs quick-jump card. A single fixed drag offset
-      // is fragile (webfont loading changes content heights between
-      // runs), so keep dragging until the card is built and visible.
+      // Scroll to Quick Access.
       final listView = find.byType(ListView).first;
       for (var i = 0;
-          i < 12 && find.text('114 Surahs').evaluate().isEmpty;
+          i < 12 && find.text('Quick Access').evaluate().isEmpty;
           i++) {
         await tester.drag(listView, const Offset(0, -500));
         await tester.pump(const Duration(milliseconds: 300));
       }
-      expect(find.text('114 Surahs'), findsOneWidget);
-      expect(find.text('Jump to any surah'), findsOneWidget);
-      expect(find.text('Browse All'), findsOneWidget);
-      // Scroll further to Quick Access.
-      for (var i = 0;
-          i < 12 && find.text('QUICK ACCESS').evaluate().isEmpty;
-          i++) {
-        await tester.drag(listView, const Offset(0, -500));
-        await tester.pump(const Duration(milliseconds: 300));
-      }
-      expect(find.text('QUICK ACCESS'), findsOneWidget);
+      expect(find.text('Quick Access'), findsOneWidget);
+      expect(find.text('All Surahs'), findsOneWidget);
+      expect(find.text('Juz Index'), findsOneWidget);
+      expect(find.text('Bookmarks'), findsOneWidget);
       // Back to the top for the Open-the-Quran button.
       for (var i = 0;
           i < 12 && find.text('Open the Quran').evaluate().isEmpty;
@@ -128,18 +119,16 @@ void main() {
     });
   });
 
-  testWidgets('Dashboard surah autocomplete jumps to surah start page',
+  testWidgets('Dashboard Quick Access All Surahs triggers tab selection',
       (tester) async {
     await tester.runAsync(() async {
-      // flutter_test mocks HTTP (all requests -> 400), breaking google_fonts.
-      // Restore real HTTP inside the test so fonts can download.
       HttpOverrides.global = null;
       final prefs = await _prefs();
-      int? openedPage;
+      int? selectedTab;
       await tester.pumpWidget(_wrap(
         DashboardScreen(
-          onOpenPage: (p) => openedPage = p,
-          onSelectTab: (_) {},
+          onOpenPage: (_) {},
+          onSelectTab: (t) => selectedTab = t,
         ),
         prefs,
       ));
@@ -147,29 +136,17 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(seconds: 1));
       }
-      // Scroll the autocomplete field into view (fixed drag offsets are
-      // fragile: webfont loading changes content heights between runs).
       final listView = find.byType(ListView).first;
       for (var i = 0;
-          i < 12 && find.byType(TextField).evaluate().isEmpty;
+          i < 12 && find.text('All Surahs').evaluate().isEmpty;
           i++) {
-        await tester.drag(listView, const Offset(0, -500));
+        await tester.drag(listView, const Offset(0, -300));
         await tester.pump(const Duration(milliseconds: 300));
       }
-      final field = find.byType(TextField).first;
-      // Type into the autocomplete field; options appear in an overlay.
-      await tester.tap(field);
+      expect(find.text('All Surahs'), findsOneWidget);
+      await tester.tap(find.text('All Surahs'));
       await tester.pump();
-      await tester.enterText(field, 'Ya-Sin');
-      for (var i = 0; i < 6; i++) {
-        await tester.pump(const Duration(milliseconds: 500));
-      }
-      // The options overlay should list Ya-Sin (surah 36).
-      final option = find.text('Ya-Sin').last;
-      expect(option, findsWidgets);
-      await tester.tap(option);
-      await tester.pump();
-      expect(openedPage, isNotNull);
+      expect(selectedTab, 2);
     });
   });
 

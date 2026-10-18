@@ -33,7 +33,7 @@ class NurAudioHandler extends BaseAudioHandler {
       id: isAyah
           ? 'ayah:${s.currentSurah}:${s.currentAyah}'
           : 'surah:${s.currentSurah}',
-      album: 'Nur Al-Quran',
+      album: 'Hafizi Quran & Tafsir',
       title: isAyah
           ? (s.currentAyah == 0
               ? '$surahName • Bismillah'

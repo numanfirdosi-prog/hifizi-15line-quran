@@ -127,13 +127,13 @@ String aboutFeaturesForLang(String version, bool isUrdu) {
 }
 
 const String aboutIntroEn =
-    'Nur-ul-Quran — the 15-line South-Asian Hifzi mushaf, digitally. '
+    'Hafizi Quran & Tafsir — the 15-line South-Asian Hifzi mushaf, digitally. '
     'All 611 pages in the authentic Hifzi layout, just as you read in the printed mushaf. '
     'This app is built for tilawat, hifz and understanding — without unnecessary features, '
     'with a clean and peaceful reading experience.';
 
 const String aboutIntroUr =
-    'نور القرآن — 15 لائن جنوبی ایشیائی حفصی مصحف کا ڈیجیٹل تجربہ۔ '
+    'حافظی قرآن و تفسیر — 15 لائن جنوبی ایشیائی حفصی مصحف کا ڈیجیٹل تجربہ۔ '
     'تمام 611 صفحات مستند حفصی لے آؤٹ میں، بالکل ویسے جیسے آپ چھپے ہوئے مصحف میں پڑھتے ہیں۔ '
     'یہ ایپ تلاوت، حفظ اور سمجھنے کے لیے بنائی گئی ہے — غیر ضروری فیچرز کے بغیر، '
     'صاف اور پُرسکون مطالعے کے تجربے کے ساتھ۔';

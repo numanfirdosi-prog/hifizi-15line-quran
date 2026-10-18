@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../main.dart';
 import '../data/ayah_of_day.dart';
@@ -15,7 +16,6 @@ import '../services/prayer_calculation_service.dart';
 import '../services/preferences_service.dart';
 import '../utils/script_font.dart';
 import '../widgets/premium_card.dart';
-import '../widgets/section_header.dart';
 import 'ayah_player_sheet.dart';
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
@@ -29,41 +29,175 @@ import 'ramzan_duas_screen.dart';
 import 'mushaf_screen.dart';
 import 'search_quran_screen.dart';
 import 'settings_screen.dart';
+import 'tafsir_ayah_detail_screen.dart';
 import 'tafsir_home_screen.dart';
 
-/// Home/dashboard view for the Nur-Al-Quran app: last-read position,
-/// reading progress, Ayah of the Day, quick-access grid, Mushaf info,
-/// and a preview of saved ayahs.
+/// Islamic Skyline / Mosque Silhouette header painter.
+/// Paints graceful minarets, domes, crescent moon and palm trees
+/// that harmoniously fade into the background theme color.
+class _IslamicSkylinePainter extends CustomPainter {
+  final Color tint;
+  final bool isDark;
+
+  _IslamicSkylinePainter({required this.tint, required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    final paint = Paint()
+      ..color = tint.withValues(alpha: isDark ? 0.22 : 0.12)
+      ..style = PaintingStyle.fill;
+
+    // Draw main central dome
+    final centerDome = Path();
+    final domeCenterX = w * 0.52;
+    final domeRadius = w * 0.16;
+    final domeBaseY = h * 0.70;
+    centerDome.moveTo(domeCenterX - domeRadius, domeBaseY);
+    centerDome.cubicTo(
+      domeCenterX - domeRadius,
+      domeBaseY - domeRadius * 1.3,
+      domeCenterX,
+      domeBaseY - domeRadius * 1.6,
+      domeCenterX,
+      domeBaseY - domeRadius * 1.7,
+    );
+    centerDome.cubicTo(
+      domeCenterX,
+      domeBaseY - domeRadius * 1.6,
+      domeCenterX + domeRadius,
+      domeBaseY - domeRadius * 1.3,
+      domeCenterX + domeRadius,
+      domeBaseY,
+    );
+    centerDome.close();
+    canvas.drawPath(centerDome, paint);
+
+    // Left smaller dome
+    final leftDome = Path();
+    final lCenterX = w * 0.28;
+    final lRadius = w * 0.11;
+    leftDome.moveTo(lCenterX - lRadius, domeBaseY);
+    leftDome.cubicTo(
+      lCenterX - lRadius,
+      domeBaseY - lRadius * 1.2,
+      lCenterX,
+      domeBaseY - lRadius * 1.5,
+      lCenterX,
+      domeBaseY - lRadius * 1.6,
+    );
+    leftDome.cubicTo(
+      lCenterX,
+      domeBaseY - lRadius * 1.5,
+      lCenterX + lRadius,
+      domeBaseY - lRadius * 1.2,
+      lCenterX + lRadius,
+      domeBaseY,
+    );
+    leftDome.close();
+    canvas.drawPath(leftDome, paint);
+
+    // Right smaller dome
+    final rightDome = Path();
+    final rCenterX = w * 0.76;
+    final rRadius = w * 0.11;
+    rightDome.moveTo(rCenterX - rRadius, domeBaseY);
+    rightDome.cubicTo(
+      rCenterX - rRadius,
+      domeBaseY - rRadius * 1.2,
+      rCenterX,
+      domeBaseY - rRadius * 1.5,
+      rCenterX,
+      domeBaseY - rRadius * 1.6,
+    );
+    rightDome.cubicTo(
+      rCenterX,
+      domeBaseY - rRadius * 1.5,
+      rCenterX + rRadius,
+      domeBaseY - rRadius * 1.2,
+      rCenterX + rRadius,
+      domeBaseY,
+    );
+    rightDome.close();
+    canvas.drawPath(rightDome, paint);
+
+    // Left minaret
+    final minaretWidth = w * 0.04;
+    final minaretPaint = Paint()
+      ..color = tint.withValues(alpha: isDark ? 0.28 : 0.15)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.14, h * 0.18, minaretWidth, h * 0.55),
+        const Radius.circular(2),
+      ),
+      minaretPaint,
+    );
+    // Left minaret top cone
+    final leftCone = Path()
+      ..moveTo(w * 0.13, h * 0.18)
+      ..lineTo(w * 0.14 + minaretWidth / 2, h * 0.10)
+      ..lineTo(w * 0.15 + minaretWidth, h * 0.18)
+      ..close();
+    canvas.drawPath(leftCone, minaretPaint);
+
+    // Far right minaret
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(w * 0.88, h * 0.22, minaretWidth, h * 0.50),
+        const Radius.circular(2),
+      ),
+      minaretPaint,
+    );
+    final rightCone = Path()
+      ..moveTo(w * 0.87, h * 0.22)
+      ..lineTo(w * 0.88 + minaretWidth / 2, h * 0.14)
+      ..lineTo(w * 0.89 + minaretWidth, h * 0.22)
+      ..close();
+    canvas.drawPath(rightCone, minaretPaint);
+
+    // Crescent on main dome
+    final crescentPaint = Paint()
+      ..color = (isDark ? const Color(0xFFE5B842) : tint).withValues(alpha: isDark ? 0.7 : 0.35)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(domeCenterX, domeBaseY - domeRadius * 1.76), 4, crescentPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Home screen for Hafizi Quran & Tafsir matching Image 3 across all 3 themes.
 class DashboardScreen extends StatelessWidget {
   final void Function(int page) onOpenPage;
-  final void Function(int tabIndex) onSelectTab; // 1=mushaf,2=surahs,3=prayer
+  final void Function(int tabIndex) onSelectTab;
 
-  const DashboardScreen(
-      {required this.onOpenPage, required this.onSelectTab, super.key});
+  const DashboardScreen({
+    required this.onOpenPage,
+    required this.onSelectTab,
+    super.key,
+  });
 
-  // Shared future so the asset index is loaded once across rebuilds.
   static Future<Map<String, int>>? _verseIndexFuture;
 
   static String _relativeTime(String iso) {
-    if (iso.isEmpty) return '';
+    if (iso.isEmpty) return 'just now';
     final dt = DateTime.tryParse(iso);
-    if (dt == null) return '';
+    if (dt == null) return 'just now';
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 1) return '1 minute ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
     if (diff.inDays < 30) return '${diff.inDays} days ago';
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
-  /// Premium card wrapper shared across the dashboard.
   Widget _card(BuildContext context,
       {required Widget child, bool goldAccent = false}) {
     return NurCard(child: child, goldAccent: goldAccent);
-  }
-
-  Widget _sectionTitle(BuildContext context, String text) {
-    return NurSectionHeader(title: text);
   }
 
   static String _hijriDateString(DateTime dt, bool urdu) {
@@ -122,272 +256,39 @@ class DashboardScreen extends StatelessWidget {
     return urdu ? '$hDay $monthName $hYear ھ' : '$hDay $monthName $hYear AH';
   }
 
-  // ------------------------------------------------------------------
-  // Compact brand header: app name + edition line, theme-aware.
-  // ------------------------------------------------------------------
-
-  Widget _brandHeader(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final prefs = Provider.of<PreferencesService>(context);
-    final ur = prefs.isUrdu;
-    final hijri = _hijriDateString(DateTime.now(), ur);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(Nur.screenMargin, Nur.s12, Nur.screenMargin, Nur.s4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today_outlined, size: 13, color: cs.primary),
-                    const SizedBox(width: 5),
-                    Text(
-                      hijri,
-                      style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.7),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => onSelectTab(3),
-            icon: Icon(Icons.notifications_none_rounded, color: cs.primary, size: 24),
-            tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
-          ),
-          IconButton(
-            onPressed: () => _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
-            icon: Icon(Icons.bookmark_outline_rounded, color: cs.primary, size: 24),
-            tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _modernSearchPill(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final prefs = Provider.of<PreferencesService>(context);
-    final ur = prefs.isUrdu;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Nur.screenMargin, vertical: Nur.s4),
-      child: Material(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(Nur.radiusLg),
-        elevation: 0,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(Nur.radiusLg),
-          onTap: () => _pushJumpable(context, (open) => SearchQuranScreen(onOpenPage: open)),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Nur.radiusLg),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.20)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search_rounded, color: cs.primary, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    ur ? 'تلاش کریں: سورت، آیت، مسئلہ...' : 'Search Quran, Surah, Masla...',
-                    style: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.55),
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                Icon(Icons.tune_rounded, color: cs.primary.withValues(alpha: 0.7), size: 18),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _modernPrayerCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final prefs = Provider.of<PreferencesService>(context);
-    final now = DateTime.now();
-    final schedule = PrayerCalculationService.calculate(
-      date: now,
-      location: prefs.selectedCity,
-      asrMode: prefs.asrMethod,
-    );
-    final nextPrayer = PrayerCalculationService.getNextPrayer(
-      schedule,
-      now,
-      prefs.selectedCity,
-    );
-
-    final ur = prefs.isUrdu;
-    final cityName = prefs.selectedCity.name.split('/')[0].trim();
-
-    final rem = nextPrayer.remaining;
-    final remStr = rem.inHours > 0
-        ? '${rem.inHours}h ${rem.inMinutes.remainder(60)}m'
-        : '${rem.inMinutes}m';
-
-    final prayerItems = [
-      {'name': 'Fajr', 'ur': 'فجر', 'time': schedule.fajr.displayTime},
-      {'name': 'Dhuhr', 'ur': 'ظہر', 'time': schedule.dhuhr.displayTime},
-      {'name': 'Asr', 'ur': 'عصر', 'time': schedule.asr.displayTime},
-      {'name': 'Maghrib', 'ur': 'مغرب', 'time': schedule.maghrib.displayTime},
-      {'name': 'Isha', 'ur': 'عشاء', 'time': schedule.isha.displayTime},
+  static String _gregorianDateString(DateTime dt) {
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
     ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Nur.screenMargin, vertical: Nur.s8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(Nur.cardRadius),
-          border: Border.all(color: cs.primary.withValues(alpha: 0.20)),
-          boxShadow: [
-            BoxShadow(
-              color: cs.primary.withValues(alpha: 0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(Nur.cardRadius),
-          onTap: () => onSelectTab(3),
-          child: Padding(
-            padding: const EdgeInsets.all(Nur.s16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.location_on, color: cs.primary, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          cityName,
-                          style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.access_time_rounded, size: 12, color: cs.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            ur ? 'اگلی نماز' : 'NEXT PRAYER',
-                            style: TextStyle(
-                              color: cs.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  ur
-                      ? '${nextPrayer.nameUrdu} کا وقت $remStr میں'
-                      : '${nextPrayer.nameEn} in $remStr',
-                  style: TextStyle(
-                    color: cs.onSurface,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: prayerItems.map((p) {
-                    final isNext = p['name'] == nextPrayer.nameEn;
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-                        decoration: BoxDecoration(
-                          color: isNext ? cs.primary : cs.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(Nur.radiusSm),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              ur ? (p['ur'] as String) : (p['name'] as String),
-                              style: TextStyle(
-                                color: isNext ? cs.onPrimary : cs.onSurface,
-                                fontSize: 11,
-                                fontWeight: isNext ? FontWeight.bold : FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              p['time'] as String,
-                              style: TextStyle(
-                                color: isNext
-                                    ? cs.onPrimary.withValues(alpha: 0.9)
-                                    : cs.onSurface.withValues(alpha: 0.65),
-                                fontSize: 10,
-                                fontWeight: isNext ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    final dayName = days[dt.weekday - 1];
+    final monthName = months[dt.month - 1];
+    return '$dayName, ${dt.day} $monthName ${dt.year}';
   }
 
   void _push(BuildContext context, Widget screen) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => screen),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
-  /// Pushes a screen that can jump to a mushaf page: pushes MushafScreen
-  /// directly onto the navigator stack so system back / back button returns
-  /// directly to this screen (Bookmarks, Juz Index, Search, etc.).
   void _pushJumpable(
       BuildContext context, Widget Function(void Function(int)) build) {
     _push(
@@ -416,49 +317,430 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // ------------------------------------------------------------------
-  // Last Read card
+  // Header Banner: Islamic Silhouette + Greeting + Single Search Bar
   // ------------------------------------------------------------------
-
-  Widget _lastReadCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+  Widget _topHeaderBanner(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final prefs = Provider.of<PreferencesService>(context);
+    final ur = prefs.isUrdu;
+    final now = DateTime.now();
+    final hijri = _hijriDateString(now, ur);
+    final greg = _gregorianDateString(now);
+    final isDark = theme.brightness == Brightness.dark;
 
-    if (prefs.lastReadAt.isEmpty) {
-      return _card(
-        context,
-        goldAccent: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Last Read',
-              style: TextStyle(
-                color: cs.primary,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
+    // Background gradient based on theme
+    final gradientColors = isDark
+        ? [const Color(0xFF070D18), const Color(0xFF0F1B2E)]
+        : (prefs.themeName == 'light_blue'
+            ? [const Color(0xFFDCEEFA), const Color(0xFFF0F6FB)]
+            : [const Color(0xFFDFEDE4), const Color(0xFFF4F8F5)]);
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: gradientColors,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Islamic Skyline Decorative Background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 170,
+            child: CustomPaint(
+              painter: _IslamicSkylinePainter(
+                tint: cs.primary,
+                isDark: isDark,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Start your journey',
-              style: TextStyle(
-                color: cs.onSurface,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top action bar: Menu (left), Bell & Bookmark (right)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(Icons.menu_rounded,
+                              color: isDark ? Colors.white : cs.onSurface,
+                              size: 22),
+                          onPressed: () => onSelectTab(4),
+                          tooltip: 'Menu',
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: (isDark ? Colors.white : Colors.black)
+                                  .withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.notifications_none_rounded,
+                                  color: isDark ? Colors.white : cs.onSurface,
+                                  size: 22),
+                              onPressed: () => onSelectTab(3),
+                              tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: (isDark ? Colors.white : Colors.black)
+                                  .withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.bookmark_outline_rounded,
+                                  color: isDark ? Colors.white : cs.onSurface,
+                                  size: 22),
+                              onPressed: () => _pushJumpable(
+                                  context,
+                                  (open) =>
+                                      BookmarksScreen(onOpenPage: open)),
+                              tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Greeting
+                  Text(
+                    ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : cs.onSurface,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Hijri & Gregorian Dates
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 13,
+                          color: (isDark ? Colors.white : cs.onSurface)
+                              .withValues(alpha: 0.7)),
+                      const SizedBox(width: 5),
+                      Text(
+                        hijri,
+                        style: TextStyle(
+                          color: (isDark ? Colors.white : cs.onSurface)
+                              .withValues(alpha: 0.75),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 18),
+                    child: Text(
+                      greg,
+                      style: TextStyle(
+                        color: (isDark ? Colors.white : cs.onSurface)
+                            .withValues(alpha: 0.55),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  // Single Top Search Bar (Only here!)
+                  Material(
+                    color: isDark ? const Color(0xFF142238) : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    elevation: isDark ? 0 : 2,
+                    shadowColor: Colors.black.withValues(alpha: 0.06),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => _pushJumpable(
+                          context,
+                          (open) =>
+                              SearchQuranScreen(onOpenPage: open)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: cs.primary.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.search_rounded,
+                                color: cs.primary, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                ur
+                                    ? 'تلاش: قرآن، سورت، آیت، تفسیر...'
+                                    : 'Search Quran, Surah, Ayah, Tafsir, Hadith...',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: (isDark ? Colors.white : cs.onSurface)
+                                      .withValues(alpha: 0.50),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.tune_rounded,
+                                color: cs.primary.withValues(alpha: 0.75),
+                                size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () => onOpenPage(1),
-              icon: const Icon(Icons.menu_book_outlined),
-              label: const Text('Open the Quran'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-                minimumSize: const Size(0, Nur.buttonHeight),
-              ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Location & Prayer Times Widget
+  // ------------------------------------------------------------------
+  Widget _prayerTimesCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final now = DateTime.now();
+    final schedule = PrayerCalculationService.calculate(
+      date: now,
+      location: prefs.selectedCity,
+      asrMode: prefs.asrMethod,
+    );
+    final nextPrayer = PrayerCalculationService.getNextPrayer(
+      schedule,
+      now,
+      prefs.selectedCity,
+    );
+
+    final ur = prefs.isUrdu;
+    final cityName = prefs.selectedCity.name.split('/')[0].trim();
+    final isDark = theme.brightness == Brightness.dark;
+
+    final prayers = [
+      {'name': 'Fajr', 'ur': 'فجر', 'time': schedule.fajr.displayTime, 'icon': Icons.wb_twilight_rounded},
+      {'name': 'Dhuhr', 'ur': 'ظہر', 'time': schedule.dhuhr.displayTime, 'icon': Icons.wb_sunny_rounded},
+      {'name': 'Asr', 'ur': 'عصر', 'time': schedule.asr.displayTime, 'icon': Icons.sunny_snowing},
+      {'name': 'Maghrib', 'ur': 'مغرب', 'time': schedule.maghrib.displayTime, 'icon': Icons.wb_twilight_outlined},
+      {'name': 'Isha', 'ur': 'عشاء', 'time': schedule.isha.displayTime, 'icon': Icons.nightlight_round},
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
+        ),
+        child: Column(
+          children: [
+            // Location and Next Prayer link
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.location_on, color: cs.primary, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      cityName,
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                InkWell(
+                  onTap: () => onSelectTab(3),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      children: [
+                        Text(
+                          ur ? 'اگلی نماز >' : 'Next Prayer >',
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 5 horizontal prayer time mini-cards
+            Row(
+              children: prayers.map((p) {
+                final isCurrent = p['name'] == nextPrayer.nameEn;
+                return Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: isCurrent
+                          ? cs.primary
+                          : (isDark ? const Color(0xFF18263E) : cs.primary.withValues(alpha: 0.08)),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: isCurrent
+                          ? [
+                              BoxShadow(
+                                color: cs.primary.withValues(alpha: 0.35),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : null,
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          p['icon'] as IconData,
+                          size: 15,
+                          color: isCurrent
+                              ? cs.onPrimary
+                              : cs.primary.withValues(alpha: 0.85),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          ur ? (p['ur'] as String) : (p['name'] as String),
+                          style: TextStyle(
+                            color: isCurrent
+                                ? cs.onPrimary
+                                : cs.onSurface.withValues(alpha: 0.85),
+                            fontSize: 11,
+                            fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          p['time'] as String,
+                          style: TextStyle(
+                            color: isCurrent
+                                ? cs.onPrimary.withValues(alpha: 0.95)
+                                : cs.onSurface.withValues(alpha: 0.65),
+                            fontSize: 10,
+                            fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Last Read Card with 3D Gold Quran Graphic
+  // ------------------------------------------------------------------
+  Widget _lastReadCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    if (prefs.lastReadAt.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Last Read',
+                style: TextStyle(
+                  color: cs.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Start your journey',
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () => onOpenPage(1),
+                icon: const Icon(Icons.menu_book_outlined, size: 16),
+                label: const Text('Open the Quran'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: cs.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -469,35 +751,549 @@ class DashboardScreen extends StatelessWidget {
     final juz = juzForPage(page);
     final rel = _relativeTime(prefs.lastReadAt);
 
-    return _card(
-      context,
-      goldAccent: true,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 3D Quran graphic
+                Container(
+                  width: 72,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.40 : 0.15),
+                        blurRadius: 10,
+                        offset: const Offset(2, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/icons/icon-512.png',
+                      width: 72,
+                      height: 92,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                // Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Last Read',
+                            style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.65),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            rel,
+                            style: TextStyle(
+                              color: cs.onSurface.withValues(alpha: 0.45),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: cs.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${surah.number}',
+                                style: TextStyle(
+                                  color: cs.onPrimary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              surah.nameEn,
+                              style: TextStyle(
+                                color: cs.onSurface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            surah.nameAr,
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: arabicFontFamily(prefs.scriptStyle),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Page $page • Juz $juz',
+                        style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.60),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Continue Reading button + play button
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => onOpenPage(page),
+                              icon: const Icon(Icons.menu_book, size: 15),
+                              label: Text(
+                                'Continue Reading (Page $page)',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: cs.primary,
+                                foregroundColor: cs.onPrimary,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Material(
+                            color: cs.primary,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () {
+                                showAyahPlayer(
+                                  context,
+                                  surah: prefs.lastReadSurah,
+                                  ayah: prefs.lastReadAyah,
+                                );
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(7),
+                                child: Icon(Icons.play_arrow_rounded,
+                                    color: Colors.white, size: 20),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () {
+                          showAyahPlayer(
+                            context,
+                            surah: prefs.lastReadSurah,
+                            ayah: prefs.lastReadAyah,
+                          );
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.headphones_rounded,
+                                size: 13, color: cs.primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Listen from Ayah ${prefs.lastReadAyah}',
+                              style: TextStyle(
+                                color: cs.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Reading Progress Card
+  // ------------------------------------------------------------------
+  Widget _readingProgressCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final pagesRead = (prefs.lastReadPage - 1).clamp(0, totalPagesInMushaf);
+    final target = prefs.dailyTargetPages;
+    final remaining = totalPagesInMushaf - pagesRead;
+    final daysLeft = (remaining / max(1, target)).ceil();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.menu_book_outlined,
+                      color: cs.primary, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Reading Progress',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Text(
+                  '$pagesRead of $totalPagesInMushaf Pages',
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.70),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: (pagesRead / totalPagesInMushaf).clamp(0.01, 1.0),
+                minHeight: 8,
+                backgroundColor: cs.primary.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Target: $target pages / day  |  Est. $daysLeft days left',
+              style: TextStyle(
+                color: cs.onSurface.withValues(alpha: 0.55),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Ayah of the Day Card with 4 buttons: Copy, Listen, Tafsir, Share
+  // ------------------------------------------------------------------
+  Widget _ayahOfDayCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final a = ayahOfDayFor(DateTime.now());
+    final surah = allSurahs[(a.surah - 1).clamp(0, allSurahs.length - 1)];
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.wb_sunny_outlined,
+                        color: cs.primary, size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Ayah of the Day',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '${surah.nameEn} • ${a.surah}:${a.ayah}',
+                  style: TextStyle(
+                    color: cs.onSurface.withValues(alpha: 0.60),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            // Arabic Text
+            Text(
+              normalizeArabicDisplay(a.ar),
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                fontFamily: arabicFontFamily(prefs.scriptStyle),
+                fontSize: 22 * prefs.ayahScale,
+                color: cs.onSurface,
+                height: 2.1,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Translation
+            Text(
+              '"${a.en}"',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: cs.onSurface.withValues(alpha: 0.85),
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 14),
+            // 4 Action Buttons: Copy, Listen, Tafsir, Share
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: '${a.ar}\n\n${a.en}'));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Ayah copied')),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 14),
+                    label: const Text('Copy', style: TextStyle(fontSize: 11)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.35)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      showAyahPlayer(context, surah: a.surah, ayah: a.ayah);
+                    },
+                    icon: const Icon(Icons.headphones_rounded, size: 14),
+                    label: const Text('Listen', style: TextStyle(fontSize: 11)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.35)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _push(
+                        context,
+                        TafsirAyahDetailScreen(surah: a.surah, ayah: a.ayah),
+                      );
+                    },
+                    icon: const Icon(Icons.menu_book_rounded, size: 14),
+                    label: const Text('Tafsir', style: TextStyle(fontSize: 11)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.35)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Share.share(
+                        '${a.ar}\n\n"${a.en}"\n\n— Surah ${surah.nameEn} (${a.surah}:${a.ayah}) • Hafizi Quran & Tafsir',
+                      );
+                    },
+                    icon: const Icon(Icons.share_rounded, size: 14),
+                    label: const Text('Share', style: TextStyle(fontSize: 11)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.35)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Quick Access Section (Matching Image 3: 5 horizontal icon buttons)
+  // ------------------------------------------------------------------
+  Widget _quickAccessSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final quickButtons = [
+      {
+        'title': 'All Surahs',
+        'icon': Icons.menu_book_rounded,
+        'action': () => onSelectTab(2),
+      },
+      {
+        'title': 'Juz Index',
+        'icon': Icons.format_list_numbered_rounded,
+        'action': () => _pushJumpable(
+            context, (open) => JuzIndexScreen(onOpenPage: open)),
+      },
+      {
+        'title': 'Bookmarks',
+        'icon': Icons.bookmark_outline_rounded,
+        'action': () => _pushJumpable(
+            context, (open) => BookmarksScreen(onOpenPage: open)),
+      },
+      {
+        'title': 'Tafsir',
+        'icon': Icons.auto_stories_rounded,
+        'action': () => _push(context, const TafsirHomeScreen()),
+      },
+      {
+        'title': 'Audio',
+        'icon': Icons.headphones_rounded,
+        'action': () => _push(context, AudioStudioScreen()),
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Last Read',
-                style: TextStyle(
-                  color: cs.primary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.grid_view_rounded,
+                      size: 16, color: cs.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Quick Access',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'Juz $juz',
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+              InkWell(
+                onTap: () => onSelectTab(4),
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Text(
+                    'View All >',
+                    style: TextStyle(
+                      color: cs.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -505,420 +1301,61 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-                ),
-                child: Center(
-                  child: Text(
-                    '${surah.number}',
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      surah.nameEn,
-                      style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Page $page • Juz $juz'
-                      '${rel.isNotEmpty ? ' • $rel' : ''}',
-                      style: TextStyle(
-                          color: cs.onSurface.withValues(alpha: 0.7),
-                          fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                surah.nameAr,
-                style: arabicStyle(
-                  prefs.scriptStyle,
-                  fontSize: 24,
-                  color: cs.primary,
-                  scale: prefs.ayahScale,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Material(
-                color: cs.primary,
-                shape: const CircleBorder(),
+            children: quickButtons.map((btn) {
+              return Expanded(
                 child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () {
-                    showAyahPlayer(
-                      context,
-                      surah: prefs.lastReadSurah,
-                      ayah: prefs.lastReadAyah,
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 8,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () => onOpenPage(prefs.lastReadPage),
-                icon: const Icon(Icons.play_arrow),
-                label: Text('Continue Reading (Page $page)'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: cs.onPrimary,
-                  minimumSize: const Size(0, Nur.buttonHeight),
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Opens the ayah player: highlights the ayah and plays
-                  // its audio ayah-by-ayah until stopped.
-                  showAyahPlayer(
-                    context,
-                    surah: prefs.lastReadSurah,
-                    ayah: prefs.lastReadAyah,
-                  );
-                },
-                icon: const Icon(Icons.headphones_outlined),
-                label: Text('Listen from Ayah ${prefs.lastReadAyah}'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: cs.primary,
-                  side: BorderSide(color: cs.primary),
-                  minimumSize: const Size(0, Nur.buttonHeight),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // Reading Progress card
-  // ------------------------------------------------------------------
-
-  Widget _progressCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final prefs = Provider.of<PreferencesService>(context);
-
-    final pagesRead = (prefs.lastReadPage - 1).clamp(0, totalPagesInMushaf);
-    final target = prefs.dailyTargetPages;
-    final remaining = totalPagesInMushaf - pagesRead;
-    final daysLeft = (remaining / max(1, target)).ceil();
-
-    return _card(
-      context,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Reading Progress',
-            style: TextStyle(
-              color: cs.primary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: pagesRead / totalPagesInMushaf,
-              minHeight: 10,
-              backgroundColor: cs.onSurface.withOpacity(0.12),
-              valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '$pagesRead of $totalPagesInMushaf Pages',
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Target: $target pages / day',
-            style:
-                TextStyle(color: cs.onSurface.withOpacity(0.7), fontSize: 13),
-          ),
-          Text(
-            'Est. $daysLeft days left',
-            style:
-                TextStyle(color: cs.onSurface.withOpacity(0.7), fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // Ayah of the Day card
-  // ------------------------------------------------------------------
-
-  Widget _ayahOfDayCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final prefs = Provider.of<PreferencesService>(context);
-    final a = ayahOfDayFor(DateTime.now());
-    final surah = allSurahs[(a.surah - 1).clamp(0, allSurahs.length - 1)];
-
-    return _card(
-      context,
-      goldAccent: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Ayah of the Day',
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Text(
-                '${surah.nameEn} • ${a.surah}:${a.ayah}',
-                style: TextStyle(
-                  color: cs.onSurface.withOpacity(0.7),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            normalizeArabicDisplay(a.ar),
-            textAlign: TextAlign.right,
-            textDirection: TextDirection.rtl,
-            style: arabicStyle(
-              prefs.scriptStyle,
-              fontSize: 26,
-              color: cs.onSurface,
-              scale: prefs.ayahScale,
-              height: 2.0,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '"${a.en}"',
-            style: TextStyle(
-              color: cs.onSurface.withOpacity(0.85),
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tadabbur note: ${a.reflection}',
-            style: TextStyle(
-              color: cs.onSurface.withOpacity(0.7),
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(
-                    ClipboardData(text: '${a.ar}\n${a.en}'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied')),
-                  );
-                },
-                icon: const Icon(Icons.copy_outlined),
-                label: const Text('Copy'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: cs.primary,
-                  side: BorderSide(color: cs.primary),
-                  minimumSize: const Size(0, Nur.buttonHeight),
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Highlights the ayah and plays its audio ayah-by-ayah.
-                  showAyahPlayer(context, surah: a.surah, ayah: a.ayah);
-                },
-                icon: const Icon(Icons.headphones_outlined),
-                label: const Text('Listen'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: cs.primary,
-                  side: BorderSide(color: cs.primary),
-                  minimumSize: const Size(0, Nur.buttonHeight),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // Surah quick-jump card (type a surah name -> opens its first page)
-  // ------------------------------------------------------------------
-
-  Widget _surahPickerCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return _card(
-      context,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.menu_book_outlined,
-                  color: cs.primary, size: Nur.iconSize),
-              const SizedBox(width: Nur.s8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '114 Surahs',
-                      style: TextStyle(
-                        color: cs.primary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  onTap: btn['action'] as void Function(),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.16)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Jump to any surah',
-                      style: TextStyle(
-                        color: cs.onSurface.withValues(alpha: 0.7),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => onSelectTab(2),
-                icon: const Icon(Icons.list, size: Nur.iconSizeSm),
-                label: const Text('Browse All'),
-                style: TextButton.styleFrom(foregroundColor: cs.primary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Autocomplete<Surah>(
-            displayStringForOption: (s) => s.nameEn,
-            optionsBuilder: (textEditingValue) {
-              final q = textEditingValue.text.trim().toLowerCase();
-              if (q.isEmpty) return const Iterable<Surah>.empty();
-              return allSurahs.where((s) =>
-                  s.nameEn.toLowerCase().contains(q) ||
-                  s.nameAr.contains(textEditingValue.text.trim()) ||
-                  s.number.toString() == q);
-            },
-            onSelected: (surah) => onOpenPage(surah.startPage),
-            fieldViewBuilder:
-                (context, controller, focusNode, onFieldSubmitted) {
-              return TextField(
-                controller: controller,
-                focusNode: focusNode,
-                decoration: InputDecoration(
-                  hintText: 'Type surah name… e.g. Ya-Sin',
-                  hintStyle: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.5)),
-                  prefixIcon: Icon(Icons.search, color: cs.primary),
-                  filled: true,
-                  fillColor:
-                      cs.onSurface.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(Nur.buttonRadius),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                style: TextStyle(color: cs.onSurface),
-              );
-            },
-            optionsViewBuilder: (context, onSelected, options) {
-              return Align(
-                alignment: Alignment.topLeft,
-                child: Material(
-                  color: cs.surface,
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(Nur.buttonRadius),
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width - 64,
-                    child: ConstrainedBox(
-                      // Cap the dropdown height so many matches scroll
-                      // inside instead of overflowing the screen.
-                      constraints: const BoxConstraints(maxHeight: 320),
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        shrinkWrap: true,
-                        itemCount: options.length,
-                        itemBuilder: (context, index) {
-                        final s = options.elementAt(index);
-                        return ListTile(
-                          dense: true,
-                          leading: Text(
-                            '${s.number}',
-                            style: TextStyle(
-                                color: cs.primary,
-                                fontWeight: FontWeight.bold),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          title: Text(s.nameEn,
-                              style: TextStyle(color: cs.onSurface)),
-                          subtitle: Text(
-                            '${s.meaning} • Page ${s.startPage}',
-                            style: TextStyle(
-                                color: cs.onSurface.withValues(alpha: 0.6),
-                                fontSize: 12),
+                          child: Icon(
+                            btn['icon'] as IconData,
+                            size: 19,
+                            color: cs.primary,
                           ),
-                          trailing: Text(
-                            s.nameAr,
-                            style: TextStyle(
-                                color: cs.primary, fontSize: 16),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          btn['title'] as String,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: cs.onSurface,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                           ),
-                          onTap: () => onSelected(s),
-                        );
-                      },
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               );
-            },
+            }).toList(),
           ),
         ],
       ),
@@ -926,103 +1363,8 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // ------------------------------------------------------------------
-  // Quick Access grid
+  // 15-Line Mushaf info card (Feature preserved)
   // ------------------------------------------------------------------
-
-  List<_QuickItem> _quickItems(BuildContext context) => [
-        _QuickItem(
-            'All 114 Surahs', Icons.menu_book_outlined, () => onSelectTab(2)),
-        _QuickItem('Juz Index', Icons.format_list_numbered,
-            () => _pushJumpable(context, (open) => JuzIndexScreen(onOpenPage: open))),
-        _QuickItem('Khatm Planner', Icons.calendar_month_outlined,
-            () => _pushJumpable(context, (open) => KhatmPlannerScreen(onOpenPage: open))),
-        _QuickItem('Bookmarks & Saved', Icons.bookmark_outline,
-            () => _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open))),
-        _QuickItem('Search Quran', Icons.search,
-            () => _pushJumpable(context, (open) => SearchQuranScreen(onOpenPage: open))),
-        _QuickItem('Tafsir', Icons.auto_stories,
-            () => _push(context, const TafsirHomeScreen())),
-        _QuickItem('Audio Recitations', Icons.headphones_outlined,
-            () => _push(context, AudioStudioScreen())),
-        _QuickItem(
-            'Prayer Times & Azan', Icons.access_time, () => onSelectTab(3)),
-        _QuickItem('Qiblah Compass', Icons.explore_outlined,
-            () => _push(context, const QiblahScreen())),
-        _QuickItem('Ramzan & Duas', Icons.nightlight_round,
-            () => _pushJumpable(context, (open) => RamzanDuasScreen(onOpenPage: open))),
-        _QuickItem('Preferences', Icons.settings_outlined,
-            () => _openSettings(context)),
-        _QuickItem('Questions & FAQ', Icons.help_outline,
-            () => _push(context, FaqScreen())),
-        _QuickItem('Backup & Restore', Icons.cloud_outlined,
-            () => _push(context, BackupRestoreScreen())),
-        _QuickItem('About & Licenses', Icons.info_outline,
-            () => _push(context, AboutScreen())),
-        _QuickItem('Offline Downloads', Icons.cloud_download_outlined,
-            () => _push(context, OfflineDownloadScreen())),
-      ];
-
-  Widget _quickAccessSection(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final items = _quickItems(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle(context, 'Quick Access'),
-        GridView.count(
-          crossAxisCount: 3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-              Nur.screenMargin, Nur.s8, Nur.screenMargin, Nur.s8),
-          mainAxisSpacing: Nur.s12,
-          crossAxisSpacing: Nur.s12,
-          children: items.map((item) {
-            return InkWell(
-              borderRadius: BorderRadius.circular(Nur.radiusMd),
-              onTap: item.onTap,
-              child: Container(
-                padding: const EdgeInsets.all(Nur.s8),
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(Nur.radiusMd),
-                  border: Border.all(color: cs.primary.withOpacity(0.25)),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: cs.primary.withOpacity(0.15),
-                      child: Icon(item.icon,
-                          color: cs.primary, size: Nur.iconSize),
-                    ),
-                    const SizedBox(height: Nur.s8),
-                    Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  // ------------------------------------------------------------------
-  // 15-Line Mushaf info card
-  // ------------------------------------------------------------------
-
   Widget _mushafInfoCard(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final prefs = Provider.of<PreferencesService>(context);
@@ -1090,40 +1432,14 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // ------------------------------------------------------------------
-  // Saved Ayahs preview
+  // Saved Ayahs preview (Feature preserved)
   // ------------------------------------------------------------------
-
   Widget _savedAyahsSection(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final prefs = Provider.of<PreferencesService>(context);
     final saved = prefs.savedAyahs;
 
-    if (saved.isEmpty) {
-      return _card(
-        context,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Saved Ayahs & Bookmarks',
-              style: TextStyle(
-                color: cs.primary,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'No saved ayahs yet',
-              style: TextStyle(
-                color: cs.onSurface.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    if (saved.isEmpty) return const SizedBox.shrink();
 
     final preview = saved.take(3).toList();
     _verseIndexFuture ??= loadVersePageIndex();
@@ -1146,12 +1462,9 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () =>
-                    _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
-                child: Text(
-                  'View All',
-                  style: TextStyle(color: cs.primary),
-                ),
+                onPressed: () => _pushJumpable(
+                    context, (open) => BookmarksScreen(onOpenPage: open)),
+                child: Text('View All', style: TextStyle(color: cs.primary)),
               ),
             ],
           ),
@@ -1191,29 +1504,23 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        _brandHeader(context),
-        _modernSearchPill(context),
-        _modernPrayerCard(context),
-        const SizedBox(height: Nur.s4),
-        _lastReadCard(context),
-        _progressCard(context),
-        _ayahOfDayCard(context),
-        _surahPickerCard(context),
-        _quickAccessSection(context),
-        _mushafInfoCard(context),
-        _savedAyahsSection(context),
-        const SizedBox(height: Nur.screenMargin),
-      ],
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          _topHeaderBanner(context),
+          const SizedBox(height: 4),
+          _prayerTimesCard(context),
+          _lastReadCard(context),
+          _readingProgressCard(context),
+          _ayahOfDayCard(context),
+          _quickAccessSection(context),
+          _mushafInfoCard(context),
+          _savedAyahsSection(context),
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
-}
-
-class _QuickItem {
-  final String title;
-  final IconData icon;
-  final void Function() onTap;
-
-  const _QuickItem(this.title, this.icon, this.onTap);
 }

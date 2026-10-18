@@ -28,7 +28,7 @@ Future<void> shareAyah(BuildContext context,
     const text = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\n'
         '"In the name of Allah, the Entirely Merciful, the Especially Merciful."\n\n'
         '— Surah ';
-    await Share.share('$text$name (Bismillah) • Nur Al-Quran');
+    await Share.share('$text$name (Bismillah) • Hafizi Quran & Tafsir');
     return;
   }
   _quranTextFuture ??= loadQuranText();
@@ -43,8 +43,8 @@ Future<void> shareAyah(BuildContext context,
     }
   }
   final text = entry == null
-      ? 'Surah $name ($surah:$ayah) — Nur Al-Quran'
-      : '${entry.ar}\n\n"${entry.en}"\n\n— Surah $name ($surah:$ayah) • Nur Al-Quran';
+      ? 'Surah $name ($surah:$ayah) — Hafizi Quran & Tafsir'
+      : '${entry.ar}\n\n"${entry.en}"\n\n— Surah $name ($surah:$ayah) • Hafizi Quran & Tafsir';
   await Share.share(text);
 }
 

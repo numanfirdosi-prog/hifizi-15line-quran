@@ -10,7 +10,7 @@ import 'services/nur_audio_handler.dart';
 import 'services/deep_link_service.dart';
 import 'views/splash_screen.dart';
 
-/// Premium design tokens for Nur-ul-Quran: deep green + gold identity.
+/// Design tokens for Hafizi Quran & Tafsir.
 ///
 /// Every theme in [buildTheme] is re-based on these tokens so the brand
 /// stays consistent across Night Slate, Emerald Day and Antique Parchment.

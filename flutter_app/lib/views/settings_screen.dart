@@ -930,7 +930,7 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ur ? 'نور القرآن کے بارے میں' : 'About Nur-ul-Quran (نور القرآن)',
+                  ur ? 'حافظی قرآن و تفسیر کے بارے میں' : 'About Hafizi Quran & Tafsir (حافظی قرآن و تفسیر)',
                   style: _headingStyle(context, ur, size: 14),
                 ),
                 const SizedBox(height: 6),
