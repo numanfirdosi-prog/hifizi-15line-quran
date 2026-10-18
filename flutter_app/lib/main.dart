@@ -295,7 +295,7 @@ ThemeData _softGreenTheme() {
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: primaryGreen,
       unselectedLabelColor: textMuted,
       indicatorColor: primaryGreen,
@@ -514,7 +514,7 @@ ThemeData _lightBlueTheme() {
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: primaryBlue,
       unselectedLabelColor: textMuted,
       indicatorColor: primaryBlue,
@@ -733,7 +733,7 @@ ThemeData _royalNavyTheme() {
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelColor: gold,
       unselectedLabelColor: textMuted,
       indicatorColor: gold,
