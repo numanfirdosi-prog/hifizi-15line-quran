@@ -23,6 +23,26 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
   int _mushafTargetPage = 2;
   final List<int> _tabHistory = [];
 
+  // Bottom-bar visual order (mockup): Home, Surahs, Quran, Prayer, More.
+  // Maps visual position -> internal tab index (Quran opens the Mushaf
+  // reader tab, which is internal index 1).
+  static const _navTabIndex = [0, 2, 1, 3, 4];
+  static const _navLabels = ['Home', 'Surahs', 'Quran', 'Prayer', 'More'];
+  static const _navIcons = [
+    Icons.home_outlined,
+    Icons.format_list_bulleted_outlined,
+    Icons.menu_book_outlined,
+    Icons.access_time_outlined,
+    Icons.grid_view_outlined,
+  ];
+  static const _navIconsSelected = [
+    Icons.home,
+    Icons.format_list_bulleted,
+    Icons.menu_book,
+    Icons.access_time_filled,
+    Icons.grid_view,
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -230,91 +250,76 @@ class _HomeNavigationScreenState extends State<HomeNavigationScreen> {
         // full screen. System back returns to Home.
         bottomNavigationBar: _currentIndex == 1
             ? null
-            : NavigationBarTheme(
-                data: NavigationBarThemeData(
-                  backgroundColor: cs.surface,
-                  // Gold selection pill — the premium accent for the
-                  // active destination.
-                  indicatorColor: cs.primary.withValues(alpha: 0.22),
-                  labelTextStyle:
-                      WidgetStateProperty.resolveWith<TextStyle>((states) {
-                    // Urdu destination labels use the bundled Noto Nastaliq
-                    // Urdu font; the tall line height keeps glyphs from
-                    // clipping inside the bar.
-                    const urduLabel = TextStyle(
-                      fontFamily: 'Noto Nastaliq Urdu',
-                      fontSize: 12,
-                      height: 2.0,
-                    );
-                    if (states.contains(WidgetState.selected)) {
-                      return urduLabel.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold);
-                    }
-                    return urduLabel.copyWith(
-                        color: cs.onSurface.withValues(alpha: 0.6));
-                  }),
-                  iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
-                      (states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return IconThemeData(
-                          color: cs.primary, size: Nur.iconSize);
-                    }
-                    return IconThemeData(
-                        color: cs.onSurface.withValues(alpha: 0.6),
-                        size: Nur.iconSizeSm);
-                  }),
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    border: Border(
-                      top: BorderSide(
-                        color: cs.primary.withValues(alpha: 0.22),
-                        width: 1,
+            : SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.16),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: List.generate(5, (pos) {
+                          final tabIndex = _navTabIndex[pos];
+                          final selected = tabIndex == _currentIndex;
+                          return Expanded(
+                            child: InkWell(
+                              onTap: () => _selectTab(tabIndex),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? cs.primary
+                                          : Colors.transparent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      selected
+                                          ? _navIconsSelected[pos]
+                                          : _navIcons[pos],
+                                      color: selected
+                                          ? cs.onPrimary
+                                          : cs.onSurface
+                                              .withValues(alpha: 0.55),
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _navLabels[pos],
+                                    style: TextStyle(
+                                      color: selected
+                                          ? cs.primary
+                                          : cs.onSurface
+                                              .withValues(alpha: 0.55),
+                                      fontSize: 11,
+                                      fontWeight: selected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
                       ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: NavigationBar(
-                  elevation: Nur.elevationCard,
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: (idx) {
-                    _selectTab(idx);
-                  },
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home),
-                      label: 'ہوم',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.menu_book_outlined),
-                      selectedIcon: Icon(Icons.menu_book),
-                      label: 'مصحف',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.format_list_bulleted_outlined),
-                      selectedIcon: Icon(Icons.format_list_bulleted),
-                      label: 'سورتیں',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.access_time_outlined),
-                      selectedIcon: Icon(Icons.access_time_filled),
-                      label: 'نماز و اذان',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.grid_view_outlined),
-                      selectedIcon: Icon(Icons.grid_view),
-                      label: 'مزید',
-                    ),
-                  ],
                   ),
                 ),
               ),

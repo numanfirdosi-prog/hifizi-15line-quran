@@ -32,144 +32,6 @@ import 'settings_screen.dart';
 import 'tafsir_ayah_detail_screen.dart';
 import 'tafsir_home_screen.dart';
 
-/// Islamic Skyline / Mosque Silhouette header painter.
-/// Paints graceful minarets, domes, crescent moon and palm trees
-/// that harmoniously fade into the background theme color.
-class _IslamicSkylinePainter extends CustomPainter {
-  final Color tint;
-  final bool isDark;
-
-  _IslamicSkylinePainter({required this.tint, required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final paint = Paint()
-      ..color = tint.withValues(alpha: isDark ? 0.22 : 0.12)
-      ..style = PaintingStyle.fill;
-
-    // Draw main central dome
-    final centerDome = Path();
-    final domeCenterX = w * 0.52;
-    final domeRadius = w * 0.16;
-    final domeBaseY = h * 0.70;
-    centerDome.moveTo(domeCenterX - domeRadius, domeBaseY);
-    centerDome.cubicTo(
-      domeCenterX - domeRadius,
-      domeBaseY - domeRadius * 1.3,
-      domeCenterX,
-      domeBaseY - domeRadius * 1.6,
-      domeCenterX,
-      domeBaseY - domeRadius * 1.7,
-    );
-    centerDome.cubicTo(
-      domeCenterX,
-      domeBaseY - domeRadius * 1.6,
-      domeCenterX + domeRadius,
-      domeBaseY - domeRadius * 1.3,
-      domeCenterX + domeRadius,
-      domeBaseY,
-    );
-    centerDome.close();
-    canvas.drawPath(centerDome, paint);
-
-    // Left smaller dome
-    final leftDome = Path();
-    final lCenterX = w * 0.28;
-    final lRadius = w * 0.11;
-    leftDome.moveTo(lCenterX - lRadius, domeBaseY);
-    leftDome.cubicTo(
-      lCenterX - lRadius,
-      domeBaseY - lRadius * 1.2,
-      lCenterX,
-      domeBaseY - lRadius * 1.5,
-      lCenterX,
-      domeBaseY - lRadius * 1.6,
-    );
-    leftDome.cubicTo(
-      lCenterX,
-      domeBaseY - lRadius * 1.5,
-      lCenterX + lRadius,
-      domeBaseY - lRadius * 1.2,
-      lCenterX + lRadius,
-      domeBaseY,
-    );
-    leftDome.close();
-    canvas.drawPath(leftDome, paint);
-
-    // Right smaller dome
-    final rightDome = Path();
-    final rCenterX = w * 0.76;
-    final rRadius = w * 0.11;
-    rightDome.moveTo(rCenterX - rRadius, domeBaseY);
-    rightDome.cubicTo(
-      rCenterX - rRadius,
-      domeBaseY - rRadius * 1.2,
-      rCenterX,
-      domeBaseY - rRadius * 1.5,
-      rCenterX,
-      domeBaseY - rRadius * 1.6,
-    );
-    rightDome.cubicTo(
-      rCenterX,
-      domeBaseY - rRadius * 1.5,
-      rCenterX + rRadius,
-      domeBaseY - rRadius * 1.2,
-      rCenterX + rRadius,
-      domeBaseY,
-    );
-    rightDome.close();
-    canvas.drawPath(rightDome, paint);
-
-    // Left minaret
-    final minaretWidth = w * 0.04;
-    final minaretPaint = Paint()
-      ..color = tint.withValues(alpha: isDark ? 0.28 : 0.15)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * 0.14, h * 0.18, minaretWidth, h * 0.55),
-        const Radius.circular(2),
-      ),
-      minaretPaint,
-    );
-    // Left minaret top cone
-    final leftCone = Path()
-      ..moveTo(w * 0.13, h * 0.18)
-      ..lineTo(w * 0.14 + minaretWidth / 2, h * 0.10)
-      ..lineTo(w * 0.15 + minaretWidth, h * 0.18)
-      ..close();
-    canvas.drawPath(leftCone, minaretPaint);
-
-    // Far right minaret
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * 0.88, h * 0.22, minaretWidth, h * 0.50),
-        const Radius.circular(2),
-      ),
-      minaretPaint,
-    );
-    final rightCone = Path()
-      ..moveTo(w * 0.87, h * 0.22)
-      ..lineTo(w * 0.88 + minaretWidth / 2, h * 0.14)
-      ..lineTo(w * 0.89 + minaretWidth, h * 0.22)
-      ..close();
-    canvas.drawPath(rightCone, minaretPaint);
-
-    // Crescent on main dome
-    final crescentPaint = Paint()
-      ..color = (isDark ? const Color(0xFFE5B842) : tint).withValues(alpha: isDark ? 0.7 : 0.35)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(domeCenterX, domeBaseY - domeRadius * 1.76), 4, crescentPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 /// Home screen for Hafizi Quran & Tafsir matching Image 3 across all 3 themes.
 class DashboardScreen extends StatelessWidget {
   final void Function(int page) onOpenPage;
@@ -193,6 +55,17 @@ class DashboardScreen extends StatelessWidget {
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
     if (diff.inDays < 30) return '${diff.inDays} days ago';
     return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  /// "Jul 1" style date chip for the Last Read card (mockup).
+  static String _dateChip(String iso) {
+    final dt = DateTime.tryParse(iso);
+    if (dt == null) return '';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${months[dt.month - 1]} ${dt.day}';
   }
 
   Widget _card(BuildContext context,
@@ -319,6 +192,10 @@ class DashboardScreen extends StatelessWidget {
   // ------------------------------------------------------------------
   // Header Banner: Islamic Silhouette + Greeting + Single Search Bar
   // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Header Banner: greeting + dates + search, sitting directly on the
+  // photographic scenic background painted by build().
+  // ------------------------------------------------------------------
   Widget _topHeaderBanner(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -329,208 +206,171 @@ class DashboardScreen extends StatelessWidget {
     final greg = _gregorianDateString(now);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Background gradient based on theme
-    final gradientColors = isDark
-        ? [const Color(0xFF070D18), const Color(0xFF0F1B2E)]
-        : (prefs.themeName == 'light_blue'
-            ? [const Color(0xFFDCEEFA), const Color(0xFFF0F6FB)]
-            : [const Color(0xFFDFEDE4), const Color(0xFFF4F8F5)]);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: gradientColors,
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Islamic Skyline Decorative Background
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 170,
-            child: CustomPaint(
-              painter: _IslamicSkylinePainter(
-                tint: cs.primary,
-                isDark: isDark,
-              ),
+    // Frosted circular button: stays legible over the photographic
+    // background (bright sky in light themes, night sky in Royal Navy).
+    Widget topButton({
+      required IconData icon,
+      required VoidCallback onTap,
+      required String tooltip,
+    }) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: (isDark ? Colors.black : Colors.white)
+              .withValues(alpha: isDark ? 0.30 : 0.55),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top action bar: Menu (left), Bell & Bookmark (right)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: (isDark ? Colors.white : Colors.black)
-                              .withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: Icon(Icons.menu_rounded,
-                              color: isDark ? Colors.white : cs.onSurface,
-                              size: 22),
-                          onPressed: () => onSelectTab(4),
-                          tooltip: 'Menu',
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: (isDark ? Colors.white : Colors.black)
-                                  .withValues(alpha: 0.08),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.notifications_none_rounded,
-                                  color: isDark ? Colors.white : cs.onSurface,
-                                  size: 22),
-                              onPressed: () => onSelectTab(3),
-                              tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: (isDark ? Colors.white : Colors.black)
-                                  .withValues(alpha: 0.08),
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.bookmark_outline_rounded,
-                                  color: isDark ? Colors.white : cs.onSurface,
-                                  size: 22),
-                              onPressed: () => _pushJumpable(
-                                  context,
-                                  (open) =>
-                                      BookmarksScreen(onOpenPage: open)),
-                              tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Greeting
-                  Text(
-                    ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : cs.onSurface,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.3,
+          ],
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: Icon(icon,
+              color: isDark ? Colors.white : cs.onSurface, size: 22),
+          onPressed: onTap,
+          tooltip: tooltip,
+        ),
+      );
+    }
+
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top action bar: Menu (left), Bell & Bookmark (right)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                topButton(
+                  icon: Icons.menu_rounded,
+                  onTap: () => onSelectTab(4),
+                  tooltip: 'Menu',
+                ),
+                Row(
+                  children: [
+                    topButton(
+                      icon: Icons.notifications_none_rounded,
+                      onTap: () => onSelectTab(3),
+                      tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Hijri & Gregorian Dates
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today_outlined,
-                          size: 13,
-                          color: (isDark ? Colors.white : cs.onSurface)
-                              .withValues(alpha: 0.7)),
-                      const SizedBox(width: 5),
-                      Text(
-                        hijri,
-                        style: TextStyle(
-                          color: (isDark ? Colors.white : cs.onSurface)
-                              .withValues(alpha: 0.75),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 18),
-                    child: Text(
-                      greg,
-                      style: TextStyle(
-                        color: (isDark ? Colors.white : cs.onSurface)
-                            .withValues(alpha: 0.55),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  // Single Top Search Bar (Only here!)
-                  Material(
-                    color: isDark ? const Color(0xFF142238) : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    elevation: isDark ? 0 : 2,
-                    shadowColor: Colors.black.withValues(alpha: 0.06),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
+                    const SizedBox(width: 8),
+                    topButton(
+                      icon: Icons.bookmark_outline_rounded,
                       onTap: () => _pushJumpable(
                           context,
                           (open) =>
-                              SearchQuranScreen(onOpenPage: open)),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: cs.primary.withValues(alpha: 0.18),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.search_rounded,
-                                color: cs.primary, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                ur
-                                    ? 'تلاش: قرآن، سورت، آیت، تفسیر...'
-                                    : 'Search Quran, Surah, Ayah, Tafsir, Hadith...',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: (isDark ? Colors.white : cs.onSurface)
-                                      .withValues(alpha: 0.50),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                            Icon(Icons.tune_rounded,
-                                color: cs.primary.withValues(alpha: 0.75),
-                                size: 18),
-                          ],
-                        ),
-                      ),
+                              BookmarksScreen(onOpenPage: open)),
+                      tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Greeting
+            Text(
+              ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
+              style: TextStyle(
+                color: isDark ? Colors.white : cs.onSurface,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.3,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            // Hijri & Gregorian Dates
+            Row(
+              children: [
+                Icon(Icons.calendar_today_outlined,
+                    size: 13,
+                    color: (isDark ? Colors.white : cs.onSurface)
+                        .withValues(alpha: 0.7)),
+                const SizedBox(width: 5),
+                Text(
+                  hijri,
+                  style: TextStyle(
+                    color: (isDark ? Colors.white : cs.onSurface)
+                        .withValues(alpha: 0.75),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(left: 18),
+              child: Text(
+                greg,
+                style: TextStyle(
+                  color: (isDark ? Colors.white : cs.onSurface)
+                      .withValues(alpha: 0.55),
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Single Top Search Bar (Only here!)
+            Material(
+              color: isDark ? const Color(0xFF142238) : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              elevation: isDark ? 0 : 2,
+              shadowColor: Colors.black.withValues(alpha: 0.06),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () => _pushJumpable(
+                    context,
+                    (open) =>
+                        SearchQuranScreen(onOpenPage: open)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: cs.primary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded,
+                          color: cs.primary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          ur
+                              ? 'تلاش: قرآن، سورت، آیت، تفسیر...'
+                              : 'Search Quran, Surah, Ayah, Tafsir, Hadith...',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: (isDark ? Colors.white : cs.onSurface)
+                                .withValues(alpha: 0.50),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.tune_rounded,
+                          color: cs.primary.withValues(alpha: 0.75),
+                          size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   // ------------------------------------------------------------------
   // Location & Prayer Times Widget
@@ -569,7 +409,7 @@ class DashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
           boxShadow: [
             BoxShadow(
@@ -601,27 +441,28 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 InkWell(
                   onTap: () => onSelectTab(3),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    child: Row(
-                      children: [
-                        Text(
-                          ur ? 'اگلی نماز >' : 'Next Prayer >',
-                          style: TextStyle(
-                            color: cs.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      ur ? 'اگلی نماز >' : 'Next Prayer >',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            // 5 horizontal prayer time mini-cards
+            // 5 prayer tiles: circular icon chip + name + time.
+            // The next-prayer tile gets a soft theme-tinted background.
             Row(
               children: prayers.map((p) {
                 final isCurrent = p['name'] == nextPrayer.nameEn;
@@ -631,35 +472,34 @@ class DashboardScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                     decoration: BoxDecoration(
                       color: isCurrent
-                          ? cs.primary
-                          : (isDark ? const Color(0xFF18263E) : cs.primary.withValues(alpha: 0.08)),
+                          ? cs.primary.withValues(alpha: 0.12)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
-                      boxShadow: isCurrent
-                          ? [
-                              BoxShadow(
-                                color: cs.primary.withValues(alpha: 0.35),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              )
-                            ]
+                      border: isCurrent
+                          ? Border.all(
+                              color: cs.primary.withValues(alpha: 0.25))
                           : null,
                     ),
                     child: Column(
                       children: [
-                        Icon(
-                          p['icon'] as IconData,
-                          size: 15,
-                          color: isCurrent
-                              ? cs.onPrimary
-                              : cs.primary.withValues(alpha: 0.85),
+                        Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            p['icon'] as IconData,
+                            size: 16,
+                            color: cs.primary,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           ur ? (p['ur'] as String) : (p['name'] as String),
                           style: TextStyle(
-                            color: isCurrent
-                                ? cs.onPrimary
-                                : cs.onSurface.withValues(alpha: 0.85),
+                            color: cs.onSurface.withValues(alpha: 0.85),
                             fontSize: 11,
                             fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
                           ),
@@ -668,9 +508,7 @@ class DashboardScreen extends StatelessWidget {
                         Text(
                           p['time'] as String,
                           style: TextStyle(
-                            color: isCurrent
-                                ? cs.onPrimary.withValues(alpha: 0.95)
-                                : cs.onSurface.withValues(alpha: 0.65),
+                            color: cs.onSurface.withValues(alpha: 0.65),
                             fontSize: 10,
                             fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                           ),
@@ -703,7 +541,7 @@ class DashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cs.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
           ),
           child: Column(
@@ -757,7 +595,7 @@ class DashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
           boxShadow: [
             BoxShadow(
@@ -789,7 +627,7 @@ class DashboardScreen extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
-                      'assets/icons/icon-512.png',
+                      'assets/images/quran_cover.jpg',
                       width: 72,
                       height: 92,
                       fit: BoxFit.cover,
@@ -813,11 +651,19 @@ class DashboardScreen extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          Text(
-                            rel,
-                            style: TextStyle(
-                              color: cs.onSurface.withValues(alpha: 0.45),
-                              fontSize: 11,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: cs.primary.withValues(alpha: 0.10),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _dateChip(prefs.lastReadAt),
+                              style: TextStyle(
+                                color: cs.onSurface.withValues(alpha: 0.60),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -869,7 +715,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Page $page • Juz $juz',
+                        'Page $page • Juz $juz • $rel',
                         style: TextStyle(
                           color: cs.onSurface.withValues(alpha: 0.60),
                           fontSize: 12,
@@ -921,29 +767,39 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      InkWell(
-                        onTap: () {
-                          showAyahPlayer(
-                            context,
-                            surah: prefs.lastReadSurah,
-                            ayah: prefs.lastReadAyah,
-                          );
-                        },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.headphones_rounded,
-                                size: 13, color: cs.primary),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Listen from Ayah ${prefs.lastReadAyah}',
-                              style: TextStyle(
-                                color: cs.primary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            showAyahPlayer(
+                              context,
+                              surah: prefs.lastReadSurah,
+                              ayah: prefs.lastReadAyah,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.headphones_rounded,
+                                    size: 13, color: cs.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Listen from Ayah ${prefs.lastReadAyah}',
+                                  style: TextStyle(
+                                    color: cs.primary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
@@ -977,7 +833,7 @@ class DashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
           boxShadow: [
             BoxShadow(
@@ -1035,7 +891,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Target: $target pages / day  |  Est. $daysLeft days left',
+              'Target: $target pages / day  •  Est. $daysLeft days left',
               style: TextStyle(
                 color: cs.onSurface.withValues(alpha: 0.55),
                 fontSize: 11,
@@ -1064,7 +920,7 @@ class DashboardScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: cs.primary.withValues(alpha: 0.20)),
           boxShadow: [
             BoxShadow(
@@ -1106,10 +962,10 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            // Arabic Text
+            // Arabic Text (right-aligned, like the mockup)
             Text(
               normalizeArabicDisplay(a.ar),
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 fontFamily: arabicFontFamily(prefs.scriptStyle),
@@ -1119,10 +975,10 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            // Translation
+            // Translation (left-aligned, like the mockup)
             Text(
               '"${a.en}"',
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.left,
               style: TextStyle(
                 color: cs.onSurface.withValues(alpha: 0.85),
                 fontSize: 13,
@@ -1308,33 +1164,20 @@ class DashboardScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 3),
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: cs.primary.withValues(alpha: 0.16)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 38,
-                          height: 38,
+                          width: 52,
+                          height: 52,
                           decoration: BoxDecoration(
                             color: cs.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
+                            shape: BoxShape.circle,
                           ),
                           child: Icon(
                             btn['icon'] as IconData,
-                            size: 19,
+                            size: 22,
                             color: cs.primary,
                           ),
                         ),
@@ -1346,7 +1189,7 @@ class DashboardScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1504,21 +1347,61 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final prefs = Provider.of<PreferencesService>(context);
+    // Photographic scenic background per theme (bundled, offline).
+    final bgAsset = prefs.themeName == 'light_blue'
+        ? 'assets/images/home_bg_blue.jpg'
+        : prefs.themeName == 'royal_navy'
+            ? 'assets/images/home_bg_navy.jpg'
+            : 'assets/images/home_bg_green.jpg';
+    final scaffoldBg = theme.scaffoldBackgroundColor;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: ListView(
-        padding: EdgeInsets.zero,
+      backgroundColor: Colors.transparent,
+      body: Stack(
         children: [
-          _topHeaderBanner(context),
-          const SizedBox(height: 4),
-          _prayerTimesCard(context),
-          _lastReadCard(context),
-          _readingProgressCard(context),
-          _ayahOfDayCard(context),
-          _quickAccessSection(context),
-          _mushafInfoCard(context),
-          _savedAyahsSection(context),
-          const SizedBox(height: 24),
+          // Full-screen scenic mosque + palm background.
+          Positioned.fill(
+            child: Image.asset(
+              bgAsset,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
+          ),
+          // Fade into the solid scaffold background so the lower cards
+          // stay readable, like the mockup's fading scenic backdrop.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    scaffoldBg.withValues(alpha: 0.0),
+                    scaffoldBg.withValues(alpha: 0.0),
+                    scaffoldBg.withValues(alpha: 0.85),
+                    scaffoldBg,
+                  ],
+                  stops: const [0.0, 0.35, 0.62, 0.8],
+                ),
+              ),
+            ),
+          ),
+          ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _topHeaderBanner(context),
+              const SizedBox(height: 4),
+              _prayerTimesCard(context),
+              _lastReadCard(context),
+              _readingProgressCard(context),
+              _ayahOfDayCard(context),
+              _quickAccessSection(context),
+              _mushafInfoCard(context),
+              _savedAyahsSection(context),
+              const SizedBox(height: 24),
+            ],
+          ),
         ],
       ),
     );

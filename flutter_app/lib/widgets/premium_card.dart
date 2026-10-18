@@ -42,6 +42,13 @@ class NurCard extends StatelessWidget {
         color: cs.surface,
         borderRadius: BorderRadius.circular(Nur.cardRadius),
         border: Border.all(color: borderColor, width: goldAccent ? 1.25 : 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: child,
     );
