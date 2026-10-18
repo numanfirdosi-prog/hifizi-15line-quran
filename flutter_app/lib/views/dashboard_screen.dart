@@ -1078,41 +1078,299 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // ------------------------------------------------------------------
-  // Quick Access Section (Matching Image 3: 5 horizontal icon buttons)
+  // Surah quick-jump card (type a surah name -> opens its first page)
+  // ------------------------------------------------------------------
+  Widget _surahPickerCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final ur = prefs.isUrdu;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: cs.primary.withValues(alpha: 0.18)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.menu_book_outlined,
+                      color: cs.primary, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ur ? '۱۱۴ سورتیں' : '114 Surahs',
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        ur ? 'کسی بھی سورت پر جائیں' : 'Jump directly to any surah',
+                        style: TextStyle(
+                          color: cs.onSurface.withValues(alpha: 0.65),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                InkWell(
+                  onTap: () => onSelectTab(2),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      ur ? 'تمام دیکھیں >' : 'Browse All >',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Autocomplete<Surah>(
+              displayStringForOption: (s) => s.nameEn,
+              optionsBuilder: (textEditingValue) {
+                final q = textEditingValue.text.trim().toLowerCase();
+                if (q.isEmpty) return const Iterable<Surah>.empty();
+                return allSurahs.where((s) =>
+                    s.nameEn.toLowerCase().contains(q) ||
+                    s.nameAr.contains(textEditingValue.text.trim()) ||
+                    s.number.toString() == q);
+              },
+              onSelected: (surah) => onOpenPage(surah.startPage),
+              fieldViewBuilder:
+                  (context, controller, focusNode, onFieldSubmitted) {
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  decoration: InputDecoration(
+                    hintText: ur
+                        ? 'سورت کا نام یا نمبر لکھیں... مثلاً یٰس، الفاتحة'
+                        : 'Type surah name or number… e.g. Ya-Sin, 36',
+                    hintStyle: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.5), fontSize: 13),
+                    prefixIcon: Icon(Icons.search, color: cs.primary, size: 20),
+                    filled: true,
+                    fillColor: cs.onSurface.withValues(alpha: 0.05),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: cs.primary.withValues(alpha: 0.15)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: cs.primary.withValues(alpha: 0.15)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: cs.primary, width: 1.5),
+                    ),
+                  ),
+                  style: TextStyle(color: cs.onSurface, fontSize: 14),
+                );
+              },
+              optionsViewBuilder: (context, onSelected, options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    color: cs.surface,
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      width: MediaQuery.of(context).size.width - 64,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 280),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final s = options.elementAt(index);
+                            return ListTile(
+                              dense: true,
+                              leading: Container(
+                                width: 26,
+                                height: 26,
+                                decoration: BoxDecoration(
+                                  color: cs.primary.withValues(alpha: 0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${s.number}',
+                                    style: TextStyle(
+                                      color: cs.primary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Text(s.nameEn,
+                                  style: TextStyle(
+                                      color: cs.onSurface,
+                                      fontWeight: FontWeight.w600)),
+                              subtitle: Text(
+                                '${s.meaning} • Page ${s.startPage}',
+                                style: TextStyle(
+                                    color: cs.onSurface.withValues(alpha: 0.6),
+                                    fontSize: 11),
+                              ),
+                              trailing: Text(
+                                s.nameAr,
+                                style: TextStyle(
+                                    color: cs.primary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              onTap: () => onSelected(s),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Quick Access Section (Complete 15 features in 3-column grid)
   // ------------------------------------------------------------------
   Widget _quickAccessSection(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final ur = prefs.isUrdu;
     final isDark = theme.brightness == Brightness.dark;
 
-    final quickButtons = [
-      {
-        'title': 'All Surahs',
-        'icon': Icons.menu_book_rounded,
-        'action': () => onSelectTab(2),
-      },
-      {
-        'title': 'Juz Index',
-        'icon': Icons.format_list_numbered_rounded,
-        'action': () => _pushJumpable(
+    final items = [
+      _QuickItem(
+        ur ? 'تمام ۱۱۴ سورتیں' : 'All 114 Surahs',
+        Icons.menu_book_rounded,
+        () => onSelectTab(2),
+      ),
+      _QuickItem(
+        ur ? 'پارہ انڈیکس' : 'Juz Index',
+        Icons.format_list_numbered_rounded,
+        () => _pushJumpable(
             context, (open) => JuzIndexScreen(onOpenPage: open)),
-      },
-      {
-        'title': 'Bookmarks',
-        'icon': Icons.bookmark_outline_rounded,
-        'action': () => _pushJumpable(
+      ),
+      _QuickItem(
+        ur ? 'ختم قرآن پلانر' : 'Khatm Planner',
+        Icons.calendar_month_outlined,
+        () => _pushJumpable(
+            context, (open) => KhatmPlannerScreen(onOpenPage: open)),
+      ),
+      _QuickItem(
+        ur ? 'محفوظ آیات' : 'Bookmarks',
+        Icons.bookmark_outline_rounded,
+        () => _pushJumpable(
             context, (open) => BookmarksScreen(onOpenPage: open)),
-      },
-      {
-        'title': 'Tafsir',
-        'icon': Icons.auto_stories_rounded,
-        'action': () => _push(context, const TafsirHomeScreen()),
-      },
-      {
-        'title': 'Audio',
-        'icon': Icons.headphones_rounded,
-        'action': () => _push(context, AudioStudioScreen()),
-      },
+      ),
+      _QuickItem(
+        ur ? 'تلاش قرآن' : 'Search Quran',
+        Icons.search_rounded,
+        () => _pushJumpable(
+            context, (open) => SearchQuranScreen(onOpenPage: open)),
+      ),
+      _QuickItem(
+        ur ? 'تفسیر ابن کثیر' : 'Tafsir',
+        Icons.auto_stories_rounded,
+        () => _push(context, const TafsirHomeScreen()),
+      ),
+      _QuickItem(
+        ur ? 'آڈیو تلاوت' : 'Audio Studio',
+        Icons.headphones_rounded,
+        () => _push(context, AudioStudioScreen()),
+      ),
+      _QuickItem(
+        ur ? 'اوقات و اذان' : 'Prayer Times',
+        Icons.access_time_filled_rounded,
+        () => onSelectTab(3),
+      ),
+      _QuickItem(
+        ur ? 'قبلہ رخ کمپاس' : 'Qiblah Compass',
+        Icons.explore_outlined,
+        () => _push(context, const QiblahScreen()),
+      ),
+      _QuickItem(
+        ur ? 'رمضان و دعائیں' : 'Ramzan & Duas',
+        Icons.nightlight_round,
+        () => _pushJumpable(
+            context, (open) => RamzanDuasScreen(onOpenPage: open)),
+      ),
+      _QuickItem(
+        ur ? 'ترجیحات و سیٹنگز' : 'Settings',
+        Icons.settings_outlined,
+        () => _openSettings(context),
+      ),
+      _QuickItem(
+        ur ? 'سوالات و جوابات' : 'FAQ & Help',
+        Icons.help_outline_rounded,
+        () => _push(context, const FaqScreen()),
+      ),
+      _QuickItem(
+        ur ? 'بیک اپ و بحالی' : 'Backup & Restore',
+        Icons.cloud_outlined,
+        () => _push(context, BackupRestoreScreen()),
+      ),
+      _QuickItem(
+        ur ? 'معلومات و لائسنس' : 'About & Licenses',
+        Icons.info_outline_rounded,
+        () => _push(context, const AboutScreen()),
+      ),
+      _QuickItem(
+        ur ? 'آف لائن ڈاؤن لوڈ' : 'Downloads',
+        Icons.cloud_download_outlined,
+        () => _push(context, OfflineDownloadScreen()),
+      ),
     ];
 
     return Padding(
@@ -1121,84 +1379,79 @@ class DashboardScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.grid_view_rounded,
-                      size: 16, color: cs.primary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Quick Access',
-                    style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              InkWell(
-                onTap: () => onSelectTab(4),
-                borderRadius: BorderRadius.circular(6),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                  child: Text(
-                    'View All >',
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              Icon(Icons.grid_view_rounded,
+                  size: 16, color: cs.primary),
+              const SizedBox(width: 6),
+              Text(
+                ur ? 'فوری رسائی' : 'Quick Access',
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: quickButtons.map((btn) {
-              return Expanded(
-                child: InkWell(
-                  onTap: btn['action'] as void Function(),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: cs.primary.withValues(alpha: 0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            btn['icon'] as IconData,
-                            size: 22,
-                            color: cs.primary,
-                          ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.05,
+            ),
+            itemBuilder: (context, idx) {
+              final item = items[idx];
+              return InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: item.onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(height: 6),
-                        Text(
-                          btn['title'] as String,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Icon(item.icon, color: cs.primary, size: 20),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.title,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               );
-            }).toList(),
+            },
           ),
         ],
       ),
@@ -1396,14 +1649,23 @@ class DashboardScreen extends StatelessWidget {
               _lastReadCard(context),
               _readingProgressCard(context),
               _ayahOfDayCard(context),
+              _surahPickerCard(context),
               _quickAccessSection(context),
               _mushafInfoCard(context),
               _savedAyahsSection(context),
-              const SizedBox(height: 24),
+              const SizedBox(height: 36),
             ],
           ),
         ],
       ),
     );
   }
+}
+
+class _QuickItem {
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _QuickItem(this.title, this.icon, this.onTap);
 }
