@@ -80,19 +80,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.APP_VERSION }}
-          name: "Nur-Al-Quran ${{ env.APP_VERSION }} — Official Release"
+          name: "Hafizi Quran & Tafsir ${{ env.APP_VERSION }} — Official Release"
           body: |
-            Nur-Al-Quran ${{ env.APP_VERSION }}
+            Hafizi Quran & Tafsir ${{ env.APP_VERSION }}
             
             ### 🌟 Features & Highlights:
-            - **100% Authentic Ayah Highlight Alignment for Juz 1 & Juz 2:**
-              All ayah highlight segments verified and aligned against original 15-line Mushaf page images.
-            - **Ayah Highlighter Redesign:**
-              Multiply blend mode keeping Arabic calligraphy pitch-black and razor sharp with soft pastel highlighters.
-            - **Bismillah Cartouche Centering:**
-              Perfect vertical alignment inside illuminated frame.
-            - **Direct Parah & Page Jump:**
-              Jump to any Parah (1-30) and Page within Parah (1-20), or directly jump to any Mushaf page.
+            - **3 Selectable Premium Islamic Themes:**
+              Soft Green (Premium), Light Blue (Modern), and Royal Navy (Modern) with bundled scenic backgrounds and balanced contrast.
+            - **All Home Screen Features Restored:**
+              Surah jump picker with Autocomplete search, full 15-option Quick Access grid, 15-Line Mushaf card, and floating modern navigation.
+            - **Uthmani Madinah Arabic Font Normalization:**
+              Fixed broken/separated ligatures across all Quran pages for seamless, authentic typography.
+            - **Azan Alarm & Hardware Lock Control:**
+              Exact prayer alarm timing, lock screen dismiss, and hardware power-button snooze/stop.
+            - **100% Authentic Ayah Highlight Alignment for Juz 1 & Juz 2.**
           files: |
             release_dist/Nur-Al-Quran.apk
             release_dist/Nur-Al-Quran-${{ env.APP_VERSION }}.apk
