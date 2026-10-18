@@ -39,7 +39,11 @@ class PrayerCalculationService {
 
   /// Effective UTC offset (in hours) for [location] on [date], honouring
   /// daylight-saving rules via the IANA timezone database when available.
-  /// Falls back to the fixed [City.tz] offset (e.g. for GPS cities).
+  /// Falls back to the fixed [City.tz] offset (e.g. for preset cities whose
+  /// IANA lookup failed). For GPS cities (no IANA zone) the device
+  /// timezone's DST-aware offset for [date] is used instead of the stored
+  /// offset, which was captured when GPS was picked and goes stale across
+  /// DST transitions (alarm times off by ~1h until GPS is re-picked).
   static double effectiveTzOffset(City location, DateTime date) {
     final iana = location.ianaTz;
     if (iana != null && iana.isNotEmpty) {
@@ -49,10 +53,21 @@ class PrayerCalculationService {
         final dt = tz.TZDateTime(loc, date.year, date.month, date.day, 12);
         return dt.timeZoneOffset.inMinutes / 60.0;
       } catch (_) {
-        // fall through to fixed offset
+        // IANA lookup failed (tzdata not initialised) — keep the fixed
+        // stored offset, which is correct for no-DST preset cities.
+        return location.tz;
       }
     }
-    return location.tz;
+    // GPS city: the device timezone IS the city's timezone (GPS = device
+    // location), so recompute its DST-aware offset for the given date.
+    try {
+      return DateTime(date.year, date.month, date.day, 12)
+              .timeZoneOffset
+              .inMinutes /
+          60.0;
+    } catch (_) {
+      return location.tz;
+    }
   }
 
   /// "Today" in the city's own timezone — avoids picking the wrong schedule

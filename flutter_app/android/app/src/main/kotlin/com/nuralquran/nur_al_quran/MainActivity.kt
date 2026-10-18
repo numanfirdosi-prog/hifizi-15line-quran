@@ -24,9 +24,29 @@ class MainActivity : FlutterActivity() {
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                // User pressed the phone's lock/power switch button -> stop the azan alarm!
-                stopAzanAlarm()
+                // User pressed the phone's lock/power switch button -> stop
+                // the azan alarm, but ONLY when one is actually ringing.
+                // Without this guard every normal screen-off cancelled the
+                // azan notifications and set the stop flag.
+                if (isAzanActive || isAzanRinging()) {
+                    stopAzanAlarm()
+                }
             }
+        }
+    }
+
+    // True while the background isolate is playing an azan (set by
+    // azanAlarmCallback, cleared when the azan finishes or is stopped).
+    // Covers alarms that fire while this activity was NOT launched from
+    // an alarm intent (e.g. app already in the foreground).
+    private fun isAzanRinging(): Boolean {
+        return try {
+            val prefs = getSharedPreferences(
+                "FlutterSharedPreferences", Context.MODE_PRIVATE
+            )
+            prefs.getBoolean("flutter.nur_azan_ringing", false)
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -70,7 +90,10 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (isAzanActive && event.action == KeyEvent.ACTION_DOWN) {
+        // Volume/power keys stop a ringing alarm (covers alarms that fired
+        // while the app was already in the foreground, where isAzanActive
+        // was never set from a launch intent).
+        if ((isAzanActive || isAzanRinging()) && event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_POWER,
                 KeyEvent.KEYCODE_VOLUME_UP,
@@ -89,6 +112,9 @@ class MainActivity : FlutterActivity() {
             isAzanActive = false
             val prefs = getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             prefs.edit().putBoolean("flutter.nur_azan_stop", true).apply()
+            // Clear the ringing flag so a later normal screen-off is never
+            // mistaken for an alarm stop.
+            prefs.edit().putBoolean("flutter.nur_azan_ringing", false).apply()
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
             for (id in 101..105) {
                 nm.cancel(id)

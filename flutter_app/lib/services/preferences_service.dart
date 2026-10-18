@@ -910,7 +910,7 @@ class PreferencesService extends ChangeNotifier {
     _lastReadAyah = 1;
     _lastReadAt = '';
     _dailyTargetPages = 4;
-    _themeName = 'night';
+    _themeName = 'soft_green';
     _scriptStyle = 'sans';
     _ayahScale = 1.0;
     _readingMode = 'slide';

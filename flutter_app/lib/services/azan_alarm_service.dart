@@ -23,6 +23,13 @@ final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 /// the azan (set by the Stop button / notification Stop action).
 const String stopAzanFlag = 'nur_azan_stop';
 
+/// SharedPreferences flag set while an azan is actually ringing in the
+/// background isolate, cleared when it finishes or is stopped. The native
+/// MainActivity gates its screen-off (power/lock button) handler on this
+/// flag so a power press stops a ringing alarm — but a normal screen-off
+/// never cancels reminders or sets the stop flag.
+const String azanRingingFlag = 'nur_azan_ringing';
+
 /// Action id for the notification's Stop button.
 const String stopAzanActionId = 'stop_azan_action';
 
@@ -87,6 +94,14 @@ void azanAlarmCallback(int id) async {
     await sp?.setBool(stopAzanFlag, false);
   } catch (_) {}
 
+  // Mark the alarm as ringing (audio path only) so the native power/lock
+  // button handler knows an alarm is actually active.
+  if (soundOn) {
+    try {
+      await sp?.setBool(azanRingingFlag, true);
+    } catch (_) {}
+  }
+
   // 1. SHOW THE NOTIFICATION FIRST — so the full-screen alarm UI (lock
   //    screen) / heads-up notification (unlocked) with the STOP button is
   //    visible the moment the alarm fires, not after the azan finishes.
@@ -111,12 +126,13 @@ void azanAlarmCallback(int id) async {
       playSound: false, // audio is handled by the player below
       enableVibration: true,
     ));
+    final body = soundOn
+        ? 'Azan is playing — tap STOP to silence'
+        : 'Prayer time has started';
     await plugin.show(
       id,
       '$prayerName — نماز کا وقت',
-      soundOn
-          ? 'Azan is playing — tap STOP to silence'
-          : 'Prayer time has started',
+      body,
       NotificationDetails(
         android: AndroidNotificationDetails(
           'azan_alarm_channel',
@@ -129,6 +145,13 @@ void azanAlarmCallback(int id) async {
           // Only pop the full-screen alarm UI when audio actually plays;
           // with sound off this is a silent visual reminder.
           fullScreenIntent: soundOn,
+          // Keep the ringing alarm notification on screen (it cannot be
+          // swiped away) so the STOP action stays reachable until the
+          // azan ends or is stopped. Silent reminders stay dismissible.
+          ongoing: soundOn,
+          // Big-text style renders the notification expanded, so the STOP
+          // action is visible without the user having to expand it first.
+          styleInformation: BigTextStyleInformation(body),
           actions: soundOn
               ? const <AndroidNotificationAction>[
                   AndroidNotificationAction(
@@ -210,6 +233,13 @@ void azanAlarmCallback(int id) async {
       await plugin?.cancel(id);
     } catch (_) {}
   }
+
+  // Alarm finished or stopped — clear the ringing flag so a later normal
+  // screen-off is never mistaken for an alarm stop.
+  try {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool(azanRingingFlag, false);
+  } catch (_) {}
 
   // C1: Chain the alarm — schedule this same prayer for tomorrow. oneShotAt
   // fires only once, so without chaining the "daily" alarm silently dies.
@@ -535,12 +565,13 @@ class AzanAlarmService {
       int alarmId, String name, DateTime prayerTime, bool azanSoundEnabled) async {
     try {
       final canExact = await canScheduleExactAlarms();
+      final body = azanSoundEnabled
+          ? 'Azan is playing — tap STOP to silence'
+          : 'Prayer time has started';
       await _notificationsPlugin.zonedSchedule(
         alarmId,
         '$name — نماز کا وقت',
-        azanSoundEnabled
-            ? 'Azan is playing — tap STOP to silence'
-            : 'Prayer time has started',
+        body,
         tz.TZDateTime.from(prayerTime, tz.local),
         NotificationDetails(
           android: AndroidNotificationDetails(
@@ -552,6 +583,13 @@ class AzanAlarmService {
             audioAttributesUsage: AudioAttributesUsage.alarm,
             category: AndroidNotificationCategory.alarm,
             fullScreenIntent: azanSoundEnabled,
+            // Keep the ringing alarm notification on screen (it cannot be
+            // swiped away) so the STOP action stays reachable until the
+            // azan ends or is stopped. Silent reminders stay dismissible.
+            ongoing: azanSoundEnabled,
+            // Big-text style renders the notification expanded, so the STOP
+            // action is visible without the user having to expand it first.
+            styleInformation: BigTextStyleInformation(body),
             actions: azanSoundEnabled
                 ? const <AndroidNotificationAction>[
                     AndroidNotificationAction(
