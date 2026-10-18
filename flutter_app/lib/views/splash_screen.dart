@@ -144,38 +144,56 @@ class _SplashScreenState extends State<SplashScreen>
               children: [
                 FadeTransition(
                   opacity: _anim.drive(
-                    Tween(begin: 0.65, end: 1.0),
+                    Tween(begin: 0.85, end: 1.0),
                   ),
-                  child: const _NurEmblem(size: 112),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: cs.primary.withValues(alpha: 0.25),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/icons/icon-512.png',
+                        width: 112,
+                        height: 112,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: Nur.s24),
                 Text(
-                  'نور القرآن',
+                  'حافِظي',
                   textDirection: TextDirection.rtl,
-                  // Bundled Arabic font (user's chosen script style) so the
-                  // wordmark renders with correct Quranic letterforms.
                   style: arabicStyle(
                     prefs.scriptStyle,
-                    fontSize: 40,
+                    fontSize: 44,
                     color: cs.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: Nur.s8),
                 Text(
-                  'Nur Al-Quran',
+                  'Hafizi Quran & Tafsir',
                   style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.85),
+                    color: cs.onSurface.withValues(alpha: 0.9),
                     fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: Nur.s4),
                 Text(
-                  '15-Line Hifzi Mushaf',
+                  '15-Line Hifzi Mushaf & Tafsir',
                   style: TextStyle(
-                    color: cs.onSurface.withValues(alpha: 0.6),
+                    color: cs.onSurface.withValues(alpha: 0.65),
                     fontSize: 14,
                   ),
                 ),

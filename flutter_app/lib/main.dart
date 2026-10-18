@@ -96,634 +96,73 @@ abstract final class Nur {
       deepGreen.withValues(alpha: alpha);
 }
 
-/// App theme palettes, switchable live from Preferences (themeName:
-/// 'night' | 'emerald' | 'parchment' | 'modern'). Theme changes apply immediately
-/// (Consumer rebuild in [NurAlQuranApp]) and persist via
-/// PreferencesService ('nur_theme_name').
+/// App theme palettes from Image 1:
+/// 1. Soft Green (Premium) — 'soft_green': Calm • Readable • Modern (#0E6848, #F4F8F5, #FFFFFF)
+/// 2. Light Blue (Modern)  — 'light_blue': Fresh • Elegant • Premium (#0284C7, #F0F6FB, #FFFFFF)
+/// 3. Royal Navy (Modern)  — 'royal_navy': Rich • Soft • Eye Friendly (#0B1324, #132035, #D4AF37)
 ThemeData buildTheme(String name) {
   switch (name) {
-    case 'emerald':
-      return _emeraldTheme();
-    case 'parchment':
-      return _parchmentTheme();
-    case 'modern':
-      return _modernTheme();
-    case 'night':
+    case 'light_blue':
+      return _lightBlueTheme();
+    case 'royal_navy':
+      return _royalNavyTheme();
+    case 'soft_green':
     default:
-      return _nightTheme();
+      return _softGreenTheme();
   }
 }
 
 // ---------------------------------------------------------------------------
-// Night Slate — deep green + gold (the signature premium theme).
+// Theme 1: Soft Green (Premium) — Calm • Readable • Modern
 // ---------------------------------------------------------------------------
-ThemeData _nightTheme() {
-  const cs = ColorScheme.dark(
-    primary: Nur.gold,
-    onPrimary: Nur.deepGreen,
-    secondary: Nur.goldDeep,
-    onSecondary: Nur.deepGreen,
-    tertiary: Nur.elevatedGreen,
-    onTertiary: Nur.ink,
-    surface: Nur.cardGreen,
-    onSurface: Nur.ink,
-    surfaceContainerHighest: Nur.elevatedGreen,
-    outline: Color(0xFF2E5B49),
-    outlineVariant: Color(0xFF24493B),
-    error: Nur.errorDark,
-    onError: Nur.deepGreen,
-  );
-  return ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: Nur.deepGreen,
-    colorScheme: cs,
-    hintColor: Nur.muted,
-    dividerColor: const Color(0xFF285344),
-    cardTheme: CardThemeData(
-      color: Nur.cardGreen,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Nur.cardRadius),
-        side: BorderSide(color: Nur.goldBorder(0.18)),
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Nur.deepGreen,
-      foregroundColor: Nur.ink,
-      elevation: 0,
-      centerTitle: false,
-      iconTheme: IconThemeData(color: Nur.gold),
-      titleTextStyle: TextStyle(
-        color: Nur.ink,
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Nur.gold,
-        foregroundColor: Nur.deepGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: Nur.gold,
-        foregroundColor: Nur.deepGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Nur.gold,
-        side: BorderSide(color: Nur.goldBorder(0.55)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: Nur.gold),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Nur.ink.withValues(alpha: 0.06),
-      hintStyle: const TextStyle(color: Nur.muted),
-      prefixIconColor: Nur.gold,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Nur.goldBorder(0.25)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Nur.gold, width: 1.5),
-      ),
-    ),
-    switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected) ? Nur.gold : Nur.sage),
-      trackColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? Nur.gold.withValues(alpha: 0.35)
-              : Nur.elevatedGreen),
-    ),
-    sliderTheme: const SliderThemeData(
-      activeTrackColor: Nur.gold,
-      inactiveTrackColor: Color(0xFF2E5B49),
-      thumbColor: Nur.gold,
-      overlayColor: Color(0x33E7C547),
-    ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: Nur.gold,
-      linearTrackColor: Color(0xFF2E5B49),
-    ),
-    chipTheme: const ChipThemeData(
-      selectedColor: Nur.gold,
-      backgroundColor: Nur.elevatedGreen,
-      labelStyle: TextStyle(color: Nur.ink, fontSize: 12),
-      secondaryLabelStyle: TextStyle(
-          color: Nur.deepGreen, fontSize: 12, fontWeight: FontWeight.bold),
-      side: BorderSide(color: Color(0xFF2E5B49)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-    ),
-    dialogTheme: const DialogThemeData(
-      backgroundColor: Nur.cardGreen,
-      titleTextStyle: TextStyle(
-          color: Nur.ink, fontSize: 18, fontWeight: FontWeight.bold),
-      contentTextStyle: TextStyle(color: Nur.sage, fontSize: 14),
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: Nur.cardGreen,
-      modalBackgroundColor: Nur.cardGreen,
-      elevation: Nur.elevationSheet,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(Nur.radiusSheet)),
-      ),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: Nur.deepGreen,
-      indicatorColor: Nur.gold.withValues(alpha: 0.20),
-      iconTheme: WidgetStateProperty.resolveWith((states) =>
-          IconThemeData(
-              color: states.contains(WidgetState.selected)
-                  ? Nur.gold
-                  : Nur.sage)),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
-          TextStyle(
-              color: states.contains(WidgetState.selected)
-                  ? Nur.gold
-                  : Nur.sage,
-              fontSize: 12,
-              fontWeight: states.contains(WidgetState.selected)
-                  ? FontWeight.bold
-                  : FontWeight.normal)),
-    ),
-    snackBarTheme: const SnackBarThemeData(
-      backgroundColor: Nur.elevatedGreen,
-      contentTextStyle: TextStyle(color: Nur.ink),
-      actionTextColor: Nur.gold,
-    ),
-    listTileTheme: const ListTileThemeData(
-      iconColor: Nur.gold,
-      textColor: Nur.ink,
-    ),
-    textTheme: const TextTheme(
-      // Legible English defaults; Arabic/Urdu use the bundled fonts via
-      // arabicStyle()/urduStyle() in utils/script_font.dart.
-      bodyLarge: TextStyle(color: Nur.ink, height: 1.5),
-      bodyMedium: TextStyle(color: Nur.sage, height: 1.5),
-      bodySmall: TextStyle(color: Nur.muted, height: 1.5),
-      titleLarge: TextStyle(
-          color: Nur.ink, fontWeight: FontWeight.bold, height: 1.3),
-      titleMedium: TextStyle(
-          color: Nur.ink, fontWeight: FontWeight.w600, height: 1.3),
-      titleSmall: TextStyle(
-          color: Nur.gold, fontWeight: FontWeight.bold, height: 1.3),
-      labelLarge: TextStyle(
-          color: Nur.deepGreen, fontWeight: FontWeight.bold),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Emerald Day — light mint sanctuary; actions in deep green, gold accents.
-// ---------------------------------------------------------------------------
-ThemeData _emeraldTheme() {
-  const cs = ColorScheme.light(
-    primary: Nur.deepGreen,
-    onPrimary: Nur.ink,
-    secondary: Nur.goldDeep,
-    onSecondary: Nur.deepGreen,
-    tertiary: Color(0xFFDDE9DE),
-    surface: Color(0xFFFDFEFB),
-    onSurface: Nur.inkDark,
-    surfaceContainerHighest: Color(0xFFE7EFE8),
-    outline: Color(0xFFB9CDBF),
-    outlineVariant: Color(0xFFD4E2D6),
-    error: Nur.errorLight,
-    onError: Nur.ink,
-  );
-  return ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: const Color(0xFFE9F1EB),
-    colorScheme: cs,
-    hintColor: const Color(0xFF6E857A),
-    dividerColor: const Color(0xFFCBDCCF),
-    cardTheme: CardThemeData(
-      color: const Color(0xFFFDFEFB),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Nur.cardRadius),
-        side: BorderSide(color: Nur.greenBorder(0.28)),
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Nur.deepGreen,
-      foregroundColor: Nur.ink,
-      elevation: 0,
-      centerTitle: false,
-      iconTheme: IconThemeData(color: Nur.gold),
-      titleTextStyle: TextStyle(
-        color: Nur.ink,
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Nur.deepGreen,
-        foregroundColor: Nur.ink,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: Nur.deepGreen,
-        foregroundColor: Nur.ink,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Nur.deepGreen,
-        side: BorderSide(color: Nur.greenBorder(0.6)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: Nur.deepGreen),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Nur.deepGreen.withValues(alpha: 0.05),
-      hintStyle: const TextStyle(color: Color(0xFF6E857A)),
-      prefixIconColor: Nur.deepGreen,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Nur.greenBorder(0.35)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Nur.deepGreen, width: 1.5),
-      ),
-    ),
-    switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? Nur.deepGreen
-              : const Color(0xFF9DB3A7)),
-      trackColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? Nur.goldDeep.withValues(alpha: 0.5)
-              : const Color(0xFFD4E2D6)),
-    ),
-    sliderTheme: const SliderThemeData(
-      activeTrackColor: Nur.deepGreen,
-      inactiveTrackColor: Color(0xFFD4E2D6),
-      thumbColor: Nur.deepGreen,
-      overlayColor: Color(0x220B3027),
-    ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: Nur.goldDeep,
-      linearTrackColor: Color(0xFFD4E2D6),
-    ),
-    chipTheme: const ChipThemeData(
-      selectedColor: Nur.deepGreen,
-      backgroundColor: Color(0xFFE7EFE8),
-      labelStyle: TextStyle(color: Nur.inkDark, fontSize: 12),
-      secondaryLabelStyle: TextStyle(
-          color: Nur.ink, fontSize: 12, fontWeight: FontWeight.bold),
-      side: BorderSide(color: Color(0xFFB9CDBF)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-    ),
-    dialogTheme: const DialogThemeData(
-      backgroundColor: Color(0xFFFDFEFB),
-      titleTextStyle: TextStyle(
-          color: Nur.inkDark, fontSize: 18, fontWeight: FontWeight.bold),
-      contentTextStyle: TextStyle(color: Color(0xFF41564C), fontSize: 14),
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: Nur.ivory,
-      modalBackgroundColor: Nur.ivory,
-      elevation: Nur.elevationSheet,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(Nur.radiusSheet)),
-      ),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: const Color(0xFFE9F1EB),
-      indicatorColor: Nur.deepGreen.withValues(alpha: 0.12),
-      iconTheme: WidgetStateProperty.resolveWith((states) =>
-          IconThemeData(
-              color: states.contains(WidgetState.selected)
-                  ? Nur.deepGreen
-                  : const Color(0xFF6E857A))),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
-          TextStyle(
-              color: states.contains(WidgetState.selected)
-                  ? Nur.deepGreen
-                  : const Color(0xFF6E857A),
-              fontSize: 12,
-              fontWeight: states.contains(WidgetState.selected)
-                  ? FontWeight.bold
-                  : FontWeight.normal)),
-    ),
-    snackBarTheme: const SnackBarThemeData(
-      backgroundColor: Nur.deepGreen,
-      contentTextStyle: TextStyle(color: Nur.ink),
-      actionTextColor: Nur.gold,
-    ),
-    listTileTheme: const ListTileThemeData(
-      iconColor: Nur.deepGreen,
-      textColor: Nur.inkDark,
-    ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Nur.inkDark, height: 1.5),
-      bodyMedium: TextStyle(color: Color(0xFF41564C), height: 1.5),
-      bodySmall: TextStyle(color: Color(0xFF6E857A), height: 1.5),
-      titleLarge: TextStyle(
-          color: Nur.inkDark, fontWeight: FontWeight.bold, height: 1.3),
-      titleMedium: TextStyle(
-          color: Nur.inkDark, fontWeight: FontWeight.w600, height: 1.3),
-      titleSmall: TextStyle(
-          color: Nur.deepGreen, fontWeight: FontWeight.bold, height: 1.3),
-      labelLarge: TextStyle(
-          color: Nur.ink, fontWeight: FontWeight.bold),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Antique Parchment — warm sepia manuscript; actions in bronze, gold accents.
-// ---------------------------------------------------------------------------
-ThemeData _parchmentTheme() {
-  const bronze = Color(0xFF7C5A1E);
-  const cs = ColorScheme.light(
-    primary: bronze,
-    onPrimary: Color(0xFFFFF6DC),
-    secondary: Nur.goldDeep,
-    onSecondary: Color(0xFF3A2C12),
-    tertiary: Color(0xFFEFE0B8),
-    surface: Color(0xFFFFF9E8),
-    onSurface: Nur.inkWarm,
-    surfaceContainerHighest: Color(0xFFF3E7C4),
-    outline: Color(0xFFD8C49A),
-    outlineVariant: Color(0xFFE6D5AC),
-    error: Nur.errorLight,
-    onError: Color(0xFFFFF6DC),
-  );
-  return ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    scaffoldBackgroundColor: const Color(0xFFF3E6C3),
-    colorScheme: cs,
-    hintColor: const Color(0xFF8A7350),
-    dividerColor: const Color(0xFFDCC9A2),
-    cardTheme: CardThemeData(
-      color: const Color(0xFFFFF9E8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Nur.cardRadius),
-        side: const BorderSide(color: Color(0xFFD8C49A)),
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: bronze,
-      foregroundColor: Color(0xFFFFF4D9),
-      elevation: 0,
-      centerTitle: false,
-      iconTheme: IconThemeData(color: Nur.gold),
-      titleTextStyle: TextStyle(
-        color: Color(0xFFFFF4D9),
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: bronze,
-        foregroundColor: const Color(0xFFFFF6DC),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: bronze,
-        foregroundColor: const Color(0xFFFFF6DC),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: bronze,
-        side: const BorderSide(color: Color(0xFFB99B5F)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Nur.buttonRadius),
-        ),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: bronze),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: bronze.withValues(alpha: 0.06),
-      hintStyle: const TextStyle(color: Color(0xFF8A7350)),
-      prefixIconColor: bronze,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD8C49A)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: bronze, width: 1.5),
-      ),
-    ),
-    switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? bronze
-              : const Color(0xFFB39B6D)),
-      trackColor: WidgetStateProperty.resolveWith((states) =>
-          states.contains(WidgetState.selected)
-              ? Nur.goldDeep.withValues(alpha: 0.5)
-              : const Color(0xFFE6D5AC)),
-    ),
-    sliderTheme: const SliderThemeData(
-      activeTrackColor: bronze,
-      inactiveTrackColor: Color(0xFFE6D5AC),
-      thumbColor: bronze,
-      overlayColor: Color(0x227C5A1E),
-    ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: Nur.goldDeep,
-      linearTrackColor: Color(0xFFE6D5AC),
-    ),
-    chipTheme: const ChipThemeData(
-      selectedColor: bronze,
-      backgroundColor: Color(0xFFF3E7C4),
-      labelStyle: TextStyle(color: Nur.inkWarm, fontSize: 12),
-      secondaryLabelStyle: TextStyle(
-          color: Color(0xFFFFF6DC),
-          fontSize: 12,
-          fontWeight: FontWeight.bold),
-      side: BorderSide(color: Color(0xFFD8C49A)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-    ),
-    dialogTheme: const DialogThemeData(
-      backgroundColor: Color(0xFFFFF9E8),
-      titleTextStyle: TextStyle(
-          color: Nur.inkWarm, fontSize: 18, fontWeight: FontWeight.bold),
-      contentTextStyle: TextStyle(color: Color(0xFF6B5636), fontSize: 14),
-    ),
-    bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: const Color(0xFFFFF9E8),
-      modalBackgroundColor: const Color(0xFFFFF9E8),
-      elevation: Nur.elevationSheet,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(Nur.radiusSheet)),
-      ),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: const Color(0xFFF3E6C3),
-      indicatorColor: bronze.withValues(alpha: 0.12),
-      iconTheme: WidgetStateProperty.resolveWith((states) =>
-          IconThemeData(
-              color: states.contains(WidgetState.selected)
-                  ? bronze
-                  : const Color(0xFF8A7350))),
-      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
-          TextStyle(
-              color: states.contains(WidgetState.selected)
-                  ? bronze
-                  : const Color(0xFF8A7350),
-              fontSize: 12,
-              fontWeight: states.contains(WidgetState.selected)
-                  ? FontWeight.bold
-                  : FontWeight.normal)),
-    ),
-    snackBarTheme: const SnackBarThemeData(
-      backgroundColor: bronze,
-      contentTextStyle: TextStyle(color: Color(0xFFFFF6DC)),
-      actionTextColor: Nur.gold,
-    ),
-    listTileTheme: const ListTileThemeData(
-      iconColor: bronze,
-      textColor: Nur.inkWarm,
-    ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Nur.inkWarm, height: 1.5),
-      bodyMedium: TextStyle(color: Color(0xFF6B5636), height: 1.5),
-      bodySmall: TextStyle(color: Color(0xFF8A7350), height: 1.5),
-      titleLarge: TextStyle(
-          color: Nur.inkWarm, fontWeight: FontWeight.bold, height: 1.3),
-      titleMedium: TextStyle(
-          color: Nur.inkWarm, fontWeight: FontWeight.w600, height: 1.3),
-      titleSmall: TextStyle(
-          color: bronze, fontWeight: FontWeight.bold, height: 1.3),
-      labelLarge: TextStyle(
-          color: Color(0xFFFFF6DC), fontWeight: FontWeight.bold),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Modern Emerald — signature Deep Emerald Green (#064E3B) & Dark Emerald (#033B2D)
-// with Premium Gold (#D4AF37), Soft Gold (#E8D29A), Warm Ivory (#FFFDF5)
-// and Dark Navy (#101B35).
-// ---------------------------------------------------------------------------
-ThemeData _modernTheme() {
-  const deepEmerald = Color(0xFF064E3B);
-  const darkEmerald = Color(0xFF033B2D);
-  const premiumGold = Color(0xFFD4AF37);
-  const softGold = Color(0xFFE8D29A);
-  const warmIvory = Color(0xFFFFFDF5);
-  const darkNavy = Color(0xFF101B35);
-  const mutedGreen = Color(0xFF52786D);
+ThemeData _softGreenTheme() {
+  const primaryGreen = Color(0xFF0E6848);
+  const secondaryGreen = Color(0xFF10B981);
+  const bg = Color(0xFFF4F8F5);
+  const surface = Color(0xFFFFFFFF);
+  const containerHighest = Color(0xFFE8F3EE);
+  const textDark = Color(0xFF16261E);
+  const textMedium = Color(0xFF3E5147);
+  const textMuted = Color(0xFF607369);
+  const outline = Color(0xFFC7DCD2);
+  const outlineVariant = Color(0xFFE2ECE7);
 
   const cs = ColorScheme.light(
-    primary: deepEmerald,
+    primary: primaryGreen,
     onPrimary: Colors.white,
-    secondary: premiumGold,
-    onSecondary: darkEmerald,
-    tertiary: softGold,
-    surface: warmIvory,
-    onSurface: darkNavy,
-    surfaceContainerHighest: Color(0xFFF0F6F2),
-    outline: Color(0xFFB5D1C6),
-    outlineVariant: Color(0xFFD3E5DC),
-    error: Nur.errorLight,
+    secondary: secondaryGreen,
+    onSecondary: Colors.white,
+    tertiary: primaryGreen,
+    surface: surface,
+    onSurface: textDark,
+    surfaceContainerHighest: containerHighest,
+    outline: outline,
+    outlineVariant: outlineVariant,
+    error: Color(0xFFB3261E),
     onError: Colors.white,
   );
 
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    scaffoldBackgroundColor: const Color(0xFFF5F9F6),
+    scaffoldBackgroundColor: bg,
     colorScheme: cs,
-    hintColor: mutedGreen,
-    dividerColor: const Color(0xFFD8E7DF),
+    hintColor: textMuted,
+    dividerColor: outlineVariant,
     cardTheme: CardThemeData(
-      color: warmIvory,
+      color: surface,
       elevation: 0,
-      shadowColor: deepEmerald.withValues(alpha: 0.08),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Nur.cardRadius),
-        side: BorderSide(color: deepEmerald.withValues(alpha: 0.18)),
+        side: BorderSide(color: primaryGreen.withValues(alpha: 0.16)),
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: deepEmerald,
+      backgroundColor: primaryGreen,
       foregroundColor: Colors.white,
       elevation: 0,
       centerTitle: false,
-      iconTheme: IconThemeData(color: premiumGold),
+      iconTheme: IconThemeData(color: Colors.white),
       titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 18,
@@ -732,7 +171,7 @@ ThemeData _modernTheme() {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: deepEmerald,
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
@@ -743,7 +182,7 @@ ThemeData _modernTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: deepEmerald,
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
@@ -752,74 +191,74 @@ ThemeData _modernTheme() {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: deepEmerald,
-        side: const BorderSide(color: deepEmerald),
+        foregroundColor: primaryGreen,
+        side: const BorderSide(color: primaryGreen),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Nur.buttonRadius),
         ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(foregroundColor: deepEmerald),
+      style: TextButton.styleFrom(foregroundColor: primaryGreen),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
-      hintStyle: const TextStyle(color: mutedGreen),
-      prefixIconColor: deepEmerald,
+      fillColor: surface,
+      hintStyle: const TextStyle(color: textMuted),
+      prefixIconColor: primaryGreen,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: deepEmerald.withValues(alpha: 0.22)),
+        borderSide: BorderSide(color: primaryGreen.withValues(alpha: 0.22)),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: deepEmerald, width: 1.5),
+        borderSide: BorderSide(color: primaryGreen, width: 1.5),
       ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) =>
           states.contains(WidgetState.selected)
-              ? deepEmerald
+              ? primaryGreen
               : const Color(0xFF88A89E)),
       trackColor: WidgetStateProperty.resolveWith((states) =>
           states.contains(WidgetState.selected)
-              ? premiumGold.withValues(alpha: 0.45)
+              ? secondaryGreen.withValues(alpha: 0.45)
               : const Color(0xFFD4E5DC)),
     ),
     sliderTheme: const SliderThemeData(
-      activeTrackColor: deepEmerald,
+      activeTrackColor: primaryGreen,
       inactiveTrackColor: Color(0xFFD4E5DC),
-      thumbColor: deepEmerald,
-      overlayColor: Color(0x22064E3B),
+      thumbColor: primaryGreen,
+      overlayColor: Color(0x220E6848),
     ),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: premiumGold,
+      color: primaryGreen,
       linearTrackColor: Color(0xFFD4E5DC),
     ),
     chipTheme: const ChipThemeData(
-      selectedColor: deepEmerald,
-      backgroundColor: Color(0xFFEDF5F1),
-      labelStyle: TextStyle(color: darkNavy, fontSize: 12),
+      selectedColor: primaryGreen,
+      backgroundColor: containerHighest,
+      labelStyle: TextStyle(color: textDark, fontSize: 12),
       secondaryLabelStyle: TextStyle(
           color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-      side: BorderSide(color: Color(0xFFB5D1C6)),
+      side: BorderSide(color: outline),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
     ),
     dialogTheme: const DialogThemeData(
-      backgroundColor: warmIvory,
+      backgroundColor: surface,
       titleTextStyle: TextStyle(
-          color: darkNavy, fontSize: 18, fontWeight: FontWeight.bold),
-      contentTextStyle: TextStyle(color: mutedGreen, fontSize: 14),
+          color: textDark, fontSize: 18, fontWeight: FontWeight.bold),
+      contentTextStyle: TextStyle(color: textMedium, fontSize: 14),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: warmIvory,
-      modalBackgroundColor: warmIvory,
+      backgroundColor: surface,
+      modalBackgroundColor: surface,
       elevation: Nur.elevationSheet,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -827,44 +266,436 @@ ThemeData _modernTheme() {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: const Color(0xFFF2F7F4),
-      indicatorColor: deepEmerald.withValues(alpha: 0.16),
+      backgroundColor: bg,
+      indicatorColor: primaryGreen.withValues(alpha: 0.16),
       iconTheme: WidgetStateProperty.resolveWith((states) =>
           IconThemeData(
               color: states.contains(WidgetState.selected)
-                  ? deepEmerald
-                  : mutedGreen)),
+                  ? primaryGreen
+                  : textMuted)),
       labelTextStyle: WidgetStateProperty.resolveWith((states) =>
           TextStyle(
               color: states.contains(WidgetState.selected)
-                  ? deepEmerald
-                  : mutedGreen,
+                  ? primaryGreen
+                  : textMuted,
               fontSize: 12,
               fontWeight: states.contains(WidgetState.selected)
                   ? FontWeight.bold
                   : FontWeight.normal)),
     ),
     snackBarTheme: const SnackBarThemeData(
-      backgroundColor: darkEmerald,
+      backgroundColor: primaryGreen,
       contentTextStyle: TextStyle(color: Colors.white),
-      actionTextColor: premiumGold,
+      actionTextColor: secondaryGreen,
     ),
     listTileTheme: const ListTileThemeData(
-      iconColor: deepEmerald,
-      textColor: darkNavy,
+      iconColor: primaryGreen,
+      textColor: textDark,
     ),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: darkNavy, height: 1.5),
-      bodyMedium: TextStyle(color: Color(0xFF26483E), height: 1.5),
-      bodySmall: TextStyle(color: mutedGreen, height: 1.5),
+      bodyLarge: TextStyle(color: textDark, height: 1.5),
+      bodyMedium: TextStyle(color: textMedium, height: 1.5),
+      bodySmall: TextStyle(color: textMuted, height: 1.5),
       titleLarge: TextStyle(
-          color: darkNavy, fontWeight: FontWeight.bold, height: 1.3),
+          color: textDark, fontWeight: FontWeight.bold, height: 1.3),
       titleMedium: TextStyle(
-          color: darkNavy, fontWeight: FontWeight.w600, height: 1.3),
+          color: textDark, fontWeight: FontWeight.w600, height: 1.3),
       titleSmall: TextStyle(
-          color: deepEmerald, fontWeight: FontWeight.bold, height: 1.3),
+          color: primaryGreen, fontWeight: FontWeight.bold, height: 1.3),
       labelLarge: TextStyle(
           color: Colors.white, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Theme 2: Light Blue (Modern) — Fresh • Elegant • Premium
+// ---------------------------------------------------------------------------
+ThemeData _lightBlueTheme() {
+  const primaryBlue = Color(0xFF0284C7);
+  const secondaryBlue = Color(0xFF0EA5E9);
+  const bg = Color(0xFFF0F6FB);
+  const surface = Color(0xFFFFFFFF);
+  const containerHighest = Color(0xFFE0F2FE);
+  const textDark = Color(0xFF0F1D33);
+  const textMedium = Color(0xFF33475B);
+  const textMuted = Color(0xFF5B7288);
+  const outline = Color(0xFFBAD7E9);
+  const outlineVariant = Color(0xFFDFECF5);
+
+  const cs = ColorScheme.light(
+    primary: primaryBlue,
+    onPrimary: Colors.white,
+    secondary: secondaryBlue,
+    onSecondary: Colors.white,
+    tertiary: primaryBlue,
+    surface: surface,
+    onSurface: textDark,
+    surfaceContainerHighest: containerHighest,
+    outline: outline,
+    outlineVariant: outlineVariant,
+    error: Color(0xFFB3261E),
+    onError: Colors.white,
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: bg,
+    colorScheme: cs,
+    hintColor: textMuted,
+    dividerColor: outlineVariant,
+    cardTheme: CardThemeData(
+      color: surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
+        side: BorderSide(color: primaryBlue.withValues(alpha: 0.16)),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: primaryBlue,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryBlue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: primaryBlue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryBlue,
+        side: const BorderSide(color: primaryBlue),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: primaryBlue),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surface,
+      hintStyle: const TextStyle(color: textMuted),
+      prefixIconColor: primaryBlue,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryBlue.withValues(alpha: 0.22)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: primaryBlue, width: 1.5),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? primaryBlue
+              : const Color(0xFF94A3B8)),
+      trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? secondaryBlue.withValues(alpha: 0.45)
+              : const Color(0xFFD6E6F2)),
+    ),
+    sliderTheme: const SliderThemeData(
+      activeTrackColor: primaryBlue,
+      inactiveTrackColor: Color(0xFFD6E6F2),
+      thumbColor: primaryBlue,
+      overlayColor: Color(0x220284C7),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: primaryBlue,
+      linearTrackColor: Color(0xFFD6E6F2),
+    ),
+    chipTheme: const ChipThemeData(
+      selectedColor: primaryBlue,
+      backgroundColor: containerHighest,
+      labelStyle: TextStyle(color: textDark, fontSize: 12),
+      secondaryLabelStyle: TextStyle(
+          color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+      side: BorderSide(color: outline),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: surface,
+      titleTextStyle: TextStyle(
+          color: textDark, fontSize: 18, fontWeight: FontWeight.bold),
+      contentTextStyle: TextStyle(color: textMedium, fontSize: 14),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: surface,
+      modalBackgroundColor: surface,
+      elevation: Nur.elevationSheet,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: bg,
+      indicatorColor: primaryBlue.withValues(alpha: 0.16),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? primaryBlue
+                  : textMuted)),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? primaryBlue
+                  : textMuted,
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: primaryBlue,
+      contentTextStyle: TextStyle(color: Colors.white),
+      actionTextColor: secondaryBlue,
+    ),
+    listTileTheme: const ListTileThemeData(
+      iconColor: primaryBlue,
+      textColor: textDark,
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: textDark, height: 1.5),
+      bodyMedium: TextStyle(color: textMedium, height: 1.5),
+      bodySmall: TextStyle(color: textMuted, height: 1.5),
+      titleLarge: TextStyle(
+          color: textDark, fontWeight: FontWeight.bold, height: 1.3),
+      titleMedium: TextStyle(
+          color: textDark, fontWeight: FontWeight.w600, height: 1.3),
+      titleSmall: TextStyle(
+          color: primaryBlue, fontWeight: FontWeight.bold, height: 1.3),
+      labelLarge: TextStyle(
+          color: Colors.white, fontWeight: FontWeight.bold),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Theme 3: Royal Navy (Modern) — Rich • Soft • Eye Friendly
+// ---------------------------------------------------------------------------
+ThemeData _royalNavyTheme() {
+  const gold = Color(0xFFD4AF37);
+  const skyBlue = Color(0xFF38BDF8);
+  const bg = Color(0xFF0B1324);
+  const surface = Color(0xFF132035);
+  const containerHighest = Color(0xFF1D2C46);
+  const textLight = Color(0xFFF8FAFC);
+  const textMuted = Color(0xFF8295AF);
+  const outline = Color(0xFF2C3E5E);
+  const outlineVariant = Color(0xFF1E2D47);
+
+  const cs = ColorScheme.dark(
+    primary: gold,
+    onPrimary: Color(0xFF0B1324),
+    secondary: skyBlue,
+    onSecondary: Color(0xFF0B1324),
+    tertiary: Color(0xFF2563EB),
+    onTertiary: Colors.white,
+    surface: surface,
+    onSurface: textLight,
+    surfaceContainerHighest: containerHighest,
+    outline: outline,
+    outlineVariant: outlineVariant,
+    error: Color(0xFFE57373),
+    onError: Color(0xFF0B1324),
+  );
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: bg,
+    colorScheme: cs,
+    hintColor: textMuted,
+    dividerColor: outlineVariant,
+    cardTheme: CardThemeData(
+      color: surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Nur.cardRadius),
+        side: BorderSide(color: gold.withValues(alpha: 0.22)),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: surface,
+      foregroundColor: textLight,
+      elevation: 0,
+      centerTitle: false,
+      iconTheme: IconThemeData(color: gold),
+      titleTextStyle: TextStyle(
+        color: textLight,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: gold,
+        foregroundColor: Color(0xFF0B1324),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: gold,
+        foregroundColor: Color(0xFF0B1324),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: gold,
+        side: const BorderSide(color: gold),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Nur.buttonRadius),
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: gold),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surface,
+      hintStyle: const TextStyle(color: textMuted),
+      prefixIconColor: gold,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: gold.withValues(alpha: 0.28)),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: gold, width: 1.5),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? gold
+              : const Color(0xFF8295AF)),
+      trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
+              ? gold.withValues(alpha: 0.35)
+              : containerHighest),
+    ),
+    sliderTheme: const SliderThemeData(
+      activeTrackColor: gold,
+      inactiveTrackColor: outline,
+      thumbColor: gold,
+      overlayColor: Color(0x33D4AF37),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: gold,
+      linearTrackColor: outline,
+    ),
+    chipTheme: const ChipThemeData(
+      selectedColor: gold,
+      backgroundColor: containerHighest,
+      labelStyle: TextStyle(color: textLight, fontSize: 12),
+      secondaryLabelStyle: TextStyle(
+          color: Color(0xFF0B1324), fontSize: 12, fontWeight: FontWeight.bold),
+      side: BorderSide(color: outline),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+      ),
+    ),
+    dialogTheme: const DialogThemeData(
+      backgroundColor: surface,
+      titleTextStyle: TextStyle(
+          color: textLight, fontSize: 18, fontWeight: FontWeight.bold),
+      contentTextStyle: TextStyle(color: Color(0xFFCBD5E1), fontSize: 14),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: surface,
+      modalBackgroundColor: surface,
+      elevation: Nur.elevationSheet,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Nur.radiusSheet)),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: bg,
+      indicatorColor: gold.withValues(alpha: 0.20),
+      iconTheme: WidgetStateProperty.resolveWith((states) =>
+          IconThemeData(
+              color: states.contains(WidgetState.selected)
+                  ? gold
+                  : textMuted)),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) =>
+          TextStyle(
+              color: states.contains(WidgetState.selected)
+                  ? gold
+                  : textMuted,
+              fontSize: 12,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.bold
+                  : FontWeight.normal)),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: containerHighest,
+      contentTextStyle: TextStyle(color: textLight),
+      actionTextColor: gold,
+    ),
+    listTileTheme: const ListTileThemeData(
+      iconColor: gold,
+      textColor: textLight,
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: textLight, height: 1.5),
+      bodyMedium: TextStyle(color: Color(0xFFCBD5E1), height: 1.5),
+      bodySmall: TextStyle(color: textMuted, height: 1.5),
+      titleLarge: TextStyle(
+          color: textLight, fontWeight: FontWeight.bold, height: 1.3),
+      titleMedium: TextStyle(
+          color: textLight, fontWeight: FontWeight.w600, height: 1.3),
+      titleSmall: TextStyle(
+          color: gold, fontWeight: FontWeight.bold, height: 1.3),
+      labelLarge: TextStyle(
+          color: Color(0xFF0B1324), fontWeight: FontWeight.bold),
     ),
   );
 }
@@ -954,7 +785,7 @@ class _NurAlQuranAppState extends State<NurAlQuranApp>
     return Consumer<PreferencesService>(
       builder: (context, prefs, _) {
         return MaterialApp(
-          title: 'نور القرآن (Nur-ul-Quran)',
+          title: 'Hafizi Quran & Tafsir',
           debugShowCheckedModeBanner: false,
           navigatorKey: appNavigatorKey,
           theme: buildTheme(prefs.themeName),

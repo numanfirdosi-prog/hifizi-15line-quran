@@ -12,7 +12,7 @@ import 'package:nur_al_quran/views/home_navigation_screen.dart';
 
 void main() {
   testWidgets(
-      'emerald theme visibly recolors HomeNavigationScreen chrome',
+      'soft_green theme visibly recolors HomeNavigationScreen chrome',
       (tester) async {
     // Azan alarm scheduling in initState touches the notifications plugin;
     // mock its channel so the widget can build in tests.
@@ -22,10 +22,10 @@ void main() {
       (MethodCall call) async => true,
     );
 
-    SharedPreferences.setMockInitialValues({'nur_theme_name': 'emerald'});
+    SharedPreferences.setMockInitialValues({'nur_theme_name': 'soft_green'});
     final prefs = PreferencesService();
     await prefs.init();
-    expect(prefs.themeName, 'emerald');
+    expect(prefs.themeName, 'soft_green');
 
     await tester.pumpWidget(
       MultiProvider(
@@ -46,18 +46,26 @@ void main() {
     );
     await tester.pump();
 
-    // The Scaffold background must follow the emerald theme, not the old
-    // hardcoded night color. (Scaffold.backgroundColor is null because it
-    // inherits the theme's scaffoldBackgroundColor — assert the effective.)
     final scaffoldCtx = tester.element(find.byType(Scaffold).first);
     expect(Theme.of(scaffoldCtx).scaffoldBackgroundColor,
-        const Color(0xFFE9F1EB));
+        const Color(0xFFF4F8F5));
 
-    // The bottom NavigationBar must also be theme-aware (emerald surface).
     final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
     final navTheme =
         tester.widget<NavigationBarTheme>(find.byType(NavigationBarTheme));
-    expect(navTheme.data.backgroundColor, buildTheme('emerald').colorScheme.surface);
+    expect(navTheme.data.backgroundColor, const Color(0xFFF4F8F5));
     expect(navBar.selectedIndex, 0);
+  });
+
+  test('all 3 new themes build without error', () {
+    final green = buildTheme('soft_green');
+    expect(green.colorScheme.primary, const Color(0xFF0E6848));
+
+    final blue = buildTheme('light_blue');
+    expect(blue.colorScheme.primary, const Color(0xFF0284C7));
+
+    final navy = buildTheme('royal_navy');
+    expect(navy.colorScheme.primary, const Color(0xFFD4AF37));
+    expect(navy.brightness, Brightness.dark);
   });
 }

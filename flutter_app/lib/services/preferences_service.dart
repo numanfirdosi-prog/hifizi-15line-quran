@@ -25,7 +25,7 @@ class PreferencesService extends ChangeNotifier {
   int _lastReadAyah = 1;
   String _lastReadAt = '';
   int _dailyTargetPages = 4;
-  String _themeName = 'night'; // night | emerald | parchment
+  String _themeName = 'soft_green'; // soft_green | light_blue | royal_navy
   String _scriptStyle = 'sans'; // sans | uthmani
   String _language = 'ur'; // 'ur' | 'en' — UI language toggle (Settings)
   String _voiceLanguage = 'auto'; // 'auto' | 'ur' | 'ar' | 'en' | 'hi'
@@ -87,6 +87,23 @@ class PreferencesService extends ChangeNotifier {
   String get lastAutoBackup => _lastAutoBackup;
   List<int> get khatmDays => _khatmDays;
 
+  /// Migrates legacy theme names (night/emerald/parchment/modern) to the 3 new themes.
+  static String _migrateThemeName(String theme) {
+    switch (theme) {
+      case 'royal_navy':
+      case 'light_blue':
+      case 'soft_green':
+        return theme;
+      case 'night':
+        return 'royal_navy';
+      case 'emerald':
+      case 'parchment':
+      case 'modern':
+      default:
+        return 'soft_green';
+    }
+  }
+
   /// The retired 'nastaliq' (Gulzar) script style migrates to Noto Sans
   /// Arabic ('sans'). Applied both at startup and on backup import so old
   /// stored values and old backups can never bypass the migration.
@@ -111,7 +128,11 @@ class PreferencesService extends ChangeNotifier {
     _lastReadAyah = _prefs.getInt('nur_last_read_ayah') ?? 1;
     _lastReadAt = _prefs.getString('nur_last_read_at') ?? '';
     _dailyTargetPages = _prefs.getInt('nur_daily_target_pages') ?? 4;
-    _themeName = _prefs.getString('nur_theme_name') ?? 'night';
+    final rawTheme = _prefs.getString('nur_theme_name') ?? 'soft_green';
+    _themeName = _migrateThemeName(rawTheme);
+    if (_themeName != rawTheme) {
+      await _prefs.setString('nur_theme_name', _themeName);
+    }
     _language = _prefs.getString('nur_language') ?? 'ur';
     _voiceLanguage = _prefs.getString('nur_voice_language') ?? 'auto';
     _scriptStyle = _prefs.getString('nur_script_style') ?? 'uthmani';
@@ -286,8 +307,8 @@ class PreferencesService extends ChangeNotifier {
   }
 
   Future<void> setThemeName(String name) async {
-    _themeName = name;
-    await _prefs.setString('nur_theme_name', name);
+    _themeName = _migrateThemeName(name);
+    await _prefs.setString('nur_theme_name', _themeName);
     notifyListeners();
   }
 
@@ -755,7 +776,7 @@ class PreferencesService extends ChangeNotifier {
     }
 
     if (data.themeName != null) {
-      _themeName = data.themeName!;
+      _themeName = _migrateThemeName(data.themeName!);
       await _prefs.setString('nur_theme_name', _themeName);
     }
 

@@ -53,7 +53,7 @@ void main() {
 
     test('font families resolve correctly', () {
       expect(arabicFontFamily('sans'), 'Noto Sans Arabic');
-      expect(arabicFontFamily('uthmani'), 'Amiri Quran');
+      expect(arabicFontFamily('uthmani'), 'KFGQPC Uthmanic');
     });
   });
 

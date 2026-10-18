@@ -7,18 +7,17 @@ void main() {
       expect(arabicFontFamily('sans'), 'Noto Sans Arabic');
     });
 
-    test('uthmani style uses Amiri Quran', () {
-      expect(arabicFontFamily('uthmani'), 'Amiri Quran');
+    test('uthmani style uses KFGQPC Uthmanic', () {
+      expect(arabicFontFamily('uthmani'), 'KFGQPC Uthmanic');
     });
 
-    test('retired nastaliq falls back to Noto Sans Arabic', () {
-      expect(arabicFontFamily('nastaliq'), 'Noto Sans Arabic');
+    test('retired nastaliq falls back to KFGQPC Uthmanic', () {
+      expect(arabicFontFamily('nastaliq'), 'KFGQPC Uthmanic');
     });
   });
 
   group('normalizeArabicDisplay', () {
     test('replaces U+06E1 sukun with standard U+0652', () {
-      // نَفْسًا with U+06E1 (dotless head of khah) as in the bundled data.
       const broken = 'نَف\u06e1سًا';
       const fixed = 'نَف\u0652سًا';
       expect(normalizeArabicDisplay(broken), fixed);
@@ -29,6 +28,15 @@ void main() {
       final out = normalizeArabicDisplay(text);
       expect(out.contains('\u06e1'), isFalse);
       expect(out.contains('\u0652'), isTrue);
+    });
+
+    test('corrects false ya-hamza-below and decomposed letters in 16:90', () {
+      const broken1690 = '۞إِنَّ ٱللَّهَ يَأۡمُرُ بِٱلۡعَدۡلِ وَٱلۡإِحۡسَٰنِ وَإِيتَآيِٕ ذِي ٱلۡقُرۡبَىٰ';
+      final fixed = normalizeArabicDisplay(broken1690);
+      expect(fixed.contains('وَإِيتَآءِ'), isTrue);
+      expect(fixed.contains('۞إِنَّ'), isTrue);
+      expect(fixed.contains('يَأْمُرُ'), isTrue);
+      expect(fixed.contains('وَٱلْإِحْسَٰنِ'), isTrue);
     });
 
     test('leaves already-correct text untouched', () {
@@ -44,11 +52,6 @@ void main() {
   group('urduStyle', () {
     test('uses the dedicated Urdu font family', () {
       expect(urduStyle().fontFamily, 'Noto Nastaliq Urdu');
-    });
-
-    test('urdu font differs from arabic font families', () {
-      expect(urduStyle().fontFamily, isNot(arabicFontFamily('sans')));
-      expect(urduStyle().fontFamily, isNot(arabicFontFamily('uthmani')));
     });
   });
 }

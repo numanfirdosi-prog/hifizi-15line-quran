@@ -31,9 +31,9 @@ class _ReaderSettingsSheet extends StatelessWidget {
   const _ReaderSettingsSheet({this.onJumpToPage, this.surahFirstPage});
 
   static const _themes = <String, String>{
-    'night': 'Night Slate',
-    'emerald': 'Emerald Day',
-    'parchment': 'Antique Parchment',
+    'soft_green': 'Soft Green (Premium)',
+    'light_blue': 'Light Blue (Modern)',
+    'royal_navy': 'Royal Navy (Modern)',
   };
 
   @override

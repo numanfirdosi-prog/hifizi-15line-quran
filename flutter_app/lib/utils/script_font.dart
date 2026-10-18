@@ -21,24 +21,69 @@ String arabicFontFamily(String scriptStyle) {
 
 /// Display-layer normalization for Quranic Arabic text.
 ///
-/// The bundled Quran text marks sukun with U+06E1 (ARABIC SMALL HIGH
-/// DOTLESS HEAD OF KHAH). U+06E1 has Unicode joining type "U"
-/// (non-joining), so the text shaper breaks cursive joining around it and
-/// letters render isolated/disconnected ("harf alag alag"). Replacing it
-/// with the standard U+0652 ARABIC SUKUN (joining type "T", transparent)
-/// restores correct joining. Also joins split tanween-alef words ("ࣰ ا" →
-/// "ࣰا") which the source data writes with a space, rendering as a broken
-/// "ضَعِيفً ا". The split occurs with several tanween marks, so all variants
-/// are joined (U+08F0, U+064B, U+064C, U+064D, U+08F1). This only affects
-/// rendering — the data files stay untouched and the meaning is identical.
-///
-/// Tanween marks the bundled text writes split as "<tanween> ا" before alef.
+/// Fixes decomposed Unicode codepoints (alef/waw/ya + isolated combining hamza),
+/// false ya-hamza-below (e.g. An-Nahl 16:90), inverted tatweel marks, and
+/// non-joining Quranic sukun U+06E1 which break cursive joining ("harf alag alag")
+/// in calligraphic fonts like KFGQPC Uthmanic Madinah.
 const _splitTanweenMarks = 'ࣰًٌࣱٍ';
 
-String normalizeArabicDisplay(String text) => text
-    .replaceAll('\u06E1', '\u0652')
-    .replaceAllMapped(
-        RegExp('([$_splitTanweenMarks]) ا'), (m) => '${m[1]}ا');
+String normalizeArabicDisplay(String text) {
+  var s = text;
+  // 1. False ya-hamza-below (e.g. 16:90 وَإِيتَاءِ instead of وَإِيتَآيِٕ)
+  s = s.replaceAllMapped(
+      RegExp(r'([اآءَُِٰۡٓ])ي[\u0650\u064e\u064f]?\u0655'),
+      (m) => '${m[1]}ءِ');
+  s = s.replaceAll(RegExp(r'ي[\u0650\u064e\u064f]?\u0655'), 'ئِ');
+  s = s.replaceAll('ي\u0655', 'ئ');
+
+  // 2. Decomposed Alef + Hamza Below (U+0655)
+  s = s.replaceAll('\u0627\u0650\u0655', 'إِ');
+  s = s.replaceAll('\u0627\u0655\u0650', 'إِ');
+  s = s.replaceAll('\u0627\u0655', 'إ');
+
+  // 3. Decomposed Alef + Hamza Above (U+0654)
+  s = s.replaceAll('\u0627\u064e\u0654', 'أَ');
+  s = s.replaceAll('\u0627\u0654\u064e', 'أَ');
+  s = s.replaceAll('\u0627\u064f\u0654', 'أُ');
+  s = s.replaceAll('\u0627\u0654\u064f', 'أُ');
+  s = s.replaceAll('\u0627\u064b\u0654', 'أً');
+  s = s.replaceAll('\u0627\u0654\u064b', 'أً');
+  s = s.replaceAll('\u0627\u0654', 'أ');
+
+  // 4. Decomposed Waw + Hamza
+  s = s.replaceAll('\u0648\u064f\u0654', 'ؤُ');
+  s = s.replaceAll('\u0648\u0654\u064f', 'ؤُ');
+  s = s.replaceAll('\u0648\u064e\u0654', 'ؤَ');
+  s = s.replaceAll('\u0648\u0654\u064e', 'ؤَ');
+  s = s.replaceAll('\u0648\u06e1\u0654', 'ؤْ');
+  s = s.replaceAll('\u0648\u0652\u0654', 'ؤْ');
+  s = s.replaceAll('\u0648\u0654', 'ؤ');
+
+  // 5. Decomposed Ya / Nabra + Hamza
+  s = s.replaceAll('\u064a\u064e\u0654', 'ئَ');
+  s = s.replaceAll('\u064a\u0654\u064e', 'ئَ');
+  s = s.replaceAll('\u064a\u0650\u0654', 'ئِ');
+  s = s.replaceAll('\u064a\u0654\u0650', 'ئِ');
+  s = s.replaceAll('\u064a\u064f\u0654', 'ئُ');
+  s = s.replaceAll('\u064a\u0654\u064f', 'ئُ');
+  s = s.replaceAll('\u064a\u06e1\u0654', 'ئْ');
+  s = s.replaceAll('\u064a\u0652\u0654', 'ئْ');
+  s = s.replaceAll('\u064a\u0654', 'ئ');
+
+  // 6. Tatweel order: \u0640 + harakah + \u0654 -> \u0640\u0654 + harakah
+  s = s.replaceAllMapped(
+      RegExp(r'(\u0640)([\u064e\u064f\u0650\u064b\u064c\u064d\u06e1\u0652])\u0654'),
+      (m) => '${m[1]}\u0654${m[2]}');
+
+  // 7. Sukun U+06E1 -> U+0652
+  s = s.replaceAll('\u06e1', '\u0652');
+
+  // 8. Split tanween before alef
+  s = s.replaceAllMapped(
+      RegExp('([$_splitTanweenMarks]) ا'), (m) => '${m[1]}ا');
+
+  return s;
+}
 
 /// Dedicated Urdu text style using the bundled Noto Nastaliq Urdu font
 /// (OFL licensed). Use for Urdu translations and Urdu UI text — never for

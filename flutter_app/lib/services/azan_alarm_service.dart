@@ -133,8 +133,8 @@ void azanAlarmCallback(int id) async {
               ? const <AndroidNotificationAction>[
                   AndroidNotificationAction(
                     stopAzanActionId,
-                    'STOP',
-                    showsUserInterface: false,
+                    'STOP (بند کریں)',
+                    showsUserInterface: true,
                     cancelNotification: true,
                   ),
                 ]
@@ -530,38 +530,68 @@ class AzanAlarmService {
     }
   }
 
-  /// Schedules a plain notification fallback for one prayer (no exact alarm).
+  /// Schedules a notification fallback for one prayer with STOP action and exact timing if permitted.
   Future<void> _scheduleNotificationFallback(
       int alarmId, String name, DateTime prayerTime, bool azanSoundEnabled) async {
     try {
+      final canExact = await canScheduleExactAlarms();
       await _notificationsPlugin.zonedSchedule(
         alarmId,
         '$name — نماز کا وقت',
-        azanSoundEnabled ? 'Azan time — tap to open' : 'Prayer time has started',
+        azanSoundEnabled
+            ? 'Azan is playing — tap STOP to silence'
+            : 'Prayer time has started',
         tz.TZDateTime.from(prayerTime, tz.local),
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'azan_alarm_channel',
             'Azan Prayers & Alarms',
             importance: Importance.max,
-            priority: Priority.high,
+            priority: Priority.max,
+            visibility: NotificationVisibility.public,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            category: AndroidNotificationCategory.alarm,
+            fullScreenIntent: azanSoundEnabled,
+            actions: azanSoundEnabled
+                ? const <AndroidNotificationAction>[
+                    AndroidNotificationAction(
+                      stopAzanActionId,
+                      'STOP (بند کریں)',
+                      showsUserInterface: true,
+                      cancelNotification: true,
+                    ),
+                  ]
+                : const <AndroidNotificationAction>[],
           ),
-          iOS: DarwinNotificationDetails(
+          iOS: const DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
           ),
         ),
-        // BUG1 FIX: the fallback path must never require the exact-alarm
-        // permission — on Android 12+ with SCHEDULE_EXACT_ALARM denied,
-        // exactAllowWhileIdle throws SecurityException, so the log-only
-        // catch left zero prayer alerts firing while toggles showed ON.
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        androidScheduleMode: canExact
+            ? AndroidScheduleMode.exactAllowWhileIdle
+            : AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'azan_alarm:$alarmId:$name',
       );
     } catch (e) {
       debugPrint('[AzanAlarm] zonedSchedule failed for $name: $e');
+    }
+  }
+
+  /// Ensures battery optimization is disabled so Azan alarms ring strictly on time.
+  Future<bool> ensureBatteryOptimizationIgnored() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      var status = await Permission.ignoreBatteryOptimizations.status;
+      if (!status.isGranted) {
+        status = await Permission.ignoreBatteryOptimizations.request();
+      }
+      return status.isGranted;
+    } catch (_) {
+      return true;
     }
   }
 

@@ -130,94 +130,53 @@ class DashboardScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final prefs = Provider.of<PreferencesService>(context);
-    final isModern = prefs.themeName == 'modern';
     final ur = prefs.isUrdu;
     final hijri = _hijriDateString(DateTime.now(), ur);
 
-    if (isModern) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(Nur.screenMargin, Nur.s12, Nur.screenMargin, Nur.s4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today_outlined, size: 13, color: cs.primary),
-                      const SizedBox(width: 5),
-                      Text(
-                        hijri,
-                        style: TextStyle(
-                          color: cs.onSurface.withValues(alpha: 0.7),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () => onSelectTab(3),
-              icon: Icon(Icons.notifications_none_rounded, color: cs.primary, size: 24),
-              tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
-            ),
-            IconButton(
-              onPressed: () => _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
-              icon: Icon(Icons.bookmark_outline_rounded, color: cs.primary, size: 24),
-              tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
-            ),
-          ],
-        ),
-      );
-    }
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          Nur.s20, Nur.s12, Nur.s20, Nur.s4),
+      padding: const EdgeInsets.fromLTRB(Nur.screenMargin, Nur.s12, Nur.screenMargin, Nur.s4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: Nur.buttonHeight,
-            height: Nur.buttonHeight,
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(Nur.buttonRadius),
-              border: Border.all(
-                  color: cs.primary.withValues(alpha: 0.35)),
-            ),
-            child: Icon(Icons.menu_book_rounded,
-                color: cs.primary, size: Nur.iconSize),
-          ),
-          const SizedBox(width: Nur.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nur Al-Quran',
-                  style: textTheme.titleLarge?.copyWith(fontSize: 20),
+                  ur ? 'السلام علیکم 👋' : 'Assalamu Alaikum 👋',
+                  style: TextStyle(
+                    color: cs.primary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  '15-Line Hifzi Mushaf',
-                  style: textTheme.bodySmall,
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today_outlined, size: 13, color: cs.primary),
+                    const SizedBox(width: 5),
+                    Text(
+                      hijri,
+                      style: TextStyle(
+                        color: cs.onSurface.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: () => onSelectTab(3),
+            icon: Icon(Icons.notifications_none_rounded, color: cs.primary, size: 24),
+            tooltip: ur ? 'اوقات الصلوٰۃ' : 'Prayer Times',
+          ),
+          IconButton(
+            onPressed: () => _pushJumpable(context, (open) => BookmarksScreen(onOpenPage: open)),
+            icon: Icon(Icons.bookmark_outline_rounded, color: cs.primary, size: 24),
+            tooltip: ur ? 'محفوظ آیات' : 'Bookmarks',
           ),
         ],
       ),
@@ -510,8 +469,6 @@ class DashboardScreen extends StatelessWidget {
     final juz = juzForPage(page);
     final rel = _relativeTime(prefs.lastReadAt);
 
-    final isModern = prefs.themeName == 'modern';
-
     return _card(
       context,
       goldAccent: true,
@@ -529,48 +486,46 @@ class DashboardScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              if (isModern)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Juz $juz',
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Juz $juz',
+                  style: TextStyle(
+                    color: cs.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
-              if (isModern)
-                Container(
-                  width: 44,
-                  height: 44,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${surah.number}',
-                      style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+              Container(
+                width: 44,
+                height: 44,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+                ),
+                child: Center(
+                  child: Text(
+                    '${surah.number}',
+                    style: TextStyle(
+                      color: cs.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,27 +559,25 @@ class DashboardScreen extends StatelessWidget {
                   scale: prefs.ayahScale,
                 ),
               ),
-              if (isModern) ...[
-                const SizedBox(width: 12),
-                Material(
-                  color: cs.primary,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      showAyahPlayer(
-                        context,
-                        surah: prefs.lastReadSurah,
-                        ayah: prefs.lastReadAyah,
-                      );
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
-                    ),
+              const SizedBox(width: 12),
+              Material(
+                color: cs.primary,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    showAyahPlayer(
+                      context,
+                      surah: prefs.lastReadSurah,
+                      ayah: prefs.lastReadAyah,
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
                   ),
                 ),
-              ],
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -1238,16 +1191,11 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prefs = Provider.of<PreferencesService>(context);
-    final isModern = prefs.themeName == 'modern';
-
     return ListView(
       children: [
         _brandHeader(context),
-        if (isModern) ...[
-          _modernSearchPill(context),
-          _modernPrayerCard(context),
-        ],
+        _modernSearchPill(context),
+        _modernPrayerCard(context),
         const SizedBox(height: Nur.s4),
         _lastReadCard(context),
         _progressCard(context),
