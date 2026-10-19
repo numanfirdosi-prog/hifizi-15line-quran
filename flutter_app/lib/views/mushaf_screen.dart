@@ -371,7 +371,7 @@ class _MushafScreenState extends State<MushafScreen> {
           if (strokes.isEmpty && inProgress == null) {
             return const SizedBox.shrink();
           }
-          final prefs = Provider.of<PreferencesService>(context, listen: false);
+          final prefs = Provider.of<PreferencesService>(context);
           return CustomPaint(
             painter: _PageDrawingPainter(
               [
@@ -2323,12 +2323,20 @@ class _PageDrawingPainter extends CustomPainter {
   final bool isNightMode;
   _PageDrawingPainter(this.strokes, {this.isNightMode = false});
 
-  static Color _colorOf(String hex, bool translucent) {
+  static Color _colorOf(String hex, bool translucent, {bool isNight = false}) {
     var h = hex.replaceAll('#', '');
     if (h.length == 6) h = 'FF$h';
     final c = Color(int.tryParse(h, radix: 16) ?? 0xFFFFD54F);
-    // Translucent pastel tint so text shines through crisply
-    return translucent ? c.withValues(alpha: 0.38) : c;
+    if (!translucent) return c;
+    // Calibrated alpha:
+    // In Day mode (white page, black text):
+    // 0.32 provides a vibrant, crisp highlighter tint where the underlying
+    // black Arabic script, harakat, and verse markers shine through with 100% clarity.
+    // In Night mode (black inverted page, white text):
+    // 0.28 gives a gentle luminous glow over the dark background without washing
+    // out or obscuring the white Quranic calligraphy.
+    final double alpha = isNight ? 0.28 : 0.32;
+    return c.withValues(alpha: alpha);
   }
 
   @override
@@ -2341,10 +2349,7 @@ class _PageDrawingPainter extends CustomPainter {
 
     for (final s in strokes) {
       if (s.tool == 'highlighter') {
-        final hlPaint = Paint()
-          ..color = _colorOf(s.colorHex, true)
-          ..style = PaintingStyle.fill
-          ..blendMode = isNightMode ? BlendMode.screen : BlendMode.multiply;
+        final hlColor = _colorOf(s.colorHex, true, isNight: isNightMode);
 
         if (s.rect != Rect.zero) {
           final r = Rect.fromLTRB(
@@ -2353,24 +2358,37 @@ class _PageDrawingPainter extends CustomPainter {
             img.dx + s.rect.right * img.w,
             img.dy + s.rect.bottom * img.h,
           );
+          final hlPaint = Paint()
+            ..color = hlColor
+            ..style = PaintingStyle.fill;
           canvas.drawRRect(
-            RRect.fromRectAndRadius(r, const Radius.circular(3)),
+            RRect.fromRectAndRadius(r, const Radius.circular(4)),
             hlPaint,
           );
         } else if (s.points.isNotEmpty) {
           final pts = s.points.map(mapPt).toList();
           final strokePaint = Paint()
-            ..color = _colorOf(s.colorHex, true)
+            ..color = hlColor
             ..strokeWidth = max(18.0, s.width * img.w)
-            ..strokeCap = StrokeCap.square
+            ..strokeCap = StrokeCap.round
             ..strokeJoin = StrokeJoin.round
-            ..style = PaintingStyle.stroke
-            ..blendMode = isNightMode ? BlendMode.screen : BlendMode.multiply;
+            ..style = PaintingStyle.stroke;
+
           if (pts.length == 1) {
-            canvas.drawCircle(pts.first, strokePaint.strokeWidth / 2,
-                strokePaint..style = PaintingStyle.fill);
+            canvas.drawCircle(
+              pts.first,
+              strokePaint.strokeWidth / 2,
+              Paint()
+                ..color = hlColor
+                ..style = PaintingStyle.fill,
+            );
           } else {
-            canvas.drawPoints(PointMode.polygon, pts, strokePaint);
+            final path = Path();
+            path.moveTo(pts.first.dx, pts.first.dy);
+            for (int i = 1; i < pts.length; i++) {
+              path.lineTo(pts[i].dx, pts[i].dy);
+            }
+            canvas.drawPath(path, strokePaint);
           }
         }
       } else {
@@ -2397,7 +2415,12 @@ class _PageDrawingPainter extends CustomPainter {
             canvas.drawCircle(pts.first, paint.strokeWidth / 2,
                 paint..style = PaintingStyle.fill);
           } else if (pts.length > 1) {
-            canvas.drawPoints(PointMode.polygon, pts, paint);
+            final path = Path();
+            path.moveTo(pts.first.dx, pts.first.dy);
+            for (int i = 1; i < pts.length; i++) {
+              path.lineTo(pts[i].dx, pts[i].dy);
+            }
+            canvas.drawPath(path, paint);
           }
         }
       }
