@@ -4,6 +4,7 @@ import '../data/juz_data.dart';
 import '../data/quran_data.dart';
 import '../main.dart';
 import '../models/hifz_model.dart';
+import '../models/surah.dart';
 import '../services/hifz_service.dart';
 import '../utils/script_font.dart';
 import '../widgets/premium_card.dart';

@@ -937,7 +937,7 @@ class DashboardScreen extends StatelessWidget {
                           final startP = juzList[(hifz.manzilCurrentJuz - 1).clamp(0, 29)].startPage;
                           onOpenPage(startP);
                         },
-                        onToggle: () => hifz.markManzilCompleted(hifz.manzilCurrentJuz),
+                        onToggle: () => hifz.toggleTodayManzil(),
                       ),
                     ),
                   ],

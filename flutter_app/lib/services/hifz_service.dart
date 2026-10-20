@@ -213,6 +213,8 @@ class HifzService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markManzilCompleted(int juz) => toggleTodayManzil();
+
   Future<void> toggleTodayManzil() async {
     final today = _todayString();
     if (isTodayManzilDone) {
