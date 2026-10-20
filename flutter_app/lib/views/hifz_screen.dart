@@ -98,7 +98,7 @@ class _HifzScreenState extends State<HifzScreen>
               horizontal: Nur.screenMargin, vertical: Nur.s16),
           children: [
             // Overall Progress Card
-            PremiumCard(
+            NurCard(
               padding: const EdgeInsets.all(Nur.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +164,7 @@ class _HifzScreenState extends State<HifzScreen>
             const SizedBox(height: Nur.s16),
 
             // 1. TODAY'S SABAQ (سبق - نیا سبق)
-            PremiumCard(
+            NurCard(
               padding: const EdgeInsets.all(Nur.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +183,7 @@ class _HifzScreenState extends State<HifzScreen>
                             child: Icon(Icons.menu_book_rounded,
                                 color: cs.primary, size: 20),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -260,13 +260,13 @@ class _HifzScreenState extends State<HifzScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: Nur.s14),
+                  const SizedBox(height: 14),
                   InkWell(
                     borderRadius: BorderRadius.circular(Nur.buttonRadius),
                     onTap: () => hifz.toggleTodaySabaq(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: Nur.s12, vertical: Nur.s10),
+                          horizontal: Nur.s12, vertical: 10),
                       decoration: BoxDecoration(
                         color: hifz.isTodaySabaqDone
                             ? Colors.green.withValues(alpha: 0.15)
@@ -289,7 +289,7 @@ class _HifzScreenState extends State<HifzScreen>
                                 ? Colors.green
                                 : cs.onSurface.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               hifz.isTodaySabaqDone
@@ -317,7 +317,7 @@ class _HifzScreenState extends State<HifzScreen>
             const SizedBox(height: Nur.s16),
 
             // 2. TODAY'S SABQI / AAMOKHTAH (سبقی - آموختہ)
-            PremiumCard(
+            NurCard(
               padding: const EdgeInsets.all(Nur.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,7 +336,7 @@ class _HifzScreenState extends State<HifzScreen>
                             child: const Icon(Icons.history_edu_rounded,
                                 color: Colors.amber, size: 20),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -413,13 +413,13 @@ class _HifzScreenState extends State<HifzScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: Nur.s14),
+                  const SizedBox(height: 14),
                   InkWell(
                     borderRadius: BorderRadius.circular(Nur.buttonRadius),
                     onTap: () => hifz.toggleTodaySabqi(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: Nur.s12, vertical: Nur.s10),
+                          horizontal: Nur.s12, vertical: 10),
                       decoration: BoxDecoration(
                         color: hifz.isTodaySabqiDone
                             ? Colors.green.withValues(alpha: 0.15)
@@ -442,7 +442,7 @@ class _HifzScreenState extends State<HifzScreen>
                                 ? Colors.green
                                 : cs.onSurface.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               hifz.isTodaySabqiDone
@@ -482,14 +482,14 @@ class _HifzScreenState extends State<HifzScreen>
         final juzObj = (currentJuzNum >= 1 && currentJuzNum <= juzList.length)
             ? juzList[currentJuzNum - 1]
             : null;
-        final startPage = juzObj?['startPage'] as int? ?? 1;
+        final startPage = juzObj?.startPage ?? 1;
 
         return ListView(
           padding: const EdgeInsets.symmetric(
               horizontal: Nur.screenMargin, vertical: Nur.s16),
           children: [
             // Current Manzil Focus Card
-            PremiumCard(
+            NurCard(
               padding: const EdgeInsets.all(Nur.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +508,7 @@ class _HifzScreenState extends State<HifzScreen>
                             child: Icon(Icons.sync_rounded,
                                 color: cs.primary, size: 22),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -548,7 +548,7 @@ class _HifzScreenState extends State<HifzScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Juz $currentJuzNum: ${juzObj?['nameEn'] ?? ''}',
+                              'Juz $currentJuzNum: ${juzObj?.nameTr ?? ''}',
                               style: TextStyle(
                                 color: cs.primary,
                                 fontWeight: FontWeight.bold,
@@ -557,7 +557,7 @@ class _HifzScreenState extends State<HifzScreen>
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'پارہ $currentJuzNum — ${juzObj?['nameUr'] ?? ''}',
+                              'پارہ $currentJuzNum — ${juzObj?.nameAr ?? ''}',
                               style: TextStyle(
                                 color: cs.onSurface.withValues(alpha: 0.8),
                                 fontSize: 14,
@@ -587,13 +587,13 @@ class _HifzScreenState extends State<HifzScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: Nur.s14),
+                  const SizedBox(height: 14),
                   InkWell(
                     borderRadius: BorderRadius.circular(Nur.buttonRadius),
                     onTap: () => hifz.toggleTodayManzil(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: Nur.s12, vertical: Nur.s10),
+                          horizontal: Nur.s12, vertical: 10),
                       decoration: BoxDecoration(
                         color: hifz.isTodayManzilDone
                             ? Colors.green.withValues(alpha: 0.15)
@@ -616,7 +616,7 @@ class _HifzScreenState extends State<HifzScreen>
                                 ? Colors.green
                                 : cs.onSurface.withValues(alpha: 0.5),
                           ),
-                          const SizedBox(width: Nur.s10),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               hifz.isTodayManzilDone
@@ -652,7 +652,7 @@ class _HifzScreenState extends State<HifzScreen>
                 fontSize: 15,
               ),
             ),
-            const SizedBox(height: Nur.s10),
+            const SizedBox(height: 10),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -748,7 +748,7 @@ class _HifzScreenState extends State<HifzScreen>
               // Filter Chips Row
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: Nur.screenMargin, vertical: Nur.s10),
+                    horizontal: Nur.screenMargin, vertical: 10),
                 child: Row(
                   children: [
                     _filterChip(
@@ -773,7 +773,7 @@ class _HifzScreenState extends State<HifzScreen>
                               Icon(Icons.check_circle_outline_rounded,
                                   size: 64,
                                   color: cs.primary.withValues(alpha: 0.4)),
-                              const SizedBox(height: Nur.s14),
+                              const SizedBox(height: 14),
                               Text(
                                 _mistakeFilter == 'active'
                                     ? 'No active mistakes! Mashallah!'
@@ -784,7 +784,7 @@ class _HifzScreenState extends State<HifzScreen>
                                   fontSize: 16,
                                 ),
                               ),
-                              const SizedBox(height: Nur.s6),
+                              const SizedBox(height: 6),
                               Text(
                                 'Log any Ayah where you faced hesitation (shuba) or a mistake so you can revise it.',
                                 textAlign: TextAlign.center,
@@ -805,10 +805,10 @@ class _HifzScreenState extends State<HifzScreen>
                             bottom: 80),
                         itemCount: list.length,
                         separatorBuilder: (_, __) =>
-                            const SizedBox(height: Nur.s10),
+                            const SizedBox(height: 10),
                         itemBuilder: (context, idx) {
                           final m = list[idx];
-                          return PremiumCard(
+                          return NurCard(
                             padding: const EdgeInsets.all(Nur.s12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1216,14 +1216,21 @@ class _HifzScreenState extends State<HifzScreen>
   }
 
   String _getSurahForPage(int page) {
-    final s = getSurahForPage(page);
-    return 'Surah ${s.nameEnglish} (${s.nameArabic})';
+    Surah current = allSurahs.first;
+    for (final s in allSurahs) {
+      if (s.startPage <= page) {
+        current = s;
+      } else {
+        break;
+      }
+    }
+    return 'Surah ${current.nameEn} (${current.nameAr})';
   }
 
   String _getSurahName(int surahNum) {
     if (surahNum >= 1 && surahNum <= 114) {
-      final s = surahList[surahNum - 1];
-      return s.nameEnglish;
+      final s = allSurahs[surahNum - 1];
+      return s.nameEn;
     }
     return 'Surah $surahNum';
   }
