@@ -20,6 +20,8 @@ import 'ayah_player_sheet.dart';
 import 'audio_studio_screen.dart';
 import 'backup_restore_screen.dart';
 import 'bookmarks_screen.dart';
+import 'hifz_screen.dart';
+import '../services/hifz_service.dart';
 import 'info_screens.dart';
 import 'juz_index_screen.dart';
 import 'khatm_planner_screen.dart';
@@ -816,6 +818,233 @@ class DashboardScreen extends StatelessWidget {
   // ------------------------------------------------------------------
   // Reading Progress Card
   // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Daily Hifz Routine Card (Sabaq, Sabqi, Manzil, Mistakes)
+  // ------------------------------------------------------------------
+  Widget _dailyHifzCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final prefs = Provider.of<PreferencesService>(context);
+    final ur = prefs.isUrdu;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Consumer<HifzService>(
+      builder: (context, hifz, _) {
+        final sabaqDone = hifz.isTodaySabaqDone;
+        final sabqiDone = hifz.isTodaySabqiDone;
+        final manzilDone = hifz.isTodayManzilDone;
+        final activeMistakes = hifz.activeMistakesCount;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.school_rounded,
+                          color: cs.primary, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        ur ? 'روزانہ حفظ روٹین' : 'Daily Hifz Routine',
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _pushJumpable(
+                          context, (open) => HifzScreen(onOpenPage: open)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              ur ? 'مینیجر' : 'Manage',
+                              style: TextStyle(
+                                color: cs.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Icon(Icons.chevron_right_rounded,
+                                color: cs.primary, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _hifzRoutineTile(
+                        context,
+                        title: ur ? 'سبق' : 'Sabaq',
+                        subtitle: 'p. ${hifz.sabaqPage}',
+                        isDone: sabaqDone,
+                        onTapPage: () => onOpenPage(hifz.sabaqPage),
+                        onToggle: () => hifz.toggleTodaySabaq(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _hifzRoutineTile(
+                        context,
+                        title: ur ? 'سبقی' : 'Sabqi',
+                        subtitle: 'p. ${hifz.sabqiStartPage}-${hifz.sabqiEndPage}',
+                        isDone: sabqiDone,
+                        onTapPage: () => onOpenPage(hifz.sabqiStartPage),
+                        onToggle: () => hifz.toggleTodaySabqi(),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _hifzRoutineTile(
+                        context,
+                        title: ur ? 'منزل' : 'Manzil',
+                        subtitle: 'Juz ${hifz.manzilCurrentJuz}',
+                        isDone: manzilDone,
+                        onTapPage: () {
+                          final startP = juzList[(hifz.manzilCurrentJuz - 1).clamp(0, 29)].startPage;
+                          onOpenPage(startP);
+                        },
+                        onToggle: () => hifz.markManzilCompleted(hifz.manzilCurrentJuz),
+                      ),
+                    ),
+                  ],
+                ),
+                if (activeMistakes > 0) ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _pushJumpable(
+                        context, (open) => HifzScreen(onOpenPage: open)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline_rounded,
+                              size: 14, color: Colors.orange.shade700),
+                          const SizedBox(width: 6),
+                          Text(
+                            ur
+                                ? '$activeMistakes غلطیاں / اغلاط زیرِ مشق ہیں'
+                                : '$activeMistakes active mistakes to practice',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _hifzRoutineTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required bool isDone,
+    required VoidCallback onTapPage,
+    required VoidCallback onToggle,
+  }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDone
+            ? cs.primary.withValues(alpha: 0.10)
+            : cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDone ? cs.primary : cs.primary.withValues(alpha: 0.15),
+          width: isDone ? 1.2 : 0.8,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurface.withValues(alpha: 0.8),
+                ),
+              ),
+              InkWell(
+                onTap: onToggle,
+                child: Icon(
+                  isDone
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 16,
+                  color: isDone ? cs.primary : cs.onSurface.withValues(alpha: 0.35),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: onTapPage,
+            child: Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: cs.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _readingProgressCard(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -1302,6 +1531,12 @@ class DashboardScreen extends StatelessWidget {
         () => _pushJumpable(
             context, (open) => JuzIndexScreen(onOpenPage: open)),
       ),
+            _QuickItem(
+        ur ? 'حفظ مینیجر' : 'Hifz Manager',
+        Icons.school_rounded,
+        () => _pushJumpable(
+            context, (open) => HifzScreen(onOpenPage: open)),
+      ),
       _QuickItem(
         ur ? 'ختم قرآن پلانر' : 'Khatm Planner',
         Icons.calendar_month_outlined,
@@ -1648,6 +1883,7 @@ class DashboardScreen extends StatelessWidget {
               _prayerTimesCard(context),
               _lastReadCard(context),
               _readingProgressCard(context),
+              _dailyHifzCard(context),
               _ayahOfDayCard(context),
               _surahPickerCard(context),
               _quickAccessSection(context),

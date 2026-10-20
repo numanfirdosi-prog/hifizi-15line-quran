@@ -276,8 +276,25 @@ void azanAlarmCallback(int id) async {
         );
         final entry = schedule.getByName(key);
         if (entry != null) {
-          final nextTime = PrayerCalculationService.cityWallTimeToAbsolute(
-              city, entry, tomorrow);
+          tz.Location loc;
+          try {
+            loc = (city.ianaTz != null && city.ianaTz!.isNotEmpty)
+                ? tz.getLocation(city.ianaTz!)
+                : tz.local;
+          } catch (_) {
+            loc = tz.local;
+          }
+          final nextTz = tz.TZDateTime(
+            loc,
+            tomorrow.year,
+            tomorrow.month,
+            tomorrow.day,
+            entry.hours24,
+            entry.mins,
+            0,
+          );
+          final nextTime = DateTime.fromMillisecondsSinceEpoch(
+              nextTz.millisecondsSinceEpoch);
           try {
             await AndroidAlarmManager.oneShotAt(
               nextTime,
@@ -288,11 +305,6 @@ void azanAlarmCallback(int id) async {
               rescheduleOnReboot: true,
             );
           } catch (_) {
-            // BUG2 FIX: exact-alarm permission may have been revoked after
-            // the day's schedule was made. Without this inner fallback the
-            // SecurityException killed the whole next-day chain (log-only),
-            // so this prayer's alarm silently never fired again until the
-            // app was reopened. Retry inexactly so the chain survives.
             await AndroidAlarmManager.oneShotAt(
               nextTime,
               id,
@@ -511,12 +523,48 @@ class AzanAlarmService {
         continue;
       }
 
-      var prayerTime = PrayerCalculationService.cityWallTimeToAbsolute(
-          location, entry, today);
-      if (prayerTime.isBefore(now)) {
-        prayerTime = PrayerCalculationService.cityWallTimeToAbsolute(
-            location, entry, today.add(const Duration(days: 1)));
+      tz.Location loc;
+      try {
+        loc = (location.ianaTz != null && location.ianaTz!.isNotEmpty)
+            ? tz.getLocation(location.ianaTz!)
+            : tz.local;
+      } catch (_) {
+        loc = tz.local;
       }
+
+      final currentTz = tz.TZDateTime.now(loc);
+      var targetTz = tz.TZDateTime(
+        loc,
+        today.year,
+        today.month,
+        today.day,
+        entry.hours24,
+        entry.mins,
+        0,
+      );
+
+      // If already passed or less than 30s away, schedule for tomorrow
+      if (targetTz.isBefore(currentTz.add(const Duration(seconds: 30)))) {
+        final tomorrow = today.add(const Duration(days: 1));
+        final tomorrowSched = PrayerCalculationService.calculate(
+          date: tomorrow,
+          location: location,
+          asrMode: asrMode,
+        );
+        final tomEntry = tomorrowSched.getByName(key) ?? entry;
+        targetTz = tz.TZDateTime(
+          loc,
+          tomorrow.year,
+          tomorrow.month,
+          tomorrow.day,
+          tomEntry.hours24,
+          tomEntry.mins,
+          0,
+        );
+      }
+
+      final prayerTime = DateTime.fromMillisecondsSinceEpoch(
+          targetTz.millisecondsSinceEpoch);
 
       // FIX: on Android 12+, oneShotAt(exact:true) throws SecurityException
       // when the user denied "Alarms & reminders" — which would abort the
@@ -542,7 +590,7 @@ class AzanAlarmService {
           debugPrint(
               '[AzanAlarm] oneShotAt failed for $name, using notification: $e');
           await _scheduleNotificationFallback(
-              alarmId, name, prayerTime, azanSoundEnabled);
+              alarmId, name, targetTz, azanSoundEnabled);
         }
       } else {
         // C2/M2: notification fallback — used on iOS and when the user turns
@@ -551,18 +599,18 @@ class AzanAlarmService {
           await AndroidAlarmManager.cancel(alarmId);
         }
         await _scheduleNotificationFallback(
-            alarmId, name, prayerTime, azanSoundEnabled);
+            alarmId, name, targetTz, azanSoundEnabled);
       }
 
       debugPrint(
-          '[AzanAlarm] Scheduled $name at ${prayerTime.toIso8601String()} '
+          '[AzanAlarm] Scheduled $name at ${targetTz.toIso8601String()} '
           '(exact: $useExactAlarm)');
     }
   }
 
   /// Schedules a notification fallback for one prayer with STOP action and exact timing if permitted.
   Future<void> _scheduleNotificationFallback(
-      int alarmId, String name, DateTime prayerTime, bool azanSoundEnabled) async {
+      int alarmId, String name, tz.TZDateTime targetTz, bool azanSoundEnabled) async {
     try {
       final canExact = await canScheduleExactAlarms();
       final body = azanSoundEnabled
@@ -572,7 +620,7 @@ class AzanAlarmService {
         alarmId,
         '$name — نماز کا وقت',
         body,
-        tz.TZDateTime.from(prayerTime, tz.local),
+        targetTz,
         NotificationDetails(
           android: AndroidNotificationDetails(
             'azan_alarm_channel',

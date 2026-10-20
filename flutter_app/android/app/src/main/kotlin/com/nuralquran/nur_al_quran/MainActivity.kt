@@ -155,7 +155,7 @@ class MainActivity : FlutterActivity() {
             }
         }
         val id = extras.getInt("notification_id", extras.getInt("notificationId", -1))
-        if (id in 1001..1005) {
+        if (id in 101..105 || id in 1001..1005) {
             return true
         }
         return false

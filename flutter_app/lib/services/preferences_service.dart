@@ -536,6 +536,21 @@ class PreferencesService extends ChangeNotifier {
       'backgroundPlaybackEnabled': _backgroundPlaybackEnabled,
       'nightPageMode': _nightPageMode,
       'lastAutoBackup': _lastAutoBackup,
+      'hifz': {
+        'sabaqPage': _prefs.getInt('nur_hifz_sabaq_page'),
+        'dailySabaqPages': _prefs.getInt('nur_hifz_sabaq_daily_target'),
+        'lastSabaqDate': _prefs.getString('nur_hifz_last_sabaq_date'),
+        'sabaqHistory': _prefs.getString('nur_hifz_sabaq_history'),
+        'sabqiStartPage': _prefs.getInt('nur_hifz_sabqi_start'),
+        'sabqiEndPage': _prefs.getInt('nur_hifz_sabqi_end'),
+        'lastSabqiDate': _prefs.getString('nur_hifz_last_sabqi_date'),
+        'sabqiHistory': _prefs.getString('nur_hifz_sabqi_history'),
+        'manzilCurrentJuz': _prefs.getInt('nur_hifz_manzil_juz'),
+        'manzilDailyTarget': _prefs.getInt('nur_hifz_manzil_target'),
+        'lastManzilDate': _prefs.getString('nur_hifz_last_manzil_date'),
+        'manzilCompletedJuz': _prefs.getStringList('nur_hifz_manzil_completed_juz'),
+        'mistakes': _prefs.getString('nur_hifz_mistakes'),
+      },
     });
   }
 
@@ -703,6 +718,11 @@ class PreferencesService extends ChangeNotifier {
           asBool(m['backgroundPlaybackEnabled']);
       data.nightPageMode = asBool(m['nightPageMode']);
       data.lastAutoBackup = asString(m['lastAutoBackup']);
+      final hifzMap = m['hifz'];
+      if (hifzMap is Map) {
+        data.hifz = Map<String, dynamic>.from(hifzMap);
+      }
+
 
       return data;
     } catch (_) {
@@ -883,6 +903,25 @@ class PreferencesService extends ChangeNotifier {
       await _prefs.setString('nur_last_auto_backup', _lastAutoBackup);
     }
 
+    if (data.hifz != null) {
+      final h = data.hifz!;
+      if (h['sabaqPage'] is int) await _prefs.setInt('nur_hifz_sabaq_page', h['sabaqPage'] as int);
+      if (h['dailySabaqPages'] is int) await _prefs.setInt('nur_hifz_sabaq_daily_target', h['dailySabaqPages'] as int);
+      if (h['lastSabaqDate'] is String) await _prefs.setString('nur_hifz_last_sabaq_date', h['lastSabaqDate'] as String);
+      if (h['sabaqHistory'] is String) await _prefs.setString('nur_hifz_sabaq_history', h['sabaqHistory'] as String);
+      if (h['sabqiStartPage'] is int) await _prefs.setInt('nur_hifz_sabqi_start', h['sabqiStartPage'] as int);
+      if (h['sabqiEndPage'] is int) await _prefs.setInt('nur_hifz_sabqi_end', h['sabqiEndPage'] as int);
+      if (h['lastSabqiDate'] is String) await _prefs.setString('nur_hifz_last_sabqi_date', h['lastSabqiDate'] as String);
+      if (h['sabqiHistory'] is String) await _prefs.setString('nur_hifz_sabqi_history', h['sabqiHistory'] as String);
+      if (h['manzilCurrentJuz'] is int) await _prefs.setInt('nur_hifz_manzil_juz', h['manzilCurrentJuz'] as int);
+      if (h['manzilDailyTarget'] is int) await _prefs.setInt('nur_hifz_manzil_target', h['manzilDailyTarget'] as int);
+      if (h['lastManzilDate'] is String) await _prefs.setString('nur_hifz_last_manzil_date', h['lastManzilDate'] as String);
+      if (h['manzilCompletedJuz'] is List) {
+        await _prefs.setStringList('nur_hifz_manzil_completed_juz', (h['manzilCompletedJuz'] as List).map((e) => e.toString()).toList());
+      }
+      if (h['mistakes'] is String) await _prefs.setString('nur_hifz_mistakes', h['mistakes'] as String);
+    }
+
     notifyListeners();
     return true;
   }
@@ -970,4 +1009,5 @@ class _ParsedBackup {
   bool? backgroundPlaybackEnabled;
   bool? nightPageMode;
   String? lastAutoBackup;
+  Map<String, dynamic>? hifz;
 }

@@ -8,6 +8,7 @@ import 'services/qari_download_service.dart';
 import 'services/page_drawing_service.dart';
 import 'services/nur_audio_handler.dart';
 import 'services/deep_link_service.dart';
+import 'services/hifz_service.dart';
 import 'views/splash_screen.dart';
 
 /// Design tokens for Hafizi Quran & Tafsir.
@@ -788,6 +789,10 @@ void main() async {
   final pageDrawingService = PageDrawingService();
   await pageDrawingService.init();
 
+  // Hifz service: Sabaq, Sabqi, Manzil, and Ghalati tracker.
+  final hifzService = HifzService();
+  await hifzService.init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -799,6 +804,8 @@ void main() async {
             create: (_) => QariDownloadService()),
         ChangeNotifierProvider<PageDrawingService>.value(
             value: pageDrawingService),
+        ChangeNotifierProvider<HifzService>.value(
+            value: hifzService),
       ],
       child: const NurAlQuranApp(),
     ),

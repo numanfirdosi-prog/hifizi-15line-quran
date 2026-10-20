@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../services/auto_backup_service.dart';
 import '../services/azan_alarm_service.dart';
 import '../services/page_drawing_service.dart';
+import '../services/hifz_service.dart';
 import '../services/preferences_service.dart';
 
 /// Export / import a JSON backup of all preferences, plus automatic weekly
@@ -324,6 +325,7 @@ class BackupRestoreScreen extends StatelessWidget {
       try {
         await Provider.of<PageDrawingService>(context, listen: false)
             .reload();
+        await Provider.of<HifzService>(context, listen: false).init();
       } catch (_) {}
       // Defaults (city / asr method / alarms) were restored: re-apply them.
       await _rescheduleAlarms(prefs);
@@ -385,6 +387,7 @@ class _ImportFieldState extends State<_ImportField> {
               // Imported page drawings must reach the drawing service too.
               await Provider.of<PageDrawingService>(context, listen: false)
                   .reload();
+              await Provider.of<HifzService>(context, listen: false).init();
               // Match the weekly auto-backup alarm to the imported toggle.
               if (prefs.autoBackup) {
                 await AutoBackupService.scheduleWeekly();

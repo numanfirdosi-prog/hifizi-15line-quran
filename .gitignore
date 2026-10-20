@@ -27,3 +27,9 @@ QuraneKareem15Line_copy.pdf
 
 
 .github/
+
+scratch/
+signed_*/
+temp_*/
+*.zip
+test.bin
